@@ -180,6 +180,14 @@ input,select,textarea{font-size:16px!important}
 .pvb{display:grid;gap:10px}.pvb img{width:100%;border-radius:10px;border:1px solid var(--cy)}
 .srow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #1b2a6a;font-size:14px}.srow b{font-weight:600}.srow .ok{color:#5cf29a}.srow .no{color:#ffb980}.srow .btn{padding:3px 12px;font-size:12px;white-space:nowrap}
 .sh{margin:14px 0 2px;color:#7fe3ff;font-size:14px}
+.ulist button.cont{grid-column:1/-1;font-size:17px;padding:14px}
+.ph.add{flex-direction:column;font-size:24px}.ph.add .wt{position:static;background:none;font-size:11px}
+.cambox{max-width:520px}.camw{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:3/4;max-height:58vh;margin:0 auto}
+.camw video{width:100%;height:100%;object-fit:cover;display:block}.camg{position:absolute;left:8%;right:8%;top:36%;height:26%;border:2px dashed #7fe3ff;border-radius:12px;box-shadow:0 0 0 999px #0006}
+.camg span{position:absolute;top:-26px;left:0;right:0;text-align:center;font-size:13px;color:#fff;text-shadow:0 1px 3px #000}
+.camb{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}.camb .btn{padding:8px 12px;font-size:18px}.camb .btn.on{background:#ffd23f;color:#000}
+.cams{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:#ff4d6d;cursor:pointer;flex:none}.cams:disabled{opacity:.35;cursor:default}
+.camalt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 </style><script>
 window.__errs=[];
 window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ทราบสาเหตุ',ln=(e&&e.lineno)?' (บรรทัด '+e.lineno+(e.colno?':'+e.colno:'')+')':'';window.__errs.push(m+ln);
@@ -285,10 +293,17 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
  <div id="vRes" class="vres"></div>
  <details class="vex"><summary>ตัวอย่างคำสั่ง</summary><div id="vexList"></div></details></div>
 <div id="syncB" class="syncb" style="display:none" onclick="retryAll()"></div>
-<input type="file" id="phIn" accept="image/*" style="display:none" onchange="phPicked(this)">
+<input type="file" id="phIn" accept="image/*" multiple style="display:none" onchange="phPicked(this)">
+<input type="file" id="phCap" accept="image/*" capture="environment" style="display:none" onchange="phPicked(this)">
+<input type="file" id="scGal" accept="image/*" style="display:none" onchange="scPicked(this)">
+<div class="modal" id="cmodal"><div class="box cambox"><h3 id="camT" style="margin-bottom:8px">📷 ถ่ายรูป</h3>
+ <div class="camw"><video id="camV" playsinline muted autoplay></video><div id="camGuide" class="camg"><span>จัดเลขเครื่องวัดให้อยู่ในกรอบ</span></div></div>
+ <div id="camMsg" class="dpl" style="margin-top:8px"></div>
+ <div class="camb"><button type="button" class="btn" onclick="camGallery()" title="เลือกจากคลังรูป">🖼️</button><button type="button" class="btn" id="camTorch" onclick="camTorchT()" title="ไฟฉาย">🔦</button><button type="button" class="cams" id="camShot" onclick="camSnap()" title="ถ่าย" aria-label="ถ่าย"></button><button type="button" class="btn" onclick="camFlip()" title="สลับกล้องหน้า/หลัง">🔄</button><button type="button" class="btn" onclick="camClose()">ปิด</button></div>
+ <div class="dpl" style="text-align:center;margin-top:6px">กล้องในแอปใช้ไม่ได้? <a href="#" style="color:#7fe3ff" onclick="event.preventDefault();camNative()">เปิดแอปกล้องของเครื่อง</a></div></div></div>
 <input type="file" id="scIn" accept="image/*" capture="environment" style="display:none" onchange="scPicked(this)">
 <div class="modal" id="umodal"><div class="box" style="max-width:420px"><h3 style="margin-bottom:6px">👤 เครื่องนี้ใช้โดยใคร?</h3>
- <div class="dpl" style="margin:0 0 10px">เลือกครั้งเดียว เครื่องจะจำไว้ · ใช้บันทึกในประวัติการแก้ไข และตั้งเป็นผู้ปฏิบัติงานในฟอร์มให้อัตโนมัติ</div>
+ <div class="dpl" style="margin:0 0 10px">แตะชื่อของคุณทุกครั้งที่เปิดแอป · ใช้บันทึกในประวัติการแก้ไข และตั้งเป็นผู้ปฏิบัติงานในฟอร์มให้อัตโนมัติ</div>
  <div id="uList" class="ulist"></div>
  <label style="margin-top:10px">หรือพิมพ์ชื่อ (หัวหน้า / แอดมิน)</label><input type="text" id="uIn" placeholder="เช่น หัวหน้าสมชาย">
  <div class="acts"><button class="btn" id="uCancel" onclick="closeMe()">ปิด</button><button class="btn f" onclick="setMe(uIn.value)">ใช้ชื่อนี้</button></div></div></div>
@@ -306,7 +321,7 @@ window.IMG={side:'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgw
 <script>
 (window.__loaded=window.__loaded||[]).push("JS1");
 (function(){var b=document.getElementById('boot');if(b)b.style.display='none'})();
-const CLIENT_VER=13;
+const CLIENT_VER=14;
 const COL=['#1e90ff','#22d36b','#ffb02e','#9b5bff','#22b8ff','#e84aa8','#ff5a6e','#ff8a1e','#18c0a0','#c0d63a'];
 const P=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1106,11 +1121,14 @@ function vScore(o){if(o.intent==='none')return -1;if(o.intent==='cmd'||o.intent=
 // ---- 4.2) เสียงพูดตอบ (เปิด/ปิดได้ที่ปุ่ม 🔊) ----
 let VMUTE=(()=>{try{return localStorage.getItem('rb_vmute')==='1'}catch(e){return false}})();
 const VTTS=window.speechSynthesis||null;let VVOICE=null;
-function vPickVoice(){try{const vs=VTTS.getVoices()||[];VVOICE=vs.find(v=>/^th/i.test(v.lang)&&/google/i.test(v.name))||vs.find(v=>/^th/i.test(v.lang))||null}catch(e){}}
+function vPickVoice(){try{const vs=(VTTS.getVoices()||[]).filter(v=>/^th/i.test(v.lang));VVOICE=vs.find(v=>/google/i.test(v.name))||vs.find(v=>/premium|enhanced|narisa|kanya/i.test(v.name))||vs.find(v=>v.localService)||vs[0]||null}catch(e){}}
 if(VTTS){vPickVoice();try{VTTS.addEventListener('voiceschanged',vPickVoice)}catch(e){}}
-function vSay(t,after){t=String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/[“”"]/g,'').replace(/\s*[·—]\s*/g,' ').trim();
+// ปรับคำให้เสียงอ่านถูก: คำสั้นอย่าง “พบ” บางเครื่องสะกดทีละตัว (พ พาน บ ใบไม้) → ใช้ “เจอ” · เลขยาวอ่านทีละตัว · 24/35 อ่าน “ทับ”
+const VPRON=[[/ไม่พบ/g,'ไม่เจอ'],[/พบ/g,'เจอ'],[/(\d+)\s*\/\s*(\d+)/g,'$1 ทับ $2'],[/\d{5,}/g,m=>m.split('').join(' ')],[/\bST\b/g,'เอส ที'],[/\bSP\b/g,'เอส พี'],[/\bMRU\b/gi,'เอ็ม อา ยู'],[/Excel/gi,'เอ็กเซล']];
+const vPron=t=>VPRON.reduce((x,[a,b])=>x.replace(a,b),String(t||''));
+function vSay(t,after){t=vPron(String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/[“”"]/g,'').replace(/\s*[·—]\s*/g,' ')).trim();
  if(!t||VMUTE||!VTTS){if(after)after();return}
- try{VTTS.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='th-TH';if(VVOICE)u.voice=VVOICE;u.rate=1.05;let done=false;const fin=()=>{if(done)return;done=true;if(after)after()};
+ try{VTTS.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='th-TH';if(VVOICE)u.voice=VVOICE;u.rate=1;let done=false;const fin=()=>{if(done)return;done=true;if(after)after()};
   u.onend=fin;u.onerror=fin;setTimeout(fin,Math.min(15000,1500+t.length*120));VTTS.speak(u)}catch(e){if(after)after()}}
 function vMuteBtn(){const b=document.getElementById('vMute');if(b){b.textContent=VMUTE?'🔇':'🔊';b.title=VMUTE?'เปิดเสียงตอบ':'ปิดเสียงตอบ'}}
 function vMuteToggle(){VMUTE=!VMUTE;try{localStorage.setItem('rb_vmute',VMUTE?'1':'0')}catch(e){}vMuteBtn();if(VMUTE&&VTTS)try{VTTS.cancel()}catch(e){}}
@@ -1180,6 +1198,22 @@ function vExec(o,note){let msg='',sp='',bad=false,listen=false,sg=null;const it=
 
 // ---- 4.5) ส่งให้ AI ตีความ (ถ้า Code.gs มี GEMINI_KEY) · คำสั่งสั้น/เปิดหน้า ทำทันทีไม่ต้องรอ AI ----
 const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
+// ปลุกเซิร์ฟเวอร์ไว้ก่อนตอนเริ่มฟัง (ระหว่างพูด) → ตอนส่งคำสั่งจริงตอบเร็วขึ้น
+let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Date.now();try{callApi('ping',[],()=>{},()=>{})}catch(e){}}
+// ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
+const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ใคร|ไหนบ้าง|ล่าสุด|ก่อนหน้า|เก่า|มากที่สุด|น้อยที่สุด|เทียบ|เฉลี่ย|ยกเว้น|ไม่ใช่|นอกจาก|หรือ)/i;
+const VFILL=/(ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
+function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase();
+ const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
+ names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
+ VK.forEach(([f,ws])=>ws.forEach(kill));['เอ็มอาร์ยู','ไม่พบข้อมูล','ผ่อนผัน','ค่าไฟ','ใกล้เคียง'].forEach(kill);
+ if(o.fields&&o.fields.comp)kill(o.fields.comp);
+ return t.replace(VFILL,' ').replace(/[\d\/\-.,:a-z]+/g,' ').replace(/[่้๊๋์็ํ]/g,'').replace(/\s+/g,'').trim()}
+function vSure(o,names){if(o.intent==='cmd'||o.intent==='nav'||o.intent==='me')return true;
+ if(o.unknownName||VASK.test(o.heard||''))return false;if(vLeft(o,names).length>1)return false;
+ if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone);
+ if(o.intent==='search')return !!(Object.keys(o.fields).length||Object.keys(o.filters).length||o.kind||/\d/.test(o.free||''));
+ return false}
 let VREQ=0;
 function vCtx(names,ctx,alts){const n=new Date(),fo=ctx.formOpen;
  return {today:isoD(n),thisMonth:isoD(n).slice(0,7),view,formOpen:fo,formKind:fo?kind:'',form:fo?{type:mType.value,comp:mComp.value,trip:mTrip.value,meter:mMeter.value,house:mHouse.value,worker:mWorker.value}:undefined,
@@ -1201,7 +1235,8 @@ function vFromAI(x,raw,names,ctx){if(!x||typeof x!=='object'||Array.isArray(x))r
  return o}
 function vRun(raw,alts){const names=[...new Set(fw().concat(wk()))],ctx={comps:compOpts(),trips:tripOpts(),formOpen:modal.classList.contains('show')};let o=vParse(raw,names,ctx);
  if(alts&&alts.length>1){let bs=vScore(o);alts.forEach(a=>{if(!a||a===raw)return;const x=vParse(a,names,ctx),sc=vScore(x);if(sc>bs){o=x;bs=sc}})}
- if(o.intent==='cmd'||o.intent==='nav'||!vAIon()){vExec(o);return o}
+ if(o.intent==='search'&&/(กี่|เท่าไร|เท่าไหร่|จำนวน)/.test(o.heard||''))o.count=true;
+ if(!vAIon()||vSure(o,names)){vExec(o);return o}
  const my=++VREQ;vShow(o.heard,'🤖 กำลังทำความเข้าใจ…',false);vStat.textContent='ได้ยินว่า:';
  const fb=why=>{if(my!==VREQ)return;VREQ++;vExec(o,why)};const to=setTimeout(()=>fb('(AI ตอบช้า ใช้แบบพื้นฐานแทน)'),12000);
  callApi('ai',[raw,vCtx(names,ctx,alts)],res=>{clearTimeout(to);if(my!==VREQ)return;let x=null;try{x=vFromAI(res&&res.out,raw,names,ctx)}catch(e){}if(!x){fb('(AI ตอบไม่ได้ ใช้แบบพื้นฐานแทน)');return}VREQ++;vExec(x)},
@@ -1225,11 +1260,12 @@ function vPick(i){const x=VSUG[i];if(!x||x.done)return;x.fn();const bs=vRes.quer
  VSUG.forEach((y,j)=>{if(y.g===x.g){y.done=true;if(bs[j]){bs[j].disabled=true;if(j!==i)bs[j].style.display='none'}}});
  if(bs[i])bs[i].textContent='✔ '+x.lab.replace(/ ใช่ไหม\?$/,'').replace(/^\S+ (หมายถึง )?/,'')}
 function vStop(){try{if(VREC)VREC.abort()}catch(e){}VON=false;vfab.classList.remove('on');vMic.classList.remove('on')}
-const VSIL=2500,VWAIT=7000,VMAX=30000;   // เงียบ 2.5 วิ = จบ · ยังไม่พูดเลยรอ 7 วิ · ยาวสุด 30 วิ
+let VSIL=(()=>{try{return +localStorage.getItem('rb_vsil')||1000}catch(e){return 1000}})();const VWAIT=7000,VMAX=30000;   // เงียบ VSIL (ค่าเริ่ม 1 วิ ปรับได้ในตั้งค่า) = จบ · ยังไม่พูดเลยรอ 7 วิ · ยาวสุด 30 วิ
+function vSilSet(ms){VSIL=+ms||1000;try{localStorage.setItem('rb_vsil',String(VSIL))}catch(e){}}
 function vStart(keep){if(!VSR){vPanelOpen();vTxt.focus();return}
  if(VON){try{VREC.stop()}catch(e){}return}
  if(VTTS)try{VTTS.cancel()}catch(e){}
- vPanelOpen();VLAST='';VERR='';if(keep!==true)vRes.innerHTML='';vTxt.value='';
+ vPanelOpen();VLAST='';VERR='';if(keep!==true)vRes.innerHTML='';vTxt.value='';vWarm();
  try{const r=new VSR();VREC=r;r.lang='th-TH';r.interimResults=true;r.continuous=true;r.maxAlternatives=3;let ALTS=[],tm=null;
   const stopIn=ms=>{clearTimeout(tm);tm=setTimeout(()=>{try{r.stop()}catch(e){}},ms)},cap=setTimeout(()=>{try{r.stop()}catch(e){}},VMAX);
   r.onresult=e=>{const parts=[];for(let i=0;i<e.results.length;i++){const t=String(e.results[i][0].transcript||'').trim(),last=parts[parts.length-1];if(last&&t.startsWith(last))parts[parts.length-1]=t;else if(t)parts.push(t)}   // บาง Android ส่งข้อความซ้ำสะสม
@@ -1239,7 +1275,7 @@ function vStart(keep){if(!VSR){vPanelOpen();vTxt.focus();return}
    if(VLAST.trim()){vStat.textContent='ได้ยินว่า:';vRun(VLAST,ALTS)}
    else{const m={'not-allowed':'⚠️ เบราว์เซอร์ไม่อนุญาตให้ใช้ไมโครโฟนในหน้านี้ — กดไมค์บนแป้นพิมพ์มือถือ พูดลงช่องด้านล่าง แล้วกด “ทำตาม” (หรือเปิดสิทธิ์ไมโครโฟนให้เบราว์เซอร์)','service-not-allowed':'⚠️ เครื่องนี้ปิดบริการแปลงเสียงเป็นข้อความ (iPhone: เปิด Siri และการป้อนตามคำบอกในการตั้งค่า) — หรือใช้ไมค์บนแป้นพิมพ์พูดลงช่องด้านล่างแทน','no-speech':'ไม่ได้ยินเสียง กด 🎤 แล้วพูดใหม่','audio-capture':'⚠️ ไม่พบไมโครโฟน','network':'⚠️ ต้องต่ออินเทอร์เน็ตเพื่อแปลงเสียง','aborted':''};
     vStat.innerHTML=(VERR in m?m[VERR]:VERR?'⚠️ ใช้ไมค์ไม่ได้ ('+esc(VERR)+') — ใช้ไมค์บนแป้นพิมพ์พูดลงช่องด้านล่างแทน':'ไม่ได้ยินเสียง กด 🎤 แล้วพูดใหม่')||'กด 🎤 แล้วพูดคำสั่ง'}};
-  r.start();VON=true;stopIn(VWAIT);vfab.classList.add('on');vMic.classList.add('on');vStat.textContent='🎙️ กำลังฟัง… พูดได้เรื่อย ๆ เงียบ 2 วินาทีจะทำตามเอง (แตะ 🎤 อีกครั้งเพื่อจบเร็ว)'}
+  r.start();VON=true;stopIn(VWAIT);vfab.classList.add('on');vMic.classList.add('on');vStat.textContent='🎙️ กำลังฟัง… พูดได้เรื่อย ๆ พูดจบแล้วเงียบ '+(VSIL/1000)+' วินาทีจะทำตามเอง (แตะ 🎤 อีกครั้งเพื่อจบทันที)'}
  catch(e){VON=false;vStat.innerHTML='⚠️ เปิดไมค์ไม่ได้ — ใช้ไมค์บนแป้นพิมพ์พูดลงช่องด้านล่าง แล้วกด “ทำตาม”'}}
 function vDo(){const s=vTxt.value.trim();if(s){vStat.textContent='คำสั่ง:';vRun(s)}}
 vTxt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();vDo()}});
@@ -1254,12 +1290,13 @@ vTxt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();vDo()
 function meSet_(v){window.__me=v;try{if(v)localStorage.setItem('rb_me',v);else localStorage.removeItem('rb_me')}catch(e){}}
 function meShow(){const n=meGet(),a=document.getElementById('meSide'),b=document.getElementById('meChip');if(a)a.textContent=n||'ยังไม่ได้เลือกผู้ใช้';if(b)b.textContent=n||'เลือกผู้ใช้'}
 function pickMe(force){const cur=meGet(),ws=wk();
- uList.innerHTML=ws.length?ws.map((n,i)=>`<button type="button" class="${n===cur?'on':''}" onclick="setMe(wk()[${i}])">${esc(n)}</button>`).join(''):'<div class="dpl">ยังไม่มีรายชื่อผู้ปฏิบัติงาน — พิมพ์ชื่อด้านล่าง</div>';
+ uList.innerHTML=(cur?`<button type="button" class="on cont" onclick="setMe(meGet())">▶ ใช้ต่อ: ${esc(cur)}</button>`:'')+(ws.length?ws.filter(n=>n!==cur).map(n=>`<button type="button" onclick="setMe(wk()[${ws.indexOf(n)}])">${esc(n)}</button>`).join(''):'<div class="dpl">ยังไม่มีรายชื่อผู้ปฏิบัติงาน — พิมพ์ชื่อด้านล่าง</div>');
  uIn.value=cur&&!ws.includes(cur)?cur:'';uCancel.style.display=force===true?'none':'';umodal.classList.add('show')}
 function closeMe(){umodal.classList.remove('show')}
 function setMe(v){v=String(v||'').trim();if(!v){uIn.focus();return}meSet_(v);meShow();closeMe();toast('เครื่องนี้ใช้โดย '+v)}
 function meDefault(){const n=meGet();if(n&&[...mWorker.options].some(o=>o.value===n))mWorker.value=n}
-function onLoaded(){meShow();oldDraw();if(!meGet()&&run&&!umodal.classList.contains('show'))pickMe(true)}
+let ME_ASKED=false;   // ถามชื่อทุกครั้งที่เปิดแอป (กดรีเฟรชข้อมูลในแอปไม่ถาม)
+function onLoaded(){meShow();oldDraw();if(run&&!ME_ASKED&&!window.__noPick){ME_ASKED=true;if(!umodal.classList.contains('show'))pickMe(true)}}
 
 // ---- 2) ข้อมูลเก่า: ตอนเปิดโหลดย้อนหลัง LOAD_M เดือน · พิมพ์ค้นหาแล้วไม่เจอ จะไปค้นข้อมูลเก่าให้เอง ----
 function oldDraw(){const on=!!(DB._partial&&!LOADALL),c=DB._cut?fmtD(DB._cut):'';
@@ -1292,6 +1329,8 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  h+='<div class="sh">🎤 เสียงและกล้อง (เครื่องนี้)</div>'+row('ไมค์สั่งงาน',ok(hasSR&&!inFrame,'ใช้ได้',hasSR?'ต้องเปิดจากลิงก์ GitHub':'เบราว์เซอร์นี้ไม่รองรับ — ใช้ไมค์บนแป้นพิมพ์'))
   +row('เสียงพูดตอบภาษาไทย',ok(tts&&thv,'มีเสียงไทย',tts?'ไม่พบเสียงภาษาไทยในเครื่อง (ติดตั้งเสียงไทยในการตั้งค่าเครื่อง)':'ไม่รองรับ'))
   +row('AI ฟังคำสั่ง / สแกนเลข',s?ok(s.ai,'เปิดใช้','ยังไม่ได้ใส่ GEMINI_KEY'):W);
+ h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
+  +row('ทดสอบเสียงพูดตอบ','ฟังว่าอ่านถูกไหม',' <button class="btn" onclick="vSayTest()">🔊 ทดสอบ</button>');
  h+='<div class="sh">🛟 สำรองข้อมูล</div>'+row('สำรองอัตโนมัติทุกคืน 02:00',s?ok(s.backup,'ตั้งเวลาแล้ว','ยังไม่ได้กด setupAll ใน Apps Script'):W)
   +row('สำรองล่าสุด',esc(s&&s.lastBackup||'-'),' <button class="btn" onclick="backupNow_()">สำรองตอนนี้</button>');
  h+='<div class="sh">💬 สรุปงานเข้ากลุ่ม LINE</div>'+row('LINE',s?(s.line?(s.lineBound?ok(true,'ผูกกลุ่มแล้ว · ส่งทุกวัน '+s.hour+':00 น.'):ok(false,'','ยังไม่ได้ผูกกลุ่ม')):ok(false,'','ยังไม่ได้ใส่ LINE_TOKEN')):W,
@@ -1303,6 +1342,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  h+='<div class="sh">📱 แอปบนหน้าจอ</div>'+row('ติดตั้งเป็นแอป',sa?ok(true,'เปิดแบบแอปอยู่'):'เปิดในเบราว์เซอร์',INSTALL?' <button class="btn" onclick="installApp()">ติดตั้ง</button>':'');
  h+='<div class="sh">🔒 ความปลอดภัย</div>'+row('ออกจากระบบเครื่องนี้','ลบรหัสทีมและชื่อผู้ใช้ออกจากเครื่องนี้',' <button class="btn" onclick="logoutDevice()">ออกจากระบบ</button>');
  sBody.innerHTML=h}
+function vSayTest(){const m=VMUTE;VMUTE=false;vSay('พบ 3 รายการ งานปลด เครื่อง 55121852 บ้าน 24/35 บันทึกแล้ว');VMUTE=m}
 function backupNow_(){toast('กำลังสำรองข้อมูล…');callApi('backup',[],r=>{toast(r&&r.skipped?'เพิ่งสำรองไปเมื่อ '+(r.last||'ไม่นานนี้')+' (สำรองซ้ำได้ทุก 10 นาที)':'สำรองแล้ว: '+(r&&r.name||''));if(smodal.classList.contains('show'))openSet()},e=>toast('สำรองไม่ได้: '+(e&&e.message||e),false))}
 function lineCode(){callApi('lineCode',[],r=>{const m=document.getElementById('lineMsg'),t=`พิมพ์ข้อความนี้ในกลุ่ม LINE ที่เชิญบอทไว้ (ใช้ได้ 30 นาที):<br><b style="font-size:20px;color:#7fe3ff">ผูกกลุ่ม ${esc(r&&r.code)}</b>`;if(m)m.innerHTML=t;else toast('รหัสผูกกลุ่ม: '+(r&&r.code))},e=>toast(e&&e.message||e,false))}
 function lineTest_(){callApi('lineTest',[],()=>toast('ส่งสรุปเข้ากลุ่ม LINE แล้ว'),e=>toast('ส่งไม่ได้: '+(e&&e.message||e),false))}
@@ -1319,10 +1359,10 @@ function phLoad(id,full,cb){const k=(full?'F':'')+id;if(PHC[k]){if(cb)cb(PHC[k])
 function phDraw(){const box=document.getElementById('fPh');if(!box)return;box.style.display=kind==='mru'?'none':'';const ids=phIds(),n=ids.length+PHN.length;
  let h=ids.map(id=>`<div class="ph" onclick="phOpen('${esc(id)}')">${PHC[id]?`<img src="${PHC[id]}" alt="">`:'⏳'}<button type="button" class="x" title="ลบรูป" onclick="event.stopPropagation();phDel('${esc(id)}')">✕</button></div>`).join('')
   +PHN.map((src,i)=>`<div class="ph"><img src="${src}" alt=""><span class="wt">รอบันทึก</span><button type="button" class="x" title="เอาออก" onclick="PHN.splice(${i},1);phDraw()">✕</button></div>`).join('');
- if(n<3)h+='<div class="ph add" onclick="phIn.click()" title="ถ่าย/เลือกรูป">＋</div>';
+ if(n<3)h+='<div class="ph add" onclick="camOpen(\'photo\')" title="ถ่ายรูป">📷<span class="wt">ถ่ายรูป</span></div><div class="ph add" onclick="phIn.click()" title="เลือกจากคลังรูป">🖼️<span class="wt">คลังรูป</span></div>';
  mPh.innerHTML=h;ids.forEach(id=>{if(!PHC[id])phLoad(id,false,()=>{if(modal.classList.contains('show'))phDraw()})})}
-function phPicked(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
- imgSmall(f,1280,.8,src=>{if(!src){toast('อ่านรูปไม่ได้',false);return}if(phIds().length+PHN.length>=3){toast('แนบได้ไม่เกิน 3 รูปต่อรายการ',false);return}PHN.push(src);phDraw()})}
+function phAdd(src){if(!src){toast('อ่านรูปไม่ได้',false);return}if(phIds().length+PHN.length>=3){toast('แนบได้ไม่เกิน 3 รูปต่อรายการ',false);return}PHN.push(src);phDraw()}
+function phPicked(inp){const fs=[...(inp.files||[])];inp.value='';fs.slice(0,3).forEach(f=>imgSmall(f,1280,.8,phAdd))}
 function phQueue(kd,id,list){list.forEach((src,i)=>enqueue({t:'photo',kd,go:r=>r.addPhoto(kd,(window.REMAP||{})[id]||id,src.split(',')[1]),
  ok:res=>{const row=res&&res.row;if(row){const a=DB[kd]||[],j=a.findIndex(x=>g(x,'ID')===row.ID);if(j>=0)a[j]['รูป']=row['รูป']}if(res&&res.fileId)PHC[res.fileId]=src;draw();toast('แนบรูปที่ '+(i+1)+' แล้ว')},fail:()=>{},mark:()=>{}}))}
 function phDel(id){if(!EDIT||!confirm('ลบรูปนี้?'))return;const {kd}=EDIT,rid=EDIT.id;
@@ -1342,10 +1382,34 @@ const saveV12=save;save=function(){const ph=PHN.slice(),ed=EDIT?{kd:EDIT.kd,id:E
  const op=QUE.slice(n0).find(o=>o.t==='add'&&o.d);if(op)phQueue(op.kd,g(op.d,'ID'),ph)};
 
 // ---- 6) สแกนเลขเครื่องวัด: ถ่ายรูปหน้าเครื่อง ให้ AI อ่านเลข (ใช้ GEMINI_KEY ใน Code.gs) ----
-function scanMeter(){if(!run){alert('โหมดตัวอย่าง: ยังไม่ได้เชื่อม Google Sheet');return}if(!DB._ai){alert('ต้องใส่ GEMINI_KEY ใน Code.gs ก่อน จึงจะสแกนเลขเครื่องวัดได้');return}scIn.click()}
-function scPicked(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;scHint.innerHTML='⏳ กำลังอ่านเลขจากรูป…';
- imgSmall(f,1600,.85,src=>{if(!src){scHint.textContent='⚠️ อ่านรูปไม่ได้';return}
-  callApi('readMeter',[src.split(',')[1]],r=>scShow(r),e=>{scHint.innerHTML='⚠️ อ่านเลขไม่ได้: '+esc(e&&e.message||e);vSay('อ่านเลขไม่ได้')})})}
+function scanMeter(){if(!run){alert('โหมดตัวอย่าง: ยังไม่ได้เชื่อม Google Sheet');return}if(!DB._ai){alert('ต้องใส่ GEMINI_KEY ใน Code.gs ก่อน จึงจะสแกนเลขเครื่องวัดได้');return}camOpen('scan')}
+function scPicked(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;imgSmall(f,1600,.85,scSend)}
+function scSend(src){if(!src){scHint.textContent='⚠️ อ่านรูปไม่ได้';return}scHint.innerHTML='⏳ กำลังอ่านเลขจากรูป…';
+ callApi('readMeter',[src.split(',')[1]],r=>scShow(r),e=>{scHint.innerHTML='⚠️ อ่านเลขไม่ได้: '+esc(e&&e.message||e);vSay('อ่านเลขไม่ได้')})}
+
+// ---- 6.1) กล้องในแอป (ใช้ได้ทั้งแนบรูปและสแกนเลข · Android รุ่นใหม่ปุ่มเลือกไฟล์เปิดแค่คลังรูป จึงเปิดกล้องเอง) ----
+let CAM='',CAMS=null,CAMF='environment',TORCH=false;
+function camOpen(mode){CAM=mode;camT.textContent=mode==='scan'?'📷 สแกนเลขเครื่องวัด':'📷 ถ่ายรูปหน้างาน';camGuide.style.display=mode==='scan'?'block':'none';camMsg.innerHTML='';cmodal.classList.add('show');camStart()}
+function camStart(){camStop();camShot.disabled=true;camTorch.style.display='none';
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camFail('เบราว์เซอร์นี้เปิดกล้องในแอปไม่ได้');return}
+ camMsg.textContent='กำลังเปิดกล้อง…';
+ navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:CAMF},width:{ideal:1920},height:{ideal:1440}},audio:false}).then(st=>{
+  if(!cmodal.classList.contains('show')){st.getTracks().forEach(t=>t.stop());return}
+  CAMS=st;camV.srcObject=st;const pl=camV.play();if(pl&&pl.catch)pl.catch(()=>{});camMsg.textContent='';camShot.disabled=false;
+  let cap={};try{const tr=st.getVideoTracks()[0];cap=tr&&tr.getCapabilities?tr.getCapabilities():{}}catch(e){}camTorch.style.display=cap&&cap.torch?'':'none'})
+ .catch(e=>{const n=e&&e.name||'';camFail(n==='NotAllowedError'||n==='SecurityError'?'ยังไม่ได้อนุญาตให้ใช้กล้อง — แตะไอคอนแม่กุญแจข้างลิงก์ด้านบน เปิดสิทธิ์กล้อง หรือใช้ปุ่มด้านล่าง':n==='NotFoundError'?'ไม่พบกล้อง':'เปิดกล้องในแอปไม่ได้ ('+esc(n||String(e))+')')})}
+function camFail(m){camMsg.innerHTML='⚠️ '+m+'<div class="camalt"><button class="btn f" onclick="camNative()">📷 เปิดแอปกล้องของเครื่อง</button><button class="btn" onclick="camGallery()">🖼️ เลือกจากคลังรูป</button></div>';camShot.disabled=true}
+function camStop(){if(CAMS){CAMS.getTracks().forEach(t=>{try{t.stop()}catch(e){}});CAMS=null}try{camV.srcObject=null}catch(e){}TORCH=false}
+function camClose(){camStop();cmodal.classList.remove('show')}
+function camFlip(){CAMF=CAMF==='environment'?'user':'environment';camStart()}
+function camTorchT(){const tr=CAMS&&CAMS.getVideoTracks()[0];if(!tr)return;TORCH=!TORCH;tr.applyConstraints({advanced:[{torch:TORCH}]}).catch(()=>{TORCH=false});camTorch.classList.toggle('on',TORCH)}
+function camSnap(){const v=camV;if(!v.videoWidth){toast('กล้องยังไม่พร้อม',false);return}
+ const m=CAM,max=m==='scan'?1600:1280,s=Math.min(1,max/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');
+ c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+ const src=c.toDataURL('image/jpeg',m==='scan'?.85:.8);camClose();if(m==='scan')scSend(src);else phAdd(src)}
+function camNative(){const m=CAM;camClose();(m==='scan'?scIn:phCap).click()}
+function camGallery(){const m=CAM;camClose();(m==='scan'?scGal:phIn).click()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&CAMS)camClose()});
 function scShow(r){const m=r&&r.meter||'',alt=(r&&r.others)||[];
  if(!m&&!alt.length){scHint.innerHTML='⚠️ อ่านเลขไม่ได้'+(r&&r.note?': '+esc(r.note):'')+' — ลองถ่ายใหม่ให้ชัด ไม่มีแสงสะท้อน';vSay('อ่านเลขไม่ได้ ลองถ่ายใหม่');return}
  const MI=vMeters(),cand=[m,...alt].filter(Boolean),known=cand.find(x=>MI.has(x)),pick=known||m||alt[0],ex=MI.get(pick);
