@@ -4,7 +4,7 @@
 // ===== ตั้งค่า: วางลิงก์เว็บแอป Apps Script (ลงท้ายด้วย /exec) ไว้ระหว่างเครื่องหมาย ' ' ด้านล่าง =====
 window.API_URL='https://script.google.com/macros/s/AKfycbxs0znzUTCe8hDx1ufrDRUptqWw0-dH6Gq_E4UYd2Qztc1apwbnt233NTkP9rPuOhCVLw/exec';
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>ระบบบันทึกงาน - ศิวภัทร ไฟฟ้า เซอร์วิส</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -159,6 +159,16 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .vfill{box-shadow:0 0 0 2px #22d36b !important;transition:box-shadow .3s}
 @media(max-width:1100px){.vfab{bottom:72px}}
 body.vdock .vpanel{top:auto;bottom:10px}body.vdock .vex{display:none}body.vdock .modal{padding-bottom:var(--vph,200px)}body.vdock .modal .box{max-height:calc(100vh - var(--vph,200px) - 24px)}
+
+/* มือถือ: พอดีจอ ไม่ล้นด้านข้าง และไม่ซูมเองตอนแตะช่องกรอก (iPhone ซูมเมื่อตัวอักษรในช่อง < 16px) */
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:700px){
+.kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{padding:10px 8px;gap:6px;flex-direction:column;align-items:flex-start;min-width:0}
+.kpi i{width:34px;height:34px;font-size:18px;border-radius:10px}
+.kpi b{font-size:24px}.kpi span{font-size:12px;overflow-wrap:anywhere}.kpi em{font-size:11px;right:8px;bottom:6px}
+input,select,textarea{font-size:16px!important}
+}
 </style><script>
 window.__errs=[];
 window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ทราบสาเหตุ',ln=(e&&e.lineno)?' (บรรทัด '+e.lineno+(e.colno?':'+e.colno:'')+')':'';window.__errs.push(m+ln);
@@ -950,9 +960,11 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  const cand=[rest,rest.replace(/^หน้า/,''),'หน้า'+rest];
  const pg=VPAGES.find(([w])=>cand.includes(w.toLowerCase().replace(/\s/g,'')));if(pg){o.intent='nav';o.page=pg[1];return o}
  // ค้นหา หรือ บันทึก
- const isSearch=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)/.test(t);
+ // ค่าเริ่มต้น = ค้นหา · จะบันทึกต้องขึ้นต้นด้วย "บันทึกงาน / บันทึกข้อมูล / บันทึก…" (หรือพูดตอนฟอร์มบันทึกเปิดอยู่)
+ const SAVERE=/^(บันทึกงาน|บันทึกข้อมูล|บันทึก|เพิ่มงาน|เพิ่มข้อมูล|ลงงาน|ลงข้อมูล)\s*/,SRCHRE=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)\s*/;
+ const saidSave=SAVERE.test(t),saidSearch=SRCHRE.test(t),isSearch=saidSearch||!(saidSave||ctx.formOpen);
  o.intent=isSearch?'search':'save';
- if(isSearch)t=t.replace(/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)\s*/,'');else t=t.replace(/^(บันทึก|เพิ่ม|ลง)(ข้อมูล)?\s*/,'');
+ t=t.replace(saidSave?SAVERE:SRCHRE,'');
  // หมายเหตุ: ทุกอย่างหลังคำว่า หมายเหตุ
  const nm=t.match(/(หมายเหตุ|โน้ต|โน๊ต)\s*(.*)$/);if(nm){o.fields.note=nm[2].trim();t=t.slice(0,nm.index)}
  // สถานะ / ประเภทหัวข้อ / ประเภทงาน / บริษัท / วันแบบพูด (ตัดออกจากข้อความเมื่อเจอ)
@@ -982,7 +994,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  // ชนิดหัวข้อ
  if(!o.kind){if(o.fields.due)o.kind='defer';else if(o.fields.nb)o.kind='nf';else if(o.fields.mru&&!o.fields.meter)o.kind='mru';else if(o.fields.phone)o.kind='phones'}
  if(isSearch){const fr=free.join(' ').replace(VKRE,' ').trim();o.free=fr}
- if(!isSearch&&!o.kind&&!Object.keys(o.fields).length&&!o.unknownName)o.intent='none';
+ if(!o.kind&&!Object.keys(o.fields).length&&!Object.keys(o.filters).length&&!o.unknownName&&!(isSearch&&(saidSearch||/\d/.test(o.free||''))))o.intent='none';
  return o}
 
 // ---- 4) ทำตามคำสั่ง ----
@@ -1040,11 +1052,11 @@ function vSuggest(o){const S=[];if(o.intent!=='save'&&o.intent!=='search')return
  return S}
 function vScore(o){if(o.intent==='none')return -1;if(o.intent==='cmd'||o.intent==='nav')return 5;const f=o.fields;let s=Object.keys(f).length;
  if(f.meter&&vMeters().has(f.meter))s+=3;if(f.worker)s+=1;if(o.unknownName)s-=1;if(f.type)s+=1;return s}
-function vRun(raw,alts){const names=[...new Set(fw().concat(wk()))],ctx={comps:compOpts(),trips:tripOpts()};let o=vParse(raw,names,ctx),msg='';
+function vRun(raw,alts){const names=[...new Set(fw().concat(wk()))],ctx={comps:compOpts(),trips:tripOpts(),formOpen:modal.classList.contains('show')};let o=vParse(raw,names,ctx),msg='';
  if(alts&&alts.length>1){let bs=vScore(o);alts.forEach(a=>{if(!a||a===raw)return;const x=vParse(a,names,ctx),sc=vScore(x);if(sc>bs){o=x;bs=sc}})}
  if(o.intent==='none'){msg='❓ ไม่เข้าใจคำสั่ง ลองพูดตามตัวอย่างด้านล่าง';vShow(o.heard,msg,true);return o}
  if(o.intent==='cmd'){
-  if(o.cmd==='save'){if(modal.classList.contains('show')){save();msg=modal.classList.contains('show')?'⚠️ ยังบันทึกไม่ได้ ดูข้อความเตือนในฟอร์ม':'✅ สั่งบันทึกแล้ว'}else msg='ยังไม่ได้เปิดฟอร์ม พูดข้อมูลที่จะบันทึกก่อน เช่น “ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35”'}
+  if(o.cmd==='save'){if(modal.classList.contains('show')){save();msg=modal.classList.contains('show')?'⚠️ ยังบันทึกไม่ได้ ดูข้อความเตือนในฟอร์ม':'✅ สั่งบันทึกแล้ว'}else{vCloseAll();openM();msg='📝 เปิดฟอร์มบันทึกแล้ว — กด 🎤 พูดกรอก แล้วพูดข้อมูล เช่น “ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35”'}}
   else if(o.cmd==='clear'){clearF();msg='🧹 ล้างตัวกรองแล้ว'}
   else if(o.cmd==='refresh'){load();msg='🔄 กำลังโหลดข้อมูลใหม่'}
   else if(o.cmd==='close'){vCloseAll();msg='ปิดหน้าต่างแล้ว'}
@@ -1058,9 +1070,9 @@ function vRun(raw,alts){const names=[...new Set(fw().concat(wk()))],ctx={comps:c
  vShow(o.heard,msg,false,sg);return o}
 
 // ---- 5) ไมโครโฟน + แผงคำสั่งเสียง ----
-const VEX=[['บันทึก','ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส'],['บันทึก','ต่อกลับ บริษัท ST ทริป 400 เครื่อง 55121852 บ้าน 24 ทับ 35 วันนี้'],['บันทึก','เบอร์โทร ทริป 200 เครื่อง 55081834 บ้าน 9/61 เบอร์ 0812345678 แจ็ค'],
- ['บันทึก','ผ่อนผัน นัด 30 พฤศจิกายน ทริป 400 MRU 704 เครื่อง 55080652 บ้าน 9/81'],['บันทึก','เอ็มอาร์ยู 954 956 978 ทริป 700 ก๊อต วันนี้'],['บันทึก','ไม่พบข้อมูล ทริป 400 เครื่อง 55009999 บ้าน 9/9 ใกล้เคียง 55009998 และ 55010000'],
- ['ยืนยัน','บันทึก'],['ค้นหา','ค้นหา บาส ทริป 400'],['ค้นหา','ค้นหา ยังไม่ใส่สาย'],['ค้นหา','หา เครื่อง 55121852'],['ค้นหา','ค้นหา เบอร์ 0812345678'],['เปิดหน้า','เปิดผ่อนผัน · ไปหน้าหลัก · รายงาน · ล้างค่า']];
+const VEX=[['ค้นหา','เครื่อง 55121852  (พูดเลขเฉย ๆ ก็ได้)'],['ค้นหา','บาส ทริป 400'],['ค้นหา','ยังไม่ใส่สาย'],['บันทึก','บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส'],['บันทึก','บันทึกงาน ต่อกลับ บริษัท ST ทริป 400 เครื่อง 55121852 บ้าน 24 ทับ 35 วันนี้'],['บันทึก','บันทึกข้อมูล เบอร์โทร ทริป 200 เครื่อง 55081834 บ้าน 9/61 เบอร์ 0812345678 แจ็ค'],
+ ['บันทึก','บันทึกข้อมูล ผ่อนผัน นัด 30 พฤศจิกายน ทริป 400 MRU 704 เครื่อง 55080652 บ้าน 9/81'],['บันทึก','บันทึกข้อมูล เอ็มอาร์ยู 954 956 978 ทริป 700 ก๊อต วันนี้'],['บันทึก','บันทึกข้อมูล ไม่พบข้อมูล ทริป 400 เครื่อง 55009999 บ้าน 9/9 ใกล้เคียง 55009998 และ 55010000'],
+ ['ยืนยัน','บันทึก  (พูดตอนฟอร์มเปิด = กดปุ่มบันทึก)'],['ค้นหา','เบอร์ 0812345678'],['เปิดหน้า','เปิดผ่อนผัน · ไปหน้าหลัก · รายงาน · ล้างค่า']];
 // ตอนฟอร์มเปิด: ย้ายแผงไปไว้ด้านล่าง (ไม่บังปุ่ม 🎤 พูดกรอก) และเว้นที่ให้ฟอร์มเลื่อนขึ้นได้ ไม่โดนแผงบัง
 function vDock(){const on=vpanel.classList.contains('show')&&modal.classList.contains('show');document.body.classList.toggle('vdock',on);
  if(on)document.body.style.setProperty('--vph',(vpanel.offsetHeight+20)+'px')}
