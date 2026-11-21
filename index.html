@@ -155,6 +155,8 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .vx{background:transparent;border:0;color:var(--m);font-size:18px;cursor:pointer}
 .vstat{font-size:13px;color:#bfe6ff;margin-bottom:6px;line-height:1.5}.vrow{display:flex;gap:6px}.vrow input{flex:1;min-width:0}
 .vres{font-size:13px;margin-top:8px;line-height:1.55;color:#b8ffd6}.vres.bad{color:#ffb980}
+.vchat{max-height:28vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:6px 0;padding-right:2px}.vchat .cu,.vchat .ca{padding:7px 11px;border-radius:14px;font-size:14px;line-height:1.45;max-width:88%}.vchat .csrc{margin-top:5px;font-size:11px;opacity:.85}.vchat .csrc a{color:#7fe3ff}
+.vchat .cu{align-self:flex-end;background:#0e7fa8;color:#fff;border-bottom-right-radius:4px}.vchat .ca{align-self:flex-start;background:#13235f;border:1px solid #2a4bb8;color:#e6f4ff;border-bottom-left-radius:4px}
 .vsug{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.vsug button{border:1px solid var(--cy);background:#0b1a5a;color:#e6f4ff;border-radius:10px;padding:6px 10px;font-size:13px;cursor:pointer;text-align:left}.vsug button:disabled{border-color:#22d36b;color:#b8ffd6;cursor:default}
 .vex{margin-top:8px;font-size:12px;color:var(--m)}.vex summary{cursor:pointer}.vex div div{padding:2px 0}.vex i{font-style:normal;color:var(--cy);display:inline-block;min-width:62px}
 .vfill{box-shadow:0 0 0 2px #22d36b !important;transition:box-shadow .3s}
@@ -290,6 +292,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
 <div id="vpanel" class="vpanel"><div class="vph"><b>🎤 คำสั่งเสียง</b><span><button type="button" id="vMute" class="vx" onclick="vMuteToggle()" title="ปิดเสียงตอบ">🔊</button><button type="button" class="vx" onclick="vPanelClose()" title="ปิด">✕</button></span></div>
  <div id="vStat" class="vstat">กด 🎤 แล้วพูดคำสั่ง</div>
  <div class="vrow"><input type="text" id="vTxt" placeholder="พูดหรือพิมพ์คำสั่ง แล้วกด ทำตาม" autocomplete="off"><button type="button" class="btn f" onclick="vDo()">ทำตาม</button><button type="button" id="vMic" class="btn vmic" onclick="vStart()" title="กดแล้วพูด">🎤</button></div>
+ <div id="vChat" class="vchat" style="display:none"></div>
  <div id="vRes" class="vres"></div>
  <details class="vex"><summary>ตัวอย่างคำสั่ง</summary><div id="vexList"></div></details></div>
 <div id="syncB" class="syncb" style="display:none" onclick="retryAll()"></div>
@@ -321,7 +324,7 @@ window.IMG={side:'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgw
 <script>
 (window.__loaded=window.__loaded||[]).push("JS1");
 (function(){var b=document.getElementById('boot');if(b)b.style.display='none'})();
-const CLIENT_VER=14;
+const CLIENT_VER=17;
 const COL=['#1e90ff','#22d36b','#ffb02e','#9b5bff','#22b8ff','#e84aa8','#ff5a6e','#ff8a1e','#18c0a0','#c0d63a'];
 const P=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1015,7 +1018,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  // คำสั่งสั้น
  const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน)(ครับ|ค่ะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
   [/^(หน้าถัดไป|ถัดไป|หน้าต่อไป|next)(ครับ|ค่ะ)?$/,'next'],[/^(หน้าก่อน|หน้าที่แล้ว|ก่อนหน้า|ย้อนกลับ)(ครับ|ค่ะ)?$/,'prev'],[/^(ปิดเสียง|ปิดเสียงตอบ|เงียบ)(ครับ|ค่ะ)?$/,'mute'],[/^(เปิดเสียง|เปิดเสียงตอบ)(ครับ|ค่ะ)?$/,'unmute'],
-  [/^(ดาวน์โหลด|ดาวโหลด|โหลดไฟล์|ดาวน์โหลดเลย|download)(ครับ|ค่ะ)?$/,'download'],[/^(ช่วยด้วย|วิธีใช้|ทำอะไรได้บ้าง|สั่งอะไรได้บ้าง|help)(ครับ|ค่ะ)?$/,'help'],[/^(หยุด|หยุดฟัง|พอแล้ว|เลิกฟัง)(ครับ|ค่ะ)?$/,'stop'],
+  [/^(ดาวน์โหลด|ดาวโหลด|โหลดไฟล์|ดาวน์โหลดเลย|download)(ครับ|ค่ะ)?$/,'download'],[/^(ช่วยด้วย|วิธีใช้|ทำอะไรได้บ้าง|สั่งอะไรได้บ้าง|help)(ครับ|ค่ะ)?$/,'help'],[/^(หยุด|หยุดฟัง|พอแล้ว|เลิกฟัง|พอก่อน|แค่นี้ก่อน)(ครับ|ค่ะ)?$/,'stop'],[/^(ล้างบทสนทนา|เริ่มคุยใหม่|ลืมที่คุย|ลืมที่คุยกัน)(ครับ|ค่ะ)?$/,'reset'],
   [/^(สแกน|สแกนเลข|สแกนเลขเครื่อง|สแกนเลขเครื่องวัด|สแกนมิเตอร์|ถ่ายรูปเลขเครื่อง|อ่านเลขจากรูป)(ครับ|ค่ะ)?$/,'scan'],[/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)(ครับ|ค่ะ)?$/,'photo'],
   [/^(โหลดข้อมูลเก่า|โหลดข้อมูลทั้งหมด|โหลดทั้งหมด|ดูข้อมูลทั้งหมด|ข้อมูลเก่า)(ครับ|ค่ะ)?$/,'old'],[/^(สำรองข้อมูล|สำรองข้อมูลตอนนี้|แบ็คอัพ|backup)(ครับ|ค่ะ)?$/,'backup'],[/^(เปลี่ยนผู้ใช้|เปลี่ยนชื่อผู้ใช้|ใครใช้เครื่อง)(ครับ|ค่ะ)?$/,'me']];
  for(const [re,c] of CMDS)if(re.test(low)){o.intent='cmd';o.cmd=c;return o}
@@ -1124,17 +1127,22 @@ const VTTS=window.speechSynthesis||null;let VVOICE=null;
 function vPickVoice(){try{const vs=(VTTS.getVoices()||[]).filter(v=>/^th/i.test(v.lang));VVOICE=vs.find(v=>/google/i.test(v.name))||vs.find(v=>/premium|enhanced|narisa|kanya/i.test(v.name))||vs.find(v=>v.localService)||vs[0]||null}catch(e){}}
 if(VTTS){vPickVoice();try{VTTS.addEventListener('voiceschanged',vPickVoice)}catch(e){}}
 // ปรับคำให้เสียงอ่านถูก: คำสั้นอย่าง “พบ” บางเครื่องสะกดทีละตัว (พ พาน บ ใบไม้) → ใช้ “เจอ” · เลขยาวอ่านทีละตัว · 24/35 อ่าน “ทับ”
-const VPRON=[[/ไม่พบ/g,'ไม่เจอ'],[/พบ/g,'เจอ'],[/(\d+)\s*\/\s*(\d+)/g,'$1 ทับ $2'],[/\d{5,}/g,m=>m.split('').join(' ')],[/\bST\b/g,'เอส ที'],[/\bSP\b/g,'เอส พี'],[/\bMRU\b/gi,'เอ็ม อา ยู'],[/Excel/gi,'เอ็กเซล']];
+const VPRON=[[/ไม่พบ/g,'ไม่เจอ'],[/พบ/g,'เจอ'],[/(\d+)\s*\/\s*(\d+)/g,'$1 ทับ $2'],[/\d{7,}/g,m=>m.split('').join(' ')],[/\bST\b/g,'เอส ที'],[/\bSP\b/g,'เอส พี'],[/\bMRU\b/gi,'เอ็ม อา ยู'],[/Excel/gi,'เอ็กเซล']];
 const vPron=t=>VPRON.reduce((x,[a,b])=>x.replace(a,b),String(t||''));
 function vSay(t,after){t=vPron(String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/[“”"]/g,'').replace(/\s*[·—]\s*/g,' ')).trim();
  if(!t||VMUTE||!VTTS){if(after)after();return}
  try{VTTS.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='th-TH';if(VVOICE)u.voice=VVOICE;u.rate=1;let done=false;const fin=()=>{if(done)return;done=true;if(after)after()};
-  u.onend=fin;u.onerror=fin;setTimeout(fin,Math.min(15000,1500+t.length*120));VTTS.speak(u)}catch(e){if(after)after()}}
+  u.onend=fin;u.onerror=fin;setTimeout(fin,Math.min(60000,3000+t.length*150));VTTS.speak(u)}catch(e){if(after)after()}}
 function vMuteBtn(){const b=document.getElementById('vMute');if(b){b.textContent=VMUTE?'🔇':'🔊';b.title=VMUTE?'เปิดเสียงตอบ':'ปิดเสียงตอบ'}}
 function vMuteToggle(){VMUTE=!VMUTE;try{localStorage.setItem('rb_vmute',VMUTE?'1':'0')}catch(e){}vMuteBtn();if(VMUTE&&VTTS)try{VTTS.cancel()}catch(e){}}
 
 // ---- 4.3) หารายการเดิม (แก้ไข/ลบด้วยเสียง) ----
-let VPEND=null;   // งานที่รอพูด "ยืนยัน" {fn, done, ask}
+let VPEND=null;
+// บทสนทนาระหว่างเปิดแอป (ไม่เก็บถาวร) — ส่งให้ AI 8 รอบล่าสุดเพื่อคุยต่อเนื่อง
+let VHIST=[];
+function vHist(u,a,chat,src){if(!u&&!a)return;VHIST.push({u:String(u||'').slice(0,300),a:String(a||'').slice(0,600),chat:!!chat||undefined,src:src&&src.length?src:undefined});if(VHIST.length>20)VHIST=VHIST.slice(-20);if(chat)vChatDraw()}
+function vChatDraw(){const el=document.getElementById('vChat');if(!el)return;const rows=VHIST.slice(-6);el.style.display=rows.length?'block':'none';
+ el.innerHTML=rows.map(x=>(x.u?`<div class="cu">${esc(x.u)}</div>`:'')+(x.a?`<div class="ca">${esc(x.a)}${x.src?'<div class="csrc">ที่มา: '+x.src.map(q=>`<a href="${esc(q.u)}" target="_blank" rel="noopener">${esc(q.t)}</a>`).join(' · ')+'</div>':''}</div>`:'')).join('');el.scrollTop=el.scrollHeight}   // งานที่รอพูด "ยืนยัน" {fn, done, ask}
 function vFind(tg){tg=tg||{};const kd=VKN[tg.kind]?tg.kind:'jobs',m=digs(tg.meter||''),h=String(tg.house||'').trim();if(!m&&!h)return {kd,n:0};
  const rs=(DB[kd]||[]).filter(r=>!GONE.has(g(r,'ID'))&&(!m||digs(g(r,'เครื่องวัดเลขที่'))===m)&&(!h||g(r,'บ้านเลขที่')===h)&&(!tg.type||kd!=='jobs'||g(r,'ประเภทงาน')===tg.type)).sort(byNew);
  if(tg.which==='oldest')rs.reverse();return {kd,r:rs[0],n:rs.length}}
@@ -1163,7 +1171,8 @@ function vExec(o,note){let msg='',sp='',bad=false,listen=false,sg=null;const it=
   else if(c==='mute'){if(!VMUTE)vMuteToggle();msg='🔇 ปิดเสียงตอบแล้ว'}
   else if(c==='unmute'){if(VMUTE)vMuteToggle();msg='🔊 เปิดเสียงตอบแล้ว';sp='เปิดเสียงตอบแล้ว'}
   else if(c==='help'){try{vexList.parentElement.open=true}catch(e){}msg='💡 ดูตัวอย่างคำสั่งด้านล่าง';sp='พูดได้เลย เช่น ค้นหางานของบาสเมื่อวาน หรือ บันทึกงานปลด ทริปสี่ร้อย'}
-  else if(c==='stop'){vPanelClose();return o}
+  else if(c==='stop'){vPanelClose();if(VHIST.some(x=>x.chat))vSay('ไว้คุยกันใหม่นะครับ');return o}
+  else if(c==='reset'){VHIST=[];vChatDraw();msg='🧹 ล้างบทสนทนาแล้ว';sp='เริ่มคุยใหม่ได้เลยครับ'}
   else if(c==='scan'){if(!formOn()){vCloseAll();openM()}msg='📷 แตะปุ่มด้านล่างเพื่อถ่ายรูปหน้าเครื่องวัด (มือถือไม่ให้เปิดกล้องด้วยเสียงอย่างเดียว)';sp='แตะปุ่มเพื่อถ่ายรูปเลขเครื่องวัด';sg=[{g:'c',lab:'📷 แตะเพื่อถ่ายรูปเลขเครื่องวัด',fn:()=>scanMeter()}]}
   else if(c==='photo'){if(!formOn()){msg=sp='เปิดฟอร์มบันทึกหรือแก้ไขก่อน แล้วค่อยแนบรูป';bad=true}else if(kind==='mru'){msg=sp='MRU แนบรูปไม่ได้';bad=true}else{msg='📷 แตะปุ่มด้านล่างเพื่อถ่าย/เลือกรูป';sp='แตะปุ่มเพื่อถ่ายรูป';sg=[{g:'c',lab:'📷 แตะเพื่อถ่าย/เลือกรูป',fn:()=>phIn.click()}]}}
   else if(c==='old'){if(DB._partial&&!LOADALL){loadAll();msg=sp='กำลังโหลดข้อมูลทั้งหมด'}else msg=sp='โหลดข้อมูลทั้งหมดอยู่แล้ว'}
@@ -1190,10 +1199,12 @@ function vExec(o,note){let msg='',sp='',bad=false,listen=false,sg=null;const it=
   if(Array.isArray(rp.sheets)&&rp.sheets.length)RSHEETS.forEach(x=>{const e=document.getElementById('rs_'+x[1]);if(e)e.checked=rp.sheets.includes(x[1])});
   if(typeof rp.month==='string'){rMonth.value=[...rMonth.options].some(op=>op.value===rp.month)?rp.month:''}if(typeof rp.useFilters==='boolean')rUseF.checked=rp.useFilters;rRefresh();
   if(rp.download){dlXlsx();msg=sp='กำลังดาวน์โหลดรายงาน Excel'}else{msg='📊 เปิดรายงานแล้ว — พูดว่า “ดาวน์โหลด” เพื่อโหลดไฟล์';sp='เปิดรายงานแล้ว พูดว่า ดาวน์โหลด เพื่อโหลดไฟล์';listen=true}}
+ else if(it==='chat'){msg='💬 '+(o.say||'…');sp=o.say||'';listen=!o.end;vHist(o.heard,o.say,true,o.sources)}
  else{msg='❓ '+(o.say||'ไม่เข้าใจคำสั่ง ลองพูดตามตัวอย่างด้านล่าง');sp=o.say||'ไม่เข้าใจคำสั่ง ลองพูดใหม่อีกครั้ง';bad=true}
  if(o.unknownName){msg+=` · ⚠️ ไม่รู้จักชื่อ “${o.unknownName}” กรุณาเลือกผู้ปฏิบัติงานเอง`;sp+=' ไม่รู้จักชื่อ '+o.unknownName}
  if(!sg){sg=vSuggest(o);if(sg.length){msg+=' · แตะตัวเลือกด้านล่าง หรือพูดว่า “ใช่”';sp+=' '+sg[0].lab.replace(/^\S+\s/,'');listen=true}}
  if(note)msg+=' '+note;
+ if(it!=='chat'&&o.cmd!=='reset'&&o.heard)vHist(o.heard,msg.replace(/^\S+\s/,'').slice(0,160),VHIST.length&&document.getElementById('vChat')&&vChat.style.display==='block');
  vShow(o.heard,msg,bad,sg);vSay(sp,listen&&VSR&&vpanel.classList.contains('show')?()=>{if(!VON&&vpanel.classList.contains('show'))vStart(true)}:null);return o}
 
 // ---- 4.5) ส่งให้ AI ตีความ (ถ้า Code.gs มี GEMINI_KEY) · คำสั่งสั้น/เปิดหน้า ทำทันทีไม่ต้องรอ AI ----
@@ -1217,10 +1228,10 @@ function vSure(o,names){if(o.intent==='cmd'||o.intent==='nav'||o.intent==='me')r
 let VREQ=0;
 function vCtx(names,ctx,alts){const n=new Date(),fo=ctx.formOpen;
  return {today:isoD(n),thisMonth:isoD(n).slice(0,7),view,formOpen:fo,formKind:fo?kind:'',form:fo?{type:mType.value,comp:mComp.value,trip:mTrip.value,meter:mMeter.value,house:mHouse.value,worker:mWorker.value}:undefined,
-  editing:fo&&!!EDIT,me:meGet(),loadedFrom:DB._partial&&!LOADALL?DB._cut:'',workers:names,comps:ctx.comps,trips:ctx.trips.slice(0,40),pending:VPEND?VPEND.ask:'',alts:(alts||[]).slice(0,3)}}
+  editing:fo&&!!EDIT,me:meGet(),loadedFrom:DB._partial&&!LOADALL?DB._cut:'',workers:names,comps:ctx.comps,trips:ctx.trips.slice(0,40),pending:VPEND?VPEND.ask:'',alts:(alts||[]).slice(0,3),now:n.toLocaleString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}),history:VHIST.slice(-8).map(x=>({u:x.u,a:x.a})),geo:VGEO||undefined}}
 function vFromAI(x,raw,names,ctx){if(!x||typeof x!=='object'||Array.isArray(x))return null;
- const A={search:'search',count:'search',save:'save',cmd:'cmd',nav:'nav',edit:'edit',delete:'delete',worker_add:'worker_add',worker_remove:'worker_remove',report:'report',me:'me',unknown:'none'};
- const str=v=>v==null?'':String(v).trim(),o={heard:vNorm(raw),intent:A[x.act]||'none',count:x.act==='count',kind:VKN[x.kind]?x.kind:'',fields:{},filters:{},page:str(x.page),cmd:str(x.cmd),unknownName:'',free:'',say:str(x.say).slice(0,200),target:Object.assign({},x.target||{}),name:str(x.name),report:x.report||{},ai:true};
+ const A={search:'search',count:'search',save:'save',cmd:'cmd',nav:'nav',edit:'edit',delete:'delete',worker_add:'worker_add',worker_remove:'worker_remove',report:'report',me:'me',chat:'chat',unknown:'none'};
+ const str=v=>v==null?'':String(v).trim(),o={heard:vNorm(raw),intent:A[x.act]||'none',count:x.act==='count',kind:VKN[x.kind]?x.kind:'',fields:{},filters:{},page:str(x.page),cmd:str(x.cmd),unknownName:'',free:'',say:str(x.say).slice(0,700),end:!!x.end,sources:(Array.isArray(x.sources)?x.sources:[]).filter(q=>q&&String(q.u).indexOf('https:'+'/'+'/')===0).slice(0,4).map(q=>({t:String(q.t||'แหล่งข้อมูล').slice(0,60),u:String(q.u)})),target:Object.assign({},x.target||{}),name:str(x.name),report:x.report||{},ai:true};
  const f=x.f||{},F2=o.fields,d=v=>digs(str(v)),arr=v=>(Array.isArray(v)?v:str(v)?str(v).split(/[\s,]+/):[]).map(str).filter(Boolean),iso=v=>/^\d{4}-\d{2}-\d{2}$/.test(str(v))?str(v):'';
  if(TYPES.includes(str(f.type)))F2.type=str(f.type);if(str(f.comp))F2.comp=vComp(str(f.comp),ctx.comps);
  if(d(f.trip))F2.trip=d(f.trip);if(d(f.meter))F2.meter=d(f.meter);if(d(f.phone))F2.phone=d(f.phone);
@@ -1233,18 +1244,25 @@ function vFromAI(x,raw,names,ctx){if(!x||typeof x!=='object'||Array.isArray(x))r
  if(o.intent==='cmd'&&!o.cmd)o.intent='none';
  if(o.intent==='edit'||o.intent==='delete'){const t=o.target;t.meter=digs(str(t.meter));t.house=str(t.house);if(!VKN[t.kind])t.kind=o.kind||'jobs'}
  return o}
+// ตำแหน่งมือถือ (ใช้เฉพาะพยากรณ์อากาศ · ปัดเป็นพิกัดคร่าว ๆ · ไม่เก็บไว้ที่ไหน)
+let VGEO=null,VGEOT=0;const VWXRE=/(อากาศ|ฝน|ร้อน|หนาว|พายุ|องศา|แดด|weather|rain)/i;
+function vGeo(cb){if(VGEO&&Date.now()-VGEOT<30*60000||!navigator.geolocation){cb();return}let done=false;const fin=()=>{if(!done){done=true;cb()}};setTimeout(fin,5000);
+ try{navigator.geolocation.getCurrentPosition(p=>{VGEO={lat:Math.round(p.coords.latitude*100)/100,lon:Math.round(p.coords.longitude*100)/100};VGEOT=Date.now();fin()},()=>fin(),{timeout:4500,maximumAge:30*60000,enableHighAccuracy:false})}catch(e){fin()}}
+const VLIVE=/(อากาศ|ฝน|พายุ|ข่าว|ราคา|ทอง|น้ำมัน|ค่าเงิน|ดอลลาร์|หุ้น|บอล|ฟุตบอล|ผลการแข่ง|สกอร์|หวย|ลอตเตอรี่|รถติด|จราจร|ล่าสุด|ตอนนี้|วันนี้)/;
 function vRun(raw,alts){const names=[...new Set(fw().concat(wk()))],ctx={comps:compOpts(),trips:tripOpts(),formOpen:modal.classList.contains('show')};let o=vParse(raw,names,ctx);
  if(alts&&alts.length>1){let bs=vScore(o);alts.forEach(a=>{if(!a||a===raw)return;const x=vParse(a,names,ctx),sc=vScore(x);if(sc>bs){o=x;bs=sc}})}
  if(o.intent==='search'&&/(กี่|เท่าไร|เท่าไหร่|จำนวน)/.test(o.heard||''))o.count=true;
  if(!vAIon()||vSure(o,names)){vExec(o);return o}
- const my=++VREQ;vShow(o.heard,'🤖 กำลังทำความเข้าใจ…',false);vStat.textContent='ได้ยินว่า:';
- const fb=why=>{if(my!==VREQ)return;VREQ++;vExec(o,why)};const to=setTimeout(()=>fb('(AI ตอบช้า ใช้แบบพื้นฐานแทน)'),12000);
+ const my=++VREQ,live=VLIVE.test(o.heard||'');vShow(o.heard,live?'🔎 กำลังเช็กข้อมูลล่าสุด…':'🤖 กำลังทำความเข้าใจ…',false);vStat.textContent='ได้ยินว่า:';
+ const fb=why=>{if(my!==VREQ)return;VREQ++;vExec(o,why)};let to=0;
+ const go=()=>{if(my!==VREQ)return;to=setTimeout(()=>fb('(AI ตอบช้า ใช้แบบพื้นฐานแทน)'),live?30000:15000);
  callApi('ai',[raw,vCtx(names,ctx,alts)],res=>{clearTimeout(to);if(my!==VREQ)return;let x=null;try{x=vFromAI(res&&res.out,raw,names,ctx)}catch(e){}if(!x){fb('(AI ตอบไม่ได้ ใช้แบบพื้นฐานแทน)');return}VREQ++;vExec(x)},
-  e=>{clearTimeout(to);fb('⚠️ AI: '+(e&&e.message||e)+' — ใช้แบบพื้นฐานแทน')});
+  e=>{clearTimeout(to);fb('⚠️ AI: '+(e&&e.message||e)+' — ใช้แบบพื้นฐานแทน')})};
+ if(VWXRE.test(o.heard||''))vGeo(go);else go();
  return o}
 
 // ---- 5) ไมโครโฟน + แผงคำสั่งเสียง ----
-const VEX=[['ถาม','เมื่อวานบาสปลดไปกี่งาน'],['ถาม','ทริป 400 มีงานที่ยังไม่ใส่สายกี่งาน'],['แก้','แก้งานเครื่อง 55121852 เป็นทริป 500'],['ลบ','ลบงานเครื่อง 55121852 (แล้วพูด “ยืนยัน”)'],['รายชื่อ','เพิ่มชื่อช่างต้น · ลบชื่อเดียร์'],['รายงาน','โหลดรายงาน Excel เดือนนี้'],['ช่วงวัน','งานของบาสสัปดาห์นี้ · ปลด 1 ถึง 15 พฤศจิกา · เดือนที่แล้ว'],['รูป','สแกนเลขเครื่อง · ถ่ายรูป (ตอนเปิดฟอร์ม)'],['ระบบ','ดูประวัติ · ตั้งค่า · สำรองข้อมูล · โหลดข้อมูลเก่า · ฉันคือบาส'],['อื่น ๆ','หน้าถัดไป · ปิดเสียง · เปิดเสียง · หยุด'],['ค้นหา','เครื่อง 55121852  (พูดเลขเฉย ๆ ก็ได้)'],['ค้นหา','บาส ทริป 400'],['ค้นหา','ยังไม่ใส่สาย'],['บันทึก','บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส'],['บันทึก','บันทึกงาน ต่อกลับ บริษัท ST ทริป 400 เครื่อง 55121852 บ้าน 24 ทับ 35 วันนี้'],['บันทึก','บันทึกข้อมูล เบอร์โทร ทริป 200 เครื่อง 55081834 บ้าน 9/61 เบอร์ 0812345678 แจ็ค'],
+const VEX=[['คุยเล่น','สวัสดีพี่ศิวภัทร · วันนี้เหนื่อยจัง · เล่าเรื่องตลกให้ฟังหน่อย (เงียบไป หรือพูดว่า “พอแล้ว” = จบการคุย)'],['ถาม','เมื่อวานบาสปลดไปกี่งาน'],['ถาม','ทริป 400 มีงานที่ยังไม่ใส่สายกี่งาน'],['แก้','แก้งานเครื่อง 55121852 เป็นทริป 500'],['ลบ','ลบงานเครื่อง 55121852 (แล้วพูด “ยืนยัน”)'],['รายชื่อ','เพิ่มชื่อช่างต้น · ลบชื่อเดียร์'],['รายงาน','โหลดรายงาน Excel เดือนนี้'],['ช่วงวัน','งานของบาสสัปดาห์นี้ · ปลด 1 ถึง 15 พฤศจิกา · เดือนที่แล้ว'],['รูป','สแกนเลขเครื่อง · ถ่ายรูป (ตอนเปิดฟอร์ม)'],['ระบบ','ดูประวัติ · ตั้งค่า · สำรองข้อมูล · โหลดข้อมูลเก่า · ฉันคือบาส'],['อื่น ๆ','หน้าถัดไป · ปิดเสียง · เปิดเสียง · หยุด'],['ค้นหา','เครื่อง 55121852  (พูดเลขเฉย ๆ ก็ได้)'],['ค้นหา','บาส ทริป 400'],['ค้นหา','ยังไม่ใส่สาย'],['บันทึก','บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส'],['บันทึก','บันทึกงาน ต่อกลับ บริษัท ST ทริป 400 เครื่อง 55121852 บ้าน 24 ทับ 35 วันนี้'],['บันทึก','บันทึกข้อมูล เบอร์โทร ทริป 200 เครื่อง 55081834 บ้าน 9/61 เบอร์ 0812345678 แจ็ค'],
  ['บันทึก','บันทึกข้อมูล ผ่อนผัน นัด 30 พฤศจิกายน ทริป 400 MRU 704 เครื่อง 55080652 บ้าน 9/81'],['บันทึก','บันทึกข้อมูล เอ็มอาร์ยู 954 956 978 ทริป 700 ก๊อต วันนี้'],['บันทึก','บันทึกข้อมูล ไม่พบข้อมูล ทริป 400 เครื่อง 55009999 บ้าน 9/9 ใกล้เคียง 55009998 และ 55010000'],
  ['ยืนยัน','บันทึก  (พูดตอนฟอร์มเปิด = กดปุ่มบันทึก)'],['ค้นหา','เบอร์ 0812345678'],['เปิดหน้า','เปิดผ่อนผัน · ไปหน้าหลัก · รายงาน · ล้างค่า']];
 // ตอนฟอร์มเปิด: ย้ายแผงไปไว้ด้านล่าง (ไม่บังปุ่ม 🎤 พูดกรอก) และเว้นที่ให้ฟอร์มเลื่อนขึ้นได้ ไม่โดนแผงบัง
@@ -1328,9 +1346,11 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +row('เวอร์ชัน','หน้าเว็บ '+CLIENT_VER+' · Code.gs '+esc(s&&s.ver||DB._v||'?')+(s&&s.ver&&s.ver!==CLIENT_VER?' <span class="no">ไม่ตรงกัน — วาง Code.gs ล่าสุด</span>':''));
  h+='<div class="sh">🎤 เสียงและกล้อง (เครื่องนี้)</div>'+row('ไมค์สั่งงาน',ok(hasSR&&!inFrame,'ใช้ได้',hasSR?'ต้องเปิดจากลิงก์ GitHub':'เบราว์เซอร์นี้ไม่รองรับ — ใช้ไมค์บนแป้นพิมพ์'))
   +row('เสียงพูดตอบภาษาไทย',ok(tts&&thv,'มีเสียงไทย',tts?'ไม่พบเสียงภาษาไทยในเครื่อง (ติดตั้งเสียงไทยในการตั้งค่าเครื่อง)':'ไม่รองรับ'))
-  +row('AI ฟังคำสั่ง / สแกนเลข',s?ok(s.ai,'เปิดใช้','ยังไม่ได้ใส่ GEMINI_KEY'):W);
+  +row('AI ฟังคำสั่ง / สแกนเลข',s?ok(s.ai,'เปิดใช้','ยังไม่ได้ใส่ GEMINI_KEY'):W)
+  +(s&&s.aiq?row('โควตา AI แต่ละรุ่น',s.aiq.models.map(x=>`<div style="font-size:12px">${esc(x.m)}: ${x.why==='gone'?'<span class="no">ไม่มีรุ่นนี้</span>':x.why?'<span class="no">'+esc(x.text)+' · กลับมาประมาณ '+esc(x.back)+'</span>':x.m===s.aiq.ok?'<span class="ok">✅ กำลังใช้</span>':'พร้อม'}</div>`).join('')):'');
  h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
-  +row('ทดสอบเสียงพูดตอบ','ฟังว่าอ่านถูกไหม',' <button class="btn" onclick="vSayTest()">🔊 ทดสอบ</button>');
+  +row('ทดสอบเสียงพูดตอบ','ฟังว่าอ่านถูกไหม',' <button class="btn" onclick="vSayTest()">🔊 ทดสอบ</button>')
+  +row('ตำแหน่งสำหรับพยากรณ์อากาศ',VGEO?ok(true,'ใช้ตำแหน่งมือถือ'):'ยังไม่ได้อนุญาต (ใช้กรุงเทพฯ)',VGEO?'':' <button class="btn" onclick="vGeo(()=>openSet())">อนุญาต</button>');
  h+='<div class="sh">🛟 สำรองข้อมูล</div>'+row('สำรองอัตโนมัติทุกคืน 02:00',s?ok(s.backup,'ตั้งเวลาแล้ว','ยังไม่ได้กด setupAll ใน Apps Script'):W)
   +row('สำรองล่าสุด',esc(s&&s.lastBackup||'-'),' <button class="btn" onclick="backupNow_()">สำรองตอนนี้</button>');
  h+='<div class="sh">💬 สรุปงานเข้ากลุ่ม LINE</div>'+row('LINE',s?(s.line?(s.lineBound?ok(true,'ผูกกลุ่มแล้ว · ส่งทุกวัน '+s.hour+':00 น.'):ok(false,'','ยังไม่ได้ผูกกลุ่ม')):ok(false,'','ยังไม่ได้ใส่ LINE_TOKEN')):W,
