@@ -1,0 +1,6 @@
+// เปิดแอปได้แม้เน็ตไม่ดี: ใช้ไฟล์ล่าสุดจากเน็ตก่อน ถ้าไม่มีเน็ตใช้ไฟล์ที่เก็บไว้ (ไม่ยุ่งกับการส่งข้อมูลไป Google)
+const C='rb-'+"1795261282052";
+self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./manifest.json','./icon-192.png'])).catch(()=>{}));self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
+ e.respondWith(fetch(r).then(res=>{if(res.ok){const cp=res.clone();caches.open(C).then(c=>c.put(r,cp)).catch(()=>{})}return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./'))))});
