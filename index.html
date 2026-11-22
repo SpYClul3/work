@@ -151,7 +151,12 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .vfab.on,.vmic.on{background:#e8334a;border-color:#ff6b7d;animation:vpulse 1s infinite}
 @keyframes vpulse{0%{box-shadow:0 0 0 0 #e8334a99}100%{box-shadow:0 0 0 14px #e8334a00}}
 .vpanel{position:fixed;left:50%;top:10px;transform:translateX(-50%);width:min(560px,calc(100% - 20px));z-index:58;display:none;background:#0a1646;border:1px solid var(--cy);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px #000b}
-.vpanel.show{display:block}.vpanel.live{border-color:#b06bff;box-shadow:0 0 0 1px rgba(176,107,255,.35),0 0 22px rgba(176,107,255,.45)}.vfab.speak{animation:vspk .9s ease-in-out infinite}@keyframes vspk{0%,100%{box-shadow:0 0 0 0 rgba(176,107,255,.6)}50%{box-shadow:0 0 0 12px rgba(176,107,255,0)}}.vpanel.think::before{content:'';position:absolute;left:12px;right:12px;top:0;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--cy),#b06bff,var(--cy),transparent);background-size:200% 100%;animation:vthink 1.1s linear infinite}@keyframes vthink{from{background-position:200% 0}to{background-position:0 0}}@media (prefers-reduced-motion:reduce){.vpanel.think::before{animation:none}}.vph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.vpanel.show{display:block}.vpanel.mini{top:auto;left:10px;right:82px;bottom:16px;width:auto;transform:none;padding:7px 10px 6px;border-radius:18px;max-height:42vh;overflow:auto;background:rgba(10,22,70,.94)}
+.vpanel.mini .vph{position:absolute;right:4px;top:2px;margin:0}.vpanel.mini .vph b,.vpanel.mini .vex,.vpanel.mini .vchat,.vpanel.mini #vMic{display:none!important}.vpanel.mini .vrow .btn.f{padding:3px 10px;font-size:12px;min-height:0;height:auto}.vpanel.mini .vph .vx{font-size:14px;padding:2px 5px}
+.vpanel.mini .vstat{font-size:11.5px;margin:0 78px 1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.vpanel.mini .vrow input{background:transparent;border:0;padding:0;height:auto;min-height:0;font-size:14px;color:#fff;box-shadow:none}
+.vpanel.mini .vres{font-size:13px;margin-top:2px}.vpanel.mini .vres:not(:has(.vsug)){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:1100px){.vpanel.mini{bottom:72px}}body.vdock .vpanel.mini{right:10px;bottom:10px}.vpanel.live{border-color:#b06bff;box-shadow:0 0 0 1px rgba(176,107,255,.35),0 0 22px rgba(176,107,255,.45)}.vfab.speak{animation:vspk .9s ease-in-out infinite}@keyframes vspk{0%,100%{box-shadow:0 0 0 0 rgba(176,107,255,.6)}50%{box-shadow:0 0 0 12px rgba(176,107,255,0)}}.vpanel.think::before{content:'';position:absolute;left:12px;right:12px;top:0;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--cy),#b06bff,var(--cy),transparent);background-size:200% 100%;animation:vthink 1.1s linear infinite}@keyframes vthink{from{background-position:200% 0}to{background-position:0 0}}@media (prefers-reduced-motion:reduce){.vpanel.think::before{animation:none}}.vph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .vx{background:transparent;border:0;color:var(--m);font-size:18px;cursor:pointer}
 .vstat{font-size:13px;color:#bfe6ff;margin-bottom:6px;line-height:1.5}.vrow{display:flex;gap:6px}.vrow input{flex:1;min-width:0}
 .vres{font-size:13px;margin-top:8px;line-height:1.55;color:#b8ffd6}.vres.bad{color:#ffb980}
@@ -293,7 +298,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
  <div id="rInfo" style="line-height:1.8;margin-top:8px"></div>
  <div class="acts" style="flex-wrap:wrap;justify-content:flex-start;margin-top:14px"><button class="btn f" onclick="dlXlsx()">⬇️ ดาวน์โหลด Excel (แยกชีต)</button><button class="btn" onclick="exportCSV();closeR()">⬇️ CSV ตารางที่เปิดอยู่</button><button class="btn" onclick="closeR()">ปิด</button></div></div></div>
 <button type="button" id="vfab" class="vfab" onclick="vStart()" title="คำสั่งเสียง">🎤</button>
-<div id="vpanel" class="vpanel"><div class="vph"><b>🎤 คำสั่งเสียง</b><span><button type="button" id="vMute" class="vx" onclick="vMuteToggle()" title="ปิดเสียงตอบ">🔊</button><button type="button" class="vx" onclick="vPanelClose()" title="ปิด">✕</button></span></div>
+<div id="vpanel" class="vpanel"><div class="vph"><b>🎤 คำสั่งเสียง</b><span><button type="button" id="vMute" class="vx" onclick="vMuteToggle()" title="ปิดเสียงตอบ">🔊</button><button type="button" id="vExp" class="vx" onclick="vMiniToggle()" title="ขยาย/ย่อแผง">⤢</button><button type="button" class="vx" onclick="vPanelClose()" title="ปิด">✕</button></span></div>
  <div id="vStat" class="vstat">กด 🎤 แล้วพูดคำสั่ง</div>
  <div class="vrow"><input type="text" id="vTxt" placeholder="พูดหรือพิมพ์คำสั่ง แล้วกด ทำตาม" autocomplete="off"><button type="button" class="btn f" onclick="vDo()">ทำตาม</button><button type="button" id="vMic" class="btn vmic" onclick="vStart()" title="กดแล้วพูด">🎤</button></div>
  <div id="vChat" class="vchat" style="display:none"></div>
@@ -1413,13 +1418,19 @@ const VEX=[['หลายค่า','ดูงานปลด ถอด วั�
 // ตอนฟอร์มเปิด: ย้ายแผงไปไว้ด้านล่าง (ไม่บังปุ่ม 🎤 พูดกรอก) และเว้นที่ให้ฟอร์มเลื่อนขึ้นได้ ไม่โดนแผงบัง
 function vDock(){const on=vpanel.classList.contains('show')&&modal.classList.contains('show');document.body.classList.toggle('vdock',on);
  if(on)document.body.style.setProperty('--vph',(vpanel.offsetHeight+20)+'px')}
-function vPanelOpen(){vpanel.classList.add('show');vMuteBtn();vexList.innerHTML=VEX.map(([a,b])=>`<div><i>${a}</i> “${esc(b)}”</div>`).join('');vSup();vDock()}
+// แถบเสียงเล็ก (ค่าเริ่ม): อยู่ด้านล่างข้างปุ่ม 🎤 ไม่บังข้อมูล · ทำเสร็จแล้วหายเองใน 6 วินาที · กด ⤢ เพื่อขยายเป็นแผงเต็ม
+let VMINI=vLS('rb_vmini','1')!=='0',VAH=0;vpanel.classList.toggle('mini',VMINI);
+function vMiniToggle(){VMINI=!VMINI;vLSset('rb_vmini',VMINI?'1':'0');vpanel.classList.toggle('mini',VMINI);vDock()}
+function vMiniSet(on){if(!!on!==VMINI)vMiniToggle()}
+function vAutoHide(ms){clearTimeout(VAH);if(!VMINI)return;VAH=setTimeout(()=>{const busy=VON||(typeof LV!=='undefined'&&(LV.on||LV.st))||(VSUG||[]).some(x=>!x.done)||VPEND||document.activeElement===vTxt||(VTTS&&VTTS.speaking)||vpanel.classList.contains('think')||!VSR||/⚠️/.test(vStat.textContent);   // มีคำเตือน / ต้องพิมพ์แทนพูด = ไม่ซ่อน
+ if(busy){vAutoHide(ms);return}vpanel.classList.remove('show');vDock()},ms||6000)}
+function vPanelOpen(){clearTimeout(VAH);vpanel.classList.add('show');vMuteBtn();vexList.innerHTML=VEX.map(([a,b])=>`<div><i>${a}</i> “${esc(b)}”</div>`).join('');vSup();vDock()}
 function vPanelClose(){if(typeof LV!=='undefined'&&(LV.on||LV.st))lvStop();vStop();VREQ++;if(VTTS)try{VTTS.cancel()}catch(e){}vpanel.classList.remove('show');vDock()}
 function vSup(){if(!VSR){vStat.innerHTML='⚠️ เบราว์เซอร์นี้ไม่รองรับไมค์ในหน้าเว็บ — <b>กดไมค์บนแป้นพิมพ์มือถือ</b> พูดลงช่องด้านล่าง แล้วกด “ทำตาม”';vMic.style.display='none'}}
 let VSUG=[];
 function vThink(on){try{vpanel.classList.toggle('think',!!on)}catch(e){}}
 function vShow(heard,msg,bad,sugs){if(heard)vTxt.value=heard;VSUG=sugs||[];vRes.className='vres'+(bad?' bad':'');
- vRes.innerHTML=esc(msg)+(VSUG.length?'<div class="vsug">'+VSUG.map((x,i)=>`<button type="button" onclick="vPick(${i})">${esc(x.lab)}</button>`).join('')+'</div>':'');vDock()}
+ vRes.innerHTML=esc(msg)+(VSUG.length?'<div class="vsug">'+VSUG.map((x,i)=>`<button type="button" onclick="vPick(${i})">${esc(x.lab)}</button>`).join('')+'</div>':'');vDock();vAutoHide()}
 function vPick(i){const x=VSUG[i];if(!x||x.done)return;x.fn();const bs=vRes.querySelectorAll('.vsug button');
  VSUG.forEach((y,j)=>{if(y.g===x.g){y.done=true;if(bs[j]){bs[j].disabled=true;if(j!==i)bs[j].style.display='none'}}});
  if(bs[i])bs[i].textContent='✔ '+x.lab.replace(/ ใช่ไหม\?$/,'').replace(/^\S+ (หมายถึง )?/,'')}
@@ -1505,6 +1516,9 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +(s&&s.aiq?row('โควตา AI แต่ละรุ่น',s.aiq.models.map(x=>`<div style="font-size:12px">${esc(x.m.replace(/^vx:/,'Vertex · '))}: ${x.why==='gone'?'<span class="no">ไม่มีรุ่นนี้</span>':x.why?'<span class="no">'+esc(x.text)+' · กลับมาประมาณ '+esc(x.back)+'</span>':x.m===s.aiq.ok?'<span class="ok">✅ กำลังใช้</span>':'พร้อม'}</div>`).join('')):'');
  h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง'+(LV.lastModel?' · ล่าสุดใช้ '+esc(LV.lastModel):''),` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
+  +row('รุ่นเสียงสด',`<select id="sLvfast" onchange="lvFastSet(this.value==='1')"><option value="1"${LVFAST?' selected':''}>เร็ว ตอบทันที (แนะนำ)</option><option value="0"${LVFAST?'':' selected'}>ฉลาด คิดก่อนตอบ (ช้ากว่า)</option></select>`)
+  +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',lvAvg('ready')||lvAvg('answer')?'แตะ 🎤 → พร้อมคุย '+(lvAvg('ready')||'-')+' วินาที · พูดจบ → เริ่มตอบ '+(lvAvg('answer')||'-')+' วินาที':'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)')
+  +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vMiniSet(this.value==='1')"><option value="1"${VMINI?' selected':''}>แถบเล็กด้านล่าง ไม่บังข้อมูล (แนะนำ)</option><option value="0"${VMINI?'':' selected'}>แผงเต็มด้านบน</option></select>`)
   +row('เสียงผู้ช่วย (เสียงสด)',`<select id="sLvoice" onchange="lvVoiceSet(this.value)">${LVVOICES.map(([v,l])=>`<option value="${v}"${v===LVVOICE?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('เสียงผู้ช่วย (แบบเดิม)',(()=>{const vs=vThVoices();if(!vs.length)return 'ใช้เสียงเริ่มต้นของเครื่อง';return `<select id="sVoice" onchange="vVoiceSet(this.value);vSayTest()"><option value="">อัตโนมัติ (เลือกเสียงที่ฟังเป็นธรรมชาติที่สุด)</option>${vs.map(v=>`<option value="${esc(v.name)}"${v.name===VVNAME?' selected':''}>${esc(v.name)}${v.localService?'':' · ออนไลน์'}</option>`).join('')}</select>`})())
   +row('ความเร็วเสียงพูด',`<select id="sRate" onchange="vRateSet(this.value);vSayTest()">${[[0.9,'ช้า ฟังชัด'],[1.05,'ปกติ (แนะนำ)'],[1.2,'เร็ว'],[1.35,'เร็วมาก']].map(([v,l])=>`<option value="${v}"${Math.abs(VRATE-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1630,8 +1644,20 @@ meShow();
 // แตะ 🎤 → คุยต่อเนื่องได้เลย · พูดแทรกตอนผู้ช่วยพูดได้ · สั่งงานแอปได้ (ผู้ช่วยเรียก do_command → ใช้ตัวสั่งงานเดิม vExec)
 // มือถือต่อ Google ตรงด้วยกุญแจชั่วคราวจากเซิร์ฟเวอร์ (liveToken) · ใช้ไม่ได้ (เน็ต/โควตา/เบราว์เซอร์) → กลับไปใช้ระบบเสียงแบบเดิมเอง
 const LVVOICES=[['Puck','ผู้ชาย สดใส (แนะนำ)'],['Charon','ผู้ชาย สุขุม นุ่ม'],['Orus','ผู้ชาย หนักแน่น'],['Fenrir','ผู้ชาย กระตือรือร้น'],['Kore','ผู้หญิง ชัดเจน'],['Aoede','ผู้หญิง นุ่มนวล']];
-let LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck');
-let LVIDLE=20000,LVSETUP=9000;   // เงียบ 20 วินาที = จบการคุยเอง (ไม่เปลืองโควตา/แบต) · ต่อไม่ติดใน 9 วินาที = ลองรุ่นถัดไป
+let LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0';
+const LVFASTM='gemini-2.5-flash-native-audio-preview-12-2025';   // เร็ว: ตอบทันทีไม่ต้องคิดก่อน · ฉลาด (3.8 Live) คิดก่อนตอบ ช้ากว่า
+function lvOrder(ms){ms=(ms||[]).slice();const i=ms.indexOf(LVFASTM);if(i>0&&LVFAST){ms.splice(i,1);ms.unshift(LVFASTM)}if(i===0&&!LVFAST&&ms.length>1){ms.shift();ms.push(LVFASTM)}return ms}
+function lvFastSet(on){LVFAST=!!on;vLSset('rb_lvfast',LVFAST?'1':'0')}
+// วัดความเร็วจริง (แสดงในตั้งค่า): แตะ→พร้อมคุย และ พูดจบ→เริ่มได้ยินคำตอบ
+let LVST=(()=>{try{return JSON.parse(localStorage.getItem('rb_lvst')||'{}')||{}}catch(e){return {}}})();
+function lvStat(k,ms){if(!(ms>0&&ms<60000))return;const a=(LVST[k]=(LVST[k]||[]).concat(Math.round(ms)).slice(-8));vLSset('rb_lvst',JSON.stringify(LVST));return a}
+const lvAvg=k=>{const a=LVST[k]||[];return a.length?(a.reduce((x,y)=>x+y,0)/a.length/1000).toFixed(1):''};
+// กุญแจล่วงหน้า: ขอไว้ตั้งแต่เปิดแอป (ใช้ได้ 25 นาที) → แตะ 🎤 แล้วต่อ Google ทันที ไม่ต้องรอเซิร์ฟเวอร์
+let LVPRE=null,LVPREQ=false;
+function lvPrefetch(){if(LVPREQ||!lvWant())return;if(LVPRE&&lvNow()<LVPRE.t+18*60000)return;LVPREQ=true;
+ callApi('liveToken',[],t=>{LVPREQ=false;if(t&&t.token)LVPRE={tok:t,t:lvNow()}},()=>{LVPREQ=false})}
+function lvTakeTok(){const p=LVPRE;LVPRE=null;return p&&lvNow()<p.t+20*60000?p.tok:null}
+let LVIDLE=20000,LVSETUP=8000;   // เงียบ 20 วินาที = จบการคุยเอง (ไม่เปลืองโควตา/แบต) · ต่อไม่ติดใน 9 วินาที = ลองรุ่นถัดไป
 const LV={on:false,st:'',ws:null,tok:null,mi:0,model:'',handle:'',retry:0,stopping:false,endAfter:false,
  ctxIn:null,ctxOut:null,stream:null,src:null,proc:null,sink:null,play:[],next:0,idleT:0,setupT:0,endT:0,heard:'',said:'',lastModel:''};
 const lvSupported=()=>!!(window.WebSocket&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
@@ -1654,15 +1680,17 @@ function lvIdle(){clearTimeout(LV.idleT);LV.idleT=setTimeout(()=>{if(LV.on&&!LV.
 // ---- เริ่ม / จบ ----
 function lvToggle(){if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว');else lvStart()}
 function lvStart(){vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
- Object.assign(LV,{st:'mic',ok:false,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0});vRes.innerHTML='';vTxt.value='';lvUI();vThink(true);vTone('listen');
+ Object.assign(LV,{st:'mic',ok:false,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false});vRes.innerHTML='';vTxt.value='';lvUI();vThink(true);vTone('listen');
  vStat.textContent='⚡ กำลังเปิดเสียงสด…';
  try{const AC=window.AudioContext||window.webkitAudioContext;LV.ctxIn=LV.ctxIn||new AC();LV.ctxOut=LV.ctxOut||new AC();LV.ctxIn.resume&&LV.ctxIn.resume();LV.ctxOut.resume&&LV.ctxOut.resume()}catch(e){lvFail('เปิดระบบเสียงไม่ได้',true);return}   // สร้างตอนแตะ (iPhone ต้องการ)
+ const go=tok=>{if(LV.stopping||!LV.st)return;if(!tok||!tok.token){lvFail('ไม่ได้กุญแจเสียงสด',true);return}LV.tok=tok;
+  const ms=lvOrder(tok.models).filter(m=>lvBadUntil('rb_lvm_'+m)<lvNow());LV.models=ms.length?ms:lvOrder(tok.models);LV.mi=0;lvOpen()};
+ const pre=lvTakeTok();   // ไมค์กับการต่อ Google ทำพร้อมกัน (เร็วขึ้น)
+ if(pre)go(pre);else{LV.st='token';callApi('liveToken',[],go,e=>lvFail((e&&e.message)||String(e),true))}
  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(st=>{
-  if(LV.st!=='mic'){st.getTracks().forEach(t=>t.stop());return}LV.stream=st;lvMicOn();LV.st='token';vStat.textContent='⚡ กำลังเชื่อมต่อเสียงสด…';
-  callApi('liveToken',[],tok=>{if(LV.st!=='token')return;if(!tok||!tok.token){lvFail('ไม่ได้กุญแจเสียงสด',true);return}LV.tok=tok;
-   const ms=(tok.models||[]).filter(m=>lvBadUntil('rb_lvm_'+m)<lvNow());LV.models=ms.length?ms:(tok.models||[]);LV.mi=0;lvOpen()},
-   e=>lvFail((e&&e.message)||String(e),true))},
-  e=>lvFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้ไมโครโฟน':'เปิดไมค์ไม่ได้',true))}
+  if(LV.stopping||(!LV.st&&!LV.on)){st.getTracks().forEach(t=>t.stop());return}LV.stream=st;lvMicOn()},
+  e=>lvFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้ไมโครโฟน':'เปิดไมค์ไม่ได้',true))
+ setTimeout(lvPrefetch,1500)}   // เตรียมกุญแจสำหรับครั้งถัดไป
 function lvMicOn(){const c=LV.ctxIn;LV.src=c.createMediaStreamSource(LV.stream);LV.proc=c.createScriptProcessor(4096,1,1);LV.sink=c.createGain();LV.sink.gain.value=0;
  LV.proc.onaudioprocess=e=>{if(!LV.on)return;lvSend({realtimeInput:{audio:{data:lvB64(lvPcm16(e.inputBuffer.getChannelData(0),c.sampleRate)),mimeType:'audio/pcm;rate=16000'}}})};
  LV.src.connect(LV.proc);LV.proc.connect(LV.sink);LV.sink.connect(c.destination)}
@@ -1674,7 +1702,7 @@ function lvSetup(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);delete c.alts;
   {name:'end_session',description:'จบการคุยและปิดไมค์ (เมื่อผู้ใช้บอกว่าพอแล้ว/จบ/ไม่มีอะไรแล้ว) — พูดลาก่อนแล้วค่อยเรียก',parameters:{type:'OBJECT',properties:{}}}];
  return {model:'models/'+LV.model,generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}},
   systemInstruction:{parts:[{text:String(LV.tok.prompt||'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:[{functionDeclarations:fn},{googleSearch:{}}],
-  realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:700}},inputAudioTranscription:{},outputAudioTranscription:{},
+  realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}},inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:LV.handle?{handle:LV.handle}:{}}}
 function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่มีรุ่นเสียงสดที่ใช้ได้ตอนนี้',true);return}
  const resume=!!LV.handle;LV.st=resume?'resume':'connect';vThink(true);if(resume)vStat.textContent='🔄 กำลังต่อสายใหม่…';
@@ -1684,12 +1712,12 @@ function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่ม�
  clearTimeout(LV.setupT);LV.setupT=setTimeout(()=>{if(LV.ws===ws&&!LV.on){ws.__why='ต่อไม่ติดภายในเวลา';try{ws.close()}catch(e){}lvClosed(ws,{code:4000,reason:'timeout'})}},LVSETUP)}
 function lvRaw(d){if(typeof d==='string'){lvMsg(d);return}if(d&&d.text){d.text().then(lvMsg);return}try{lvMsg(new TextDecoder().decode(d))}catch(e){}}
 function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
- if(m.setupComplete){clearTimeout(LV.setupT);const first=!LV.on&&LV.st==='connect';LV.on=true;LV.ok=true;LV.st='';LV.retry=0;LV.lastModel=LV.model;vLSset('rb_lvfail','0');vThink(false);lvUI();lvIdle();
+ if(m.setupComplete){clearTimeout(LV.setupT);const first=!LV.on&&LV.st==='connect';LV.on=true;LV.ok=true;LV.st='';LV.retry=0;LV.lastModel=LV.model;if(first)lvStat('ready',lvNow()-LV.t0);vLSset('rb_lvfail','0');vThink(false);lvUI();lvIdle();
   vStat.textContent='🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
  if(sc){if(sc.interrupted)lvFlush();
-  ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio'))lvPlay(p.inlineData.data)});
-  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();lvIdle()}
+  ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvPlay(p.inlineData.data)}});
+  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;lvIdle()}
   if(sc.outputTranscription&&sc.outputTranscription.text){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
   if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';lvIdle();if(LV.endAfter)lvEndSoon()}}
  if(m.toolCall&&Array.isArray(m.toolCall.functionCalls)){const out=m.toolCall.functionCalls.map(fc=>({id:fc.id,name:fc.name,response:lvTool(fc)}));lvSend({toolResponse:{functionResponses:out}});lvIdle()}
@@ -1735,7 +1763,9 @@ function lvFail(msg,early){const n=(+vLS('rb_lvfail','0')||0)+1;vLSset('rb_lvfai
  if(early&&VSR&&vpanel.classList.contains('show'))setTimeout(()=>{if(!VON&&!LV.on&&!LV.st)vStart(true)},300)}
 function lvStop(msg){LV.stopping=true;clearTimeout(LV.idleT);clearTimeout(LV.setupT);clearTimeout(LV.endT);const ws=LV.ws;LV.ws=null;
  try{if(ws&&ws.readyState===1)ws.send(JSON.stringify({realtimeInput:{audioStreamEnd:true}}))}catch(e){}try{ws&&ws.close()}catch(e){}
- lvMicOff();lvFlush();LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;vThink(false);lvUI();if(msg)vStat.textContent=msg}
+ lvMicOff();lvFlush();LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;vThink(false);lvUI();if(msg)vStat.textContent=msg;try{vAutoHide(4000)}catch(e){}setTimeout(lvPrefetch,800)}
+// เปิดแอป/กลับมาที่แอป → เตรียมกุญแจเสียงสดไว้ก่อน
+setTimeout(()=>{try{lvPrefetch()}catch(e){}},4000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>{try{lvPrefetch()}catch(e){}},800)});
 </script>
 
 <script>
