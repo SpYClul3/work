@@ -1540,19 +1540,19 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +(s&&s.stored?row('รหัสเก็บในระบบ (Script Properties)',s.stored.length?ok(true,s.stored.join(', ')):ok(false,'','ยังไม่ได้กด saveKeys')):'')
   +(s&&s.aiq?row('โควตา AI แต่ละรุ่น',s.aiq.models.map(x=>`<div style="font-size:12px">${esc(x.m.replace(/^vx:/,'Vertex · '))}: ${x.why==='gone'?'<span class="no">ไม่มีรุ่นนี้</span>':x.why?'<span class="no">'+esc(x.text)+' · กลับมาประมาณ '+esc(x.back)+'</span>':x.m===s.aiq.ok?'<span class="ok">✅ กำลังใช้</span>':'พร้อม'}</div>`).join('')):'');
  h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
-  +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง'+(LV.lastModel?' · ล่าสุดใช้ '+esc(LV.lastModel):''),` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
+  +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง',` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
   +row('รุ่นเสียงสด',`<select id="sLvfast" onchange="lvFastSet(this.value==='1')"><option value="1"${LVFAST?' selected':''}>เร็ว ตอบทันที (แนะนำ)</option><option value="0"${LVFAST?'':' selected'}>ฉลาด คิดก่อนตอบ (ช้ากว่า)</option></select>`)
   +row('รุ่นเสียงสดที่ใช้ล่าสุด',(()=>{const m=LV.lastModel||(WM&&WM.ready?WM.model:''),F=LVFASTM,nm=x=>/native-audio/.test(x)?'เร็ว (2.5)':/3\.8/.test(x)?'ฉลาด (3.8 คิดก่อนตอบ ช้ากว่า)':x,why=vLS('rb_lvwhy_'+F,''),sf=lvSafe(F);
     return (m?nm(m)+(lvSafe(m)?' · โหมดปลอดภัย':''):'ยังไม่ได้ใช้')+(why&&(!m||m!==F||sf)?'<div style="font-size:12px" class="no">รุ่นเร็วไม่รับค่าตั้งบางอย่าง: '+esc(why)+'</div>':'')})())
   +row('ความดังเสียงผู้ช่วย (เสียงสด)',`<select id="sLvol" onchange="lvVolSet(this.value)">${[[1,'ปกติ'],[2.5,'ดัง (แนะนำ)'],[3.5,'ดังมาก (ที่เสียงดัง)']].map(([v,l])=>`<option value="${v}"${Math.abs(LVVOL-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
-  +row('🔊 ลำโพงดัง (เสียงสด)','ถ้ายังเบา: เปิดข้อนี้ เสียงดังเต็มที่เหมือนเปิดเพลง · ระหว่างผู้ช่วยพูดจะพูดแทรกด้วยเสียงไม่ได้ (แตะ 🎤 เพื่อหยุด)',` <label><input type="checkbox" id="sLoud"${LVLOUD?' checked':''} onchange="lvLoudSet(this.checked)"> เปิด</label>`)
+  +row('🔊 ลำโพงดัง (เสียงสด)','เสียงดังเต็มที่เหมือนเปิดเพลง (แนะนำ) · ระหว่างผู้ช่วยพูดจะพูดแทรกด้วยเสียงไม่ได้ ให้แตะ 🎤 · ปิดข้อนี้ = พูดแทรกได้แต่เสียงเบาลง',` <label><input type="checkbox" id="sLoud"${LVLOUD?' checked':''} onchange="lvLoudSet(this.checked)"> เปิด</label>`)
   +row('ต่อสายรอไว้ล่วงหน้า','แตะ 🎤 แล้วคุยได้ทันที (ไม่เปิดไมค์ ไม่ส่งเสียงจนกว่าจะแตะ)',` <label><input type="checkbox" id="sWarm"${LVWARM?' checked':''} onchange="lvWarmSet(this.checked)"> เปิด</label>`)
-  +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=LVST.warm||[];if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
-    return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ต่อสายรอไว้แล้ว '+w.filter(x=>x).length+'/'+w.length+' ครั้ง)':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
+  +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=(LVST.warm||[]).filter(x=>x===1||x===2);if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
+    return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ใช้สายที่ต่อรอไว้ '+w.filter(x=>x===1).length+'/'+w.length+' ครั้ง'+(LVWAKE?' · โหมดเรียกชื่อไม่ใช้สายรอ':'')+')':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
      +'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · พูดจบ→ผู้ช่วยสั่งแอป '+a('call')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'
-     +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(LV.lastAiReq?' · ล่าสุดที่ต้องถาม AI: “'+esc(String(LV.lastAiReq).slice(0,60))+'”':'')+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
+     +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]')}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
-  +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · จอไม่ดับเอง · ส่งเสียงเฉพาะตอนมีคนพูด · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
+  +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · ทำงานเฉพาะเมื่อได้ยินชื่อ “ศิวภัทร” (ปุ่ม 🎤 ม่วง = รอ · แดง = คุยอยู่) · เงียบ 12 วิ กลับไปรอชื่อ · จอไม่ดับเอง · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
   +row('เสียงผู้ช่วย (เสียงสด)',`<select id="sLvoice" onchange="lvVoiceSet(this.value)">${LVVOICES.map(([v,l])=>`<option value="${v}"${v===LVVOICE?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('เสียงผู้ช่วย (แบบเดิม)',(()=>{const vs=vThVoices();if(!vs.length)return 'ใช้เสียงเริ่มต้นของเครื่อง';return `<select id="sVoice" onchange="vVoiceSet(this.value);vSayTest()"><option value="">อัตโนมัติ (เลือกเสียงที่ฟังเป็นธรรมชาติที่สุด)</option>${vs.map(v=>`<option value="${esc(v.name)}"${v.name===VVNAME?' selected':''}>${esc(v.name)}${v.localService?'':' · ออนไลน์'}</option>`).join('')}</select>`})())
   +row('ความเร็วเสียงพูด',`<select id="sRate" onchange="vRateSet(this.value);vSayTest()">${[[0.9,'ช้า ฟังชัด'],[1.05,'ปกติ (แนะนำ)'],[1.2,'เร็ว'],[1.35,'เร็วมาก']].map(([v,l])=>`<option value="${v}"${Math.abs(VRATE-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1679,7 +1679,7 @@ meShow();
 // โหมด "เรียกชื่อ": เปิดรอฟังตลอดตอนเปิดแอป · เรียก "ศิวภัทร" แล้วผู้ช่วยขานรับ
 // มือถือต่อ Google ตรงด้วยกุญแจชั่วคราวจากเซิร์ฟเวอร์ (liveToken) · ใช้ไม่ได้ (เน็ต/โควตา/เบราว์เซอร์) → กลับไปใช้ระบบเสียงแบบเดิมเอง
 const LVVOICES=[['Puck','ผู้ชาย สดใส (แนะนำ)'],['Charon','ผู้ชาย สุขุม นุ่ม'],['Orus','ผู้ชาย หนักแน่น'],['Fenrir','ผู้ชาย กระตือรือร้น'],['Kore','ผู้หญิง ชัดเจน'],['Aoede','ผู้หญิง นุ่มนวล']];
-let LVLOUD=vLS('rb_lvloud','0')==='1',LVVOL=+vLS('rb_lvvol','2.5')||2.5,LVWARM=vLS('rb_lvwarm','1')!=='0',LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0',LVWAKE=vLS('rb_lvwake','0')==='1';
+let LVLOUD=vLS('rb_lvloud','1')!=='0',LVVOL=+vLS('rb_lvvol','2.5')||2.5,LVWARM=vLS('rb_lvwarm','1')!=='0',LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0',LVWAKE=vLS('rb_lvwake','0')==='1';
 const LVFASTM='gemini-2.5-flash-native-audio-preview-12-2025';   // เร็ว: ตอบทันทีไม่ต้องคิดก่อน · ฉลาด (3.8 Live) คิดก่อนตอบ ช้ากว่า
 function lvOrder(ms){ms=(ms||[]).slice();const i=ms.indexOf(LVFASTM);if(i>0&&LVFAST){ms.splice(i,1);ms.unshift(LVFASTM)}if(i===0&&!LVFAST&&ms.length>1){ms.shift();ms.push(LVFASTM)}return ms}
 function lvFastSet(on){LVFAST=!!on;vLSset('rb_lvfast',LVFAST?'1':'0')}
@@ -1707,7 +1707,7 @@ function lvWant(){return LVPREF&&vAIon()&&lvSupported()&&lvBadUntil('rb_lvbad')<
 function lvSet(on){LVPREF=!!on;vLSset('rb_live',LVPREF?'1':'0');if(!LVPREF&&(LV.on||LV.st))lvStop('ปิดเสียงสดแล้ว')}
 function lvVoiceSet(v){LVVOICE=LVVOICES.some(x=>x[0]===v)?v:'Puck';vLSset('rb_lvoice',LVVOICE)}
 function lvWakeSet(on){LVWAKE=!!on;vLSset('rb_lvwake',LVWAKE?'1':'0');if(!LVWAKE&&LV.wake&&(LV.on||LV.st))lvStop('ปิดโหมดเรียกชื่อแล้ว');if(LVWAKE)lvArm()}
-function lvUI(){const on=LV.on||!!LV.st;vpanel.classList.toggle('live',on);vfab.classList.toggle('on',on&&!LV.wake);vfab.classList.toggle('wake',on&&LV.wake);vMic.classList.toggle('on',on)}
+function lvUI(){const on=LV.on||!!LV.st,sleep=LV.wake&&!LV.awake;vpanel.classList.toggle('live',on);vfab.classList.toggle('on',on&&!sleep);vfab.classList.toggle('wake',on&&sleep);vMic.classList.toggle('on',on)}   // ม่วง = รอฟังชื่อ · แดง = กำลังคุย
 const lvB64=buf=>{const b=new Uint8Array(buf);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)};
 const lvUnB64=s=>{const bin=atob(s),b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b.buffer};
 // เสียงไมค์ (อัตราเครื่อง เช่น 48000) → 16000 Hz, 16-bit PCM little-endian
@@ -1730,7 +1730,7 @@ function lvGate(f,b64){const g=LV.g,n=lvNow();if(LVLOUD&&LV.play.length){g.open=
 // ---- เริ่ม / จบ ----
 function lvToggle(){if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว');else lvStart()}
 function lvStart(opt){opt=opt||{};const wake=!!opt.wake;if(!wake)vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
- if(wake)lvWarmClose();Object.assign(LV,{st:'mic',ok:false,readyMarked:false,warmUsed:false,spec:null,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false,wake,qa:[],g:{floor:0.004,open:false,until:0,pre:[],sent:false}});
+ if(wake)lvWarmClose();Object.assign(LV,{awake:false,awakeUntil:0,st:'mic',ok:false,readyMarked:false,warmUsed:false,spec:null,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false,wake,qa:[],g:{floor:0.004,open:false,until:0,pre:[],sent:false}});
  if(!wake){vRes.innerHTML='';vTxt.value=''}lvUI();vThink(true);if(!wake)vTone('listen');vStat.textContent=wake?'👂 กำลังเปิดโหมดรอฟัง…':'⚡ กำลังเปิดเสียงสด…';
  try{const AC=window.AudioContext||window.webkitAudioContext;LV.ctxIn=LV.ctxIn||new AC();LV.ctxOut=LV.ctxOut||new AC();LV.ctxIn.resume&&LV.ctxIn.resume();LV.ctxOut.resume&&LV.ctxOut.resume()}catch(e){lvFail('เปิดระบบเสียงไม่ได้',true);return}   // สร้างตอนแตะ (iPhone ต้องการ)
  const go=tok=>{if(LV.stopping||!LV.st)return;if(!tok||!tok.token){lvFail('ไม่ได้กุญแจเสียงสด',true);return}LV.tok=tok;
@@ -1741,7 +1741,8 @@ function lvStart(opt){opt=opt||{};const wake=!!opt.wake;if(!wake)vPanelOpen();if
  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!LVLOUD,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(st=>{
   if(LV.stopping||(!LV.st&&!LV.on)){st.getTracks().forEach(t=>t.stop());return}LV.stream=st;lvMicOn();lvReadyMark()},
   e=>lvFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้ไมโครโฟน':'เปิดไมค์ไม่ได้',true))
- if(wake)lvLock(true);setTimeout(lvPrefetch,1500)}   // เตรียมกุญแจสำหรับครั้งถัดไป
+ if(wake)lvLock(true);setTimeout(lvPrefetch,1500)}
+setInterval(()=>{if(LV.awake&&lvNow()>LV.awakeUntil&&!LV.play.length)lvAwake(false)},1000);   // เงียบไปแล้ว → กลับไปรอฟังชื่อ   // เตรียมกุญแจสำหรับครั้งถัดไป
 function lvMicOn(){const c=LV.ctxIn;LV.src=c.createMediaStreamSource(LV.stream);LV.proc=c.createScriptProcessor(4096,1,1);LV.sink=c.createGain();LV.sink.gain.value=0;
  LV.proc.onaudioprocess=e=>{const f=e.inputBuffer.getChannelData(0),b=lvB64(lvPcm16(f,c.sampleRate));
   if(!LV.on){if(LV.st&&!LV.wake){LV.qa.push(b);if(LV.qa.length>70)LV.qa.shift()}return}   // ยังต่อไม่ติด: เก็บเสียงไว้ก่อน (พูดทันทีหลังแตะก็ไม่หาย)
@@ -1750,7 +1751,12 @@ function lvMicOn(){const c=LV.ctxIn;LV.src=c.createMediaStreamSource(LV.stream);
 function lvMicOff(){try{LV.proc&&(LV.proc.onaudioprocess=null);LV.src&&LV.src.disconnect();LV.proc&&LV.proc.disconnect();LV.sink&&LV.sink.disconnect()}catch(e){}
  try{LV.stream&&LV.stream.getTracks().forEach(t=>t.stop())}catch(e){}LV.src=LV.proc=LV.sink=LV.stream=null}
 const lvNm=()=>(LV.tok&&LV.tok.name)||'ศิวภัทร';
-const LVWAKERULE=()=>'โหมดรอฟัง (ไมค์เปิดรอตลอด): รอบตัวผู้ใช้อาจมีคนอื่นคุยกัน ให้เงียบไว้ ห้ามตอบ จนกว่าผู้ใช้จะเรียกชื่อ "'+lvNm()+'" (อาจได้ยินเป็น สิวะพัด ศิวะ ศิวพัฒน์ ศิวภัทร์ ศิวะภัทร) หรือกำลังคุยต่อเนื่องกับคุณภายใน 10 วินาทีหลังคุณตอบ · ถูกเรียกชื่ออย่างเดียว → ขานรับสั้น ๆ "ครับ" แล้วรอฟัง · เรียกชื่อพร้อมคำสั่ง → ทำเลย ไม่ต้องขานรับ · ผู้ใช้บอกว่าพอแล้ว → พูดลาสั้น ๆ แล้วกลับไปเงียบรอ (ห้ามเรียก end_session)';
+// ได้ยินชื่อ "ศิวภัทร" ไหม (ถอดเสียงอาจเพี้ยน: สิวะพัด ศิวพัฒน์ ศิวะภัทร ศิวะ…) → ทำให้เป็นเสียงพื้นฐานก่อนเทียบ
+function lvIsWake(t){const x=String(t||'').toLowerCase().replace(/[่้๊๋์็ํ\s.,!?"'“”]/g,'').replace(/[ศษ]/g,'ส').replace(/[ภ]/g,'พ').replace(/ทร|ฒน|ฒ|ฑ|ท|ต|ธ/g,'ด');
+ return /สิ?ว[ะ]?พ[ัา]?ด|สิวะ(ครับ|คับ|จ้า|จ๋า|เอ๊ย|เอย)?$|^สิวะ|sivapat|siwapat|siwaphat/.test(x)}
+const LVAWAKE=12000;   // ถูกเรียกชื่อแล้ว คุยต่อได้โดยไม่ต้องเรียกซ้ำ จนกว่าจะเงียบ 12 วินาที
+function lvAwake(on){if(on){if(!LV.awake){LV.awake=true;vTone('ok');lvUI()}LV.awakeUntil=lvNow()+LVAWAKE}else if(LV.awake){LV.awake=false;lvFlush();lvUI()}}
+const LVWAKERULE=()=>'โหมดรอฟัง (ไมค์เปิดรอตลอด): รอบตัวผู้ใช้อาจมีคนอื่นคุยกัน ให้เงียบไว้ ห้ามตอบ จนกว่าผู้ใช้จะเรียกชื่อ "'+lvNm()+'" (อาจได้ยินเป็น สิวะพัด ศิวะ ศิวพัฒน์ ศิวภัทร์ ศิวะภัทร) หรือกำลังคุยต่อเนื่องกับคุณภายใน 10 วินาทีหลังคุณตอบ · ถูกเรียกชื่ออย่างเดียว → ขานรับสั้น ๆ "ครับ" (เรียกชื่อผู้ใช้ด้วยถ้ารู้) แล้วรอฟัง · เรียกชื่อพร้อมคำสั่ง → ทำเลย ไม่ต้องขานรับ · ผู้ใช้บอกว่าพอแล้ว → พูดลาสั้น ๆ แล้วกลับไปเงียบรอ (ห้ามเรียก end_session)';
 function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handle};const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);delete c.alts;delete c.history;
  const fn=[{name:'do_command',description:'สั่งงานในแอประบบบันทึกงาน (ค้นหา ดู นับ สรุป บันทึก กรอกฟอร์ม แก้ ลบ เปิดหน้า รายงาน ยืนยัน/ยกเลิก หน้าถัดไป ฯลฯ) — เรียกทันทีทุกครั้งที่ผู้ใช้สั่งงาน แล้วพูดสรุปจาก result',
    parameters:{type:'OBJECT',properties:{request:{type:'STRING',description:'คำสั่งภาษาไทยที่ชัดเจนครบในประโยคเดียว ใช้เลขอารบิก เช่น "เมื่อวานบาสปลดกี่งาน" "ค้นหางานของแจ็ค สัปดาห์นี้" "บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส" "บันทึก" "ไปหน้าเบอร์โทร" "ยืนยัน"'}},required:['request']}},
@@ -1758,7 +1764,7 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
  const native=/native-audio/.test(o.model),safe=lvSafe(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
  if(native&&!safe)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
  const st={model:'models/'+o.model,generationConfig:gc,
-  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
+  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'" (ไม่ต้องเรียกชื่อทุกประโยค)':'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
   inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
  if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}};   // ตรวจพูดจบไว
@@ -1781,10 +1787,11 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
  if(sc){if(sc.interrupted)lvFlush();
-  ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
-  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
-  if(sc.outputTranscription&&sc.outputTranscription.text){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
-  if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
+  const mute=LV.wake&&!LV.awake;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ไม่เล่นเสียงตอบ (คนรอบข้างคุยกันไม่เกี่ยว)
+  if(!mute)((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
+  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
+  if(sc.outputTranscription&&sc.outputTranscription.text&&!mute){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
+  if(sc.turnComplete){if(LV.awake)LV.awakeUntil=lvNow()+LVAWAKE;if(mute){LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;return}if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
  if(m.toolCall&&Array.isArray(m.toolCall.functionCalls))lvTools(m.toolCall.functionCalls);
  if(m.sessionResumptionUpdate){const u=m.sessionResumptionUpdate;if(u.resumable!==false&&u.newHandle)LV.handle=u.newHandle}
  if(m.goAway)LV.goAway=true}
@@ -1792,7 +1799,8 @@ function lvText(t){t=String(t||'').trim();if(!t||!LV.on)return;lvFlush();LV.hear
 // ---- ผู้ช่วยสั่งงานแอป (ทำทีละคำสั่ง ส่งผลกลับเมื่อเสร็จครบ) ----
 function lvState(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]),o={view:c.view};if(c.formOpen){o.formOpen=true;o.form=c.form;if(c.editing)o.editing=true}if(c.pending)o.pending=c.pending;return o}   // ส่งเท่าที่จำเป็น (ผู้ช่วยอ่านไว ตอบไว)
 const lvClean=t=>String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/\s+/g,' ').trim();
-function lvTools(calls){const ws=LV.ws,out=new Array(calls.length),t0=lvNow();let left=calls.length;vThink(true);
+function lvTools(calls){if(LV.wake&&!LV.awake){lvSend({toolResponse:{functionResponses:calls.map(c=>({id:c.id,name:c.name,response:{result:'ไม่มีใครเรียกชื่อคุณ ห้ามทำคำสั่ง เงียบไว้',ok:false}}))}});return}   // ยังไม่ถูกเรียกชื่อ → ไม่ทำอะไรเลย
+ const ws=LV.ws,out=new Array(calls.length),t0=lvNow();let left=calls.length;vThink(true);
  if(LV.callWait&&calls.some(c=>c.name==='do_command')){LV.callWait=false;lvStat('call',t0-LV.tEnd)}   // พูดจบ → ผู้ช่วยสั่งแอป
  const fin=(i,r)=>{out[i]={id:calls[i].id,name:calls[i].name,response:r};if(--left===0){vThink(false);if(LV.ws===ws){lvSend({toolResponse:{functionResponses:out}});if(calls.some(c=>c.name==='do_command')){lvStat('tool',Math.max(1,lvNow()-t0));LV.tResp=lvNow();LV.waitGen=true;LV.waitAns=false}}lvIdle()}};
  calls.forEach((fc,i)=>{try{lvTool(fc,r=>fin(i,r))}catch(e){fin(i,{result:'ทำไม่สำเร็จ',ok:false})}})}
@@ -1807,17 +1815,17 @@ function lvTool(fc,cb){const a=fc.args||{};
  const req=String(a.request||a.cmd||heard||'').trim();
  if(!req){cb({result:'ไม่ได้รับคำสั่ง ถามผู้ใช้ใหม่',ok:false});return}
  const sp=LV.spec;if(sp&&lvNow()-sp.t<10000&&lvSame(req,sp)){LV.spec=null;lvReply(sp.rs,req,cb);return}   // ทำไปแล้วตอนผู้ใช้พูดจบ → ส่งผลกลับทันที
- try{const q=lvParseQ(req);lvStat('ai',vSure(q.o,q.names)||vSplit(req).length>1?1:2);LV.lastAiReq=vSure(q.o,q.names)?LV.lastAiReq:req}catch(e){}   // 1 = แอปแปลเองได้ · 2 = ต้องถาม AI ข้อความเพิ่ม
+ try{const q=lvParseQ(req);lvStat('ai',vSure(q.o,q.names)||vSplit(req).length>1?1:2);if(!vSure(q.o,q.names)&&vSplit(req).length<2){LV.lastAiReq=req;try{const a=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]').filter(x=>x!==req);a.unshift(req);vLSset('rb_lvaireq',JSON.stringify(a.slice(0,5)))}catch(e){}}}catch(e){}   // 1 = แอปแปลเองได้ · 2 = ต้องถาม AI ข้อความเพิ่ม
  vRunQ(req,rs=>lvReply(rs,req,cb))}
 function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''});const bad=rs.some(r=>r.bad),sg=(rs.find(r=>r.sg&&r.sg.length)||{}).sg;
  const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
  try{vShow(heard,rs.map(r=>r.msg).join(' · '),bad,sg)}catch(e){}
  cb({result:txt||'ทำแล้ว',ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
-function lvReadyMark(){if(LV.readyMarked||!LV.on||!LV.stream)return;LV.readyMarked=true;lvStat('ready',lvNow()-LV.t0);lvStat('warm',LV.warmUsed?1:0)}
+function lvReadyMark(){if(LV.readyMarked||!LV.on||!LV.stream)return;LV.readyMarked=true;lvStat('ready',lvNow()-LV.t0);lvStat('warm',LV.warmUsed?1:2)}
 // ---- ทำล่วงหน้า: ระหว่างผู้ใช้พูด แปลในเครื่องไปด้วย · คำสั่งดู/ค้นหา/นับ/เปิดหน้าที่ชัดแล้ว → โชว์ผลบนจอทันที (บันทึก/แก้/ลบ รอผู้ช่วยสั่งเท่านั้น) ----
 const lvKey=o=>JSON.stringify([o.intent,o.kind||'',o.fields,o.filters,o.multi||{},o.not||{},!!o.count,o.summary||'',o.page||'',o.sort||'',!!o.all]);
 function lvParseQ(t){const {names,ctx}=vEnv(),o=vParse(vNorm(t),names,ctx);if(o.intent==='search'&&/(กี่|เท่าไร|เท่าไหร่|จำนวน)/.test(o.heard||''))o.count=true;return {o,names}}
-function lvSpecRun(){if(!LV.on||LV.wake)return;   // โหมดรอฟัง: เสียงรอบข้างอาจไม่ได้สั่งเรา → ไม่ทำล่วงหน้า
+function lvSpecRun(){if(!LV.on||(LV.wake&&!LV.awake))return;   // โหมดรอฟัง: เสียงรอบข้างอาจไม่ได้สั่งเรา → ไม่ทำล่วงหน้า
 const h=vNorm(LV.heard);if(!h||(LV.spec&&LV.spec.h===h)||vSplit(h).length>1)return;
  const {o,names}=lvParseQ(h);if(!(o.intent==='search'||o.intent==='nav')||!vSure(o,names))return;
  let r;try{r=vExec(o,'',true)}catch(e){return}if(!r||typeof r.msg!=='string')return;LV.spec={h,key:lvKey(o),rs:[r],t:lvNow()};try{vShow(h,r.msg,r.bad,r.sg)}catch(e){}}
@@ -1873,7 +1881,7 @@ function lvFail(msg,early){LV.noAuto=true;const n=(+vLS('rb_lvfail','0')||0)+1;v
  if(early&&!wake&&VSR&&vpanel.classList.contains('show'))setTimeout(()=>{if(!VON&&!LV.on&&!LV.st)vStart(true)},300)}
 function lvStop(msg){LV.stopping=true;clearTimeout(LV.idleT);clearTimeout(LV.setupT);clearTimeout(LV.endT);const ws=LV.ws;LV.ws=null;
  try{if(ws&&ws.readyState===1)ws.send(JSON.stringify({realtimeInput:{audioStreamEnd:true}}))}catch(e){}try{ws&&ws.close()}catch(e){}
- const wasWake=LV.wake,auto=!LV.noAuto;LV.noAuto=false;lvMicOff();lvFlush();lvLock(false);LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;LV.qa=[];LV.wake=false;vThink(false);lvUI();if(msg)vStat.textContent=msg;try{vAutoHide(4000)}catch(e){}setTimeout(lvPrefetch,800)
+ const wasWake=LV.wake,auto=!LV.noAuto;LV.noAuto=false;lvMicOff();lvFlush();lvLock(false);LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;LV.qa=[];LV.wake=false;LV.awake=false;vThink(false);lvUI();if(msg)vStat.textContent=msg;try{vAutoHide(4000)}catch(e){}setTimeout(lvPrefetch,800)
  if(LVWAKE&&!wasWake&&auto)setTimeout(()=>{if(!LV.on&&!LV.st&&!VON)lvWakeGo()},2500);else setTimeout(lvWarm,2500)}   // จบแล้ว → ต่อสายรอไว้สำหรับครั้งหน้า   // คุยปกติจบ → กลับไปรอฟังชื่อต่อ
 // ---- โหมดเรียกชื่อ: แตะหน้าจอครั้งแรกหลังเปิดแอป = เริ่มรอฟัง (เบราว์เซอร์บังคับให้แตะก่อนเปิดไมค์/เสียง) · สลับไปแอปอื่น = พัก · กลับมา = รอฟังต่อ ----
 function lvLock(on){try{if(on&&navigator.wakeLock&&!LV.lock)navigator.wakeLock.request('screen').then(l=>{LV.lock=l}).catch(()=>{});else if(!on&&LV.lock){LV.lock.release().catch(()=>{});LV.lock=null}}catch(e){}}   // รอฟังอยู่ = จอไม่ดับเอง
