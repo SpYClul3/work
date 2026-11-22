@@ -1542,6 +1542,8 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง'+(LV.lastModel?' · ล่าสุดใช้ '+esc(LV.lastModel):''),` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
   +row('รุ่นเสียงสด',`<select id="sLvfast" onchange="lvFastSet(this.value==='1')"><option value="1"${LVFAST?' selected':''}>เร็ว ตอบทันที (แนะนำ)</option><option value="0"${LVFAST?'':' selected'}>ฉลาด คิดก่อนตอบ (ช้ากว่า)</option></select>`)
+  +row('รุ่นเสียงสดที่ใช้ล่าสุด',(()=>{const m=LV.lastModel||(WM&&WM.ready?WM.model:''),F=LVFASTM,nm=x=>/native-audio/.test(x)?'เร็ว (2.5)':/3\.8/.test(x)?'ฉลาด (3.8 คิดก่อนตอบ ช้ากว่า)':x,why=vLS('rb_lvwhy_'+F,''),sf=lvSafe(F);
+    return (m?nm(m)+(lvSafe(m)?' · โหมดปลอดภัย':''):'ยังไม่ได้ใช้')+(why&&(!m||m!==F||sf)?'<div style="font-size:12px" class="no">รุ่นเร็วไม่รับค่าตั้งบางอย่าง: '+esc(why)+'</div>':'')})())
   +row('ความดังเสียงผู้ช่วย (เสียงสด)',`<select id="sLvol" onchange="lvVolSet(this.value)">${[[1,'ปกติ'],[2.5,'ดัง (แนะนำ)'],[3.5,'ดังมาก (ที่เสียงดัง)']].map(([v,l])=>`<option value="${v}"${Math.abs(LVVOL-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('ต่อสายรอไว้ล่วงหน้า','แตะ 🎤 แล้วคุยได้ทันที (ไม่เปิดไมค์ ไม่ส่งเสียงจนกว่าจะแตะ)',` <label><input type="checkbox" id="sWarm"${LVWARM?' checked':''} onchange="lvWarmSet(this.checked)"> เปิด</label>`)
   +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=LVST.warm||[];if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
@@ -1694,7 +1696,7 @@ function lvTakeTok(){const p=LVPRE;LVPRE=null;return p&&lvNow()<p.t+20*60000?p.t
 let LVIDLE=20000,LVSETUP=8000,LVWAKEIDLE=15*60000;   // คุยปกติ: เงียบ 20 วิ จบเอง · โหมดเรียกชื่อ: ไม่มีใครเรียก 15 นาที พักเอง · ต่อไม่ติดใน 8 วิ = ลองรุ่นถัดไป
 const LV={on:false,st:'',ws:null,tok:null,mi:0,model:'',handle:'',retry:0,stopping:false,endAfter:false,wake:false,
  ctxIn:null,ctxOut:null,stream:null,src:null,proc:null,sink:null,play:[],next:0,idleT:0,setupT:0,endT:0,heard:'',said:'',lastModel:'',qa:[],
- g:{floor:0.004,open:false,until:0,pre:[],sent:false},noThink:vLS('rb_lvnothink','1')!=='0',lock:null};
+ g:{floor:0.004,open:false,until:0,pre:[],sent:false},lock:null};
 const lvMicAllowed=()=>{try{const fp=document.permissionsPolicy||document.featurePolicy;return !(fp&&fp.allowsFeature&&!fp.allowsFeature('microphone'))}catch(e){return true}};   // ลิงก์ Apps Script เดิม (หน้าในกรอบ) ห้ามใช้ไมค์
 const lvSupported=()=>!!(window.WebSocket&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)&&lvMicAllowed();
 const lvNow=()=>Date.now();
@@ -1751,14 +1753,19 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
  const fn=[{name:'do_command',description:'สั่งงานในแอประบบบันทึกงาน (ค้นหา ดู นับ สรุป บันทึก กรอกฟอร์ม แก้ ลบ เปิดหน้า รายงาน ยืนยัน/ยกเลิก หน้าถัดไป ฯลฯ) — เรียกทันทีทุกครั้งที่ผู้ใช้สั่งงาน แล้วพูดสรุปจาก result',
    parameters:{type:'OBJECT',properties:{request:{type:'STRING',description:'คำสั่งภาษาไทยที่ชัดเจนครบในประโยคเดียว ใช้เลขอารบิก เช่น "เมื่อวานบาสปลดกี่งาน" "ค้นหางานของแจ็ค สัปดาห์นี้" "บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส" "บันทึก" "ไปหน้าเบอร์โทร" "ยืนยัน"'}},required:['request']}},
   {name:'end_session',description:'จบการคุยและปิดไมค์ (เมื่อผู้ใช้บอกว่าพอแล้ว/จบ/ไม่มีอะไรแล้ว) — พูดลาก่อนแล้วค่อยเรียก',parameters:{type:'OBJECT',properties:{}}}];
- const native=/native-audio/.test(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
- if(native&&LV.noThink)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
+ const native=/native-audio/.test(o.model),safe=lvSafe(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
+ if(native&&!safe)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
  const st={model:'models/'+o.model,generationConfig:gc,
-  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:[{functionDeclarations:fn},{googleSearch:{}}],
-  realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}},inputAudioTranscription:{},outputAudioTranscription:{},
+  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
+  inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
- if(o.wake&&native)st.proactivity={proactiveAudio:true};   // ให้ผู้ช่วยเลือกเงียบได้เมื่อเสียงนั้นไม่ได้พูดกับเขา
- if(o.model===LV.model&&o.tok===LV.tok)LV.usedThink=!!gc.thinkingConfig;return st}
+ if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}};   // ตรวจพูดจบไว
+ if(o.wake&&native&&!safe)st.proactivity={proactiveAudio:true};   // ให้ผู้ช่วยเลือกเงียบได้เมื่อเสียงนั้นไม่ได้พูดกับเขา
+ return st}
+// โหมดปลอดภัย: รุ่นไหนไม่รับค่าตั้งเสริม (ปิดการคิด/ตรวจพูดจบไว/ค้น Google/เลือกเงียบ) → ใช้เฉพาะค่าที่จำเป็น · จำไว้ 7 วัน · เก็บเหตุผลไว้ดูในตั้งค่า
+const lvSafe=m=>lvBadUntil('rb_lvsafe_'+m)>lvNow();
+function lvSafeOn(m,why){vLSset('rb_lvsafe_'+m,lvNow()+7*86400000);vLSset('rb_lvwhy_'+m,String(why||'').slice(0,160))}
+const lvQuota=why=>/quota|exhaust|exceed|limit|rate/i.test(why);
 function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่มีรุ่นเสียงสดที่ใช้ได้ตอนนี้',true);return}
  const resume=!!LV.handle;LV.st=resume?'resume':'connect';vThink(true);if(resume)vStat.textContent='🔄 กำลังต่อสายใหม่…';
  let ws;try{ws=new WebSocket('wss:'+'/'+'/generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token='+encodeURIComponent(LV.tok.token))}
@@ -1781,7 +1788,7 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
  if(m.goAway)LV.goAway=true}
 function lvText(t){t=String(t||'').trim();if(!t||!LV.on)return;lvFlush();LV.heard=t;lvSend({realtimeInput:{text:t}});lvIdle()}   // พิมพ์แทนพูด
 // ---- ผู้ช่วยสั่งงานแอป (ทำทีละคำสั่ง ส่งผลกลับเมื่อเสร็จครบ) ----
-function lvState(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);return {view:c.view,formOpen:c.formOpen,form:c.form,editing:c.editing,pending:c.pending}}
+function lvState(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]),o={view:c.view};if(c.formOpen){o.formOpen=true;o.form=c.form;if(c.editing)o.editing=true}if(c.pending)o.pending=c.pending;return o}   // ส่งเท่าที่จำเป็น (ผู้ช่วยอ่านไว ตอบไว)
 const lvClean=t=>String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/\s+/g,' ').trim();
 function lvTools(calls){const ws=LV.ws,out=new Array(calls.length),t0=lvNow();let left=calls.length;vThink(true);
  if(LV.callWait&&calls.some(c=>c.name==='do_command')){LV.callWait=false;lvStat('call',t0-LV.tEnd)}   // พูดจบ → ผู้ช่วยสั่งแอป
@@ -1823,16 +1830,16 @@ function lvWarm(again){if(!lvCanWarm())return;const tok=lvTakeTok();if(!tok){if(
 function lvWarmOpen(w){w.model=w.models[w.mi];if(!w.model){WM=null;return}let ws;
  try{ws=new WebSocket('wss:'+'/'+'/generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token='+encodeURIComponent(w.tok.token))}catch(e){WM=null;WMBAD=lvNow()+10*60000;return}
  w.ws=ws;ws.onopen=()=>{if(WM===w)ws.send(JSON.stringify({setup:lvSetup({model:w.model,tok:w.tok,wake:false,handle:''})}))};
- ws.onmessage=e=>{if(WM!==w)return;const h=t=>{let m;try{m=JSON.parse(t)}catch(x){return}if(m.setupComplete){w.ready=true;w.t=lvNow();w.usedThink=LV.noThink&&/native-audio/.test(w.model);clearTimeout(w.kill);w.kill=setTimeout(()=>{if(WM===w){lvWarmClose();setTimeout(lvWarm,200)}},9*60000)}
+ ws.onmessage=e=>{if(WM!==w)return;const h=t=>{let m;try{m=JSON.parse(t)}catch(x){return}if(m.setupComplete){w.ready=true;w.t=lvNow();clearTimeout(w.kill);w.kill=setTimeout(()=>{if(WM===w){lvWarmClose();setTimeout(lvWarm,200)}},9*60000)}
   if(m.sessionResumptionUpdate&&m.sessionResumptionUpdate.newHandle&&m.sessionResumptionUpdate.resumable!==false)w.handle=m.sessionResumptionUpdate.newHandle;if(m.goAway){lvWarmClose();setTimeout(lvWarm,200)}};
   if(typeof e.data==='string')h(e.data);else if(e.data&&e.data.text)e.data.text().then(h)};
  ws.onerror=()=>{};ws.onclose=e=>{if(WM!==w)return;const why=String((e&&e.reason)||'');
-  if(!w.ready){if(/native-audio/.test(w.model)&&LV.noThink&&/think|budget|invalid|1007/i.test(why+' '+(e&&e.code))){LV.noThink=false;vLSset('rb_lvnothink','0');lvWarmOpen(w);return}
-   if(/quota|exhaust|exceed|limit|rate/i.test(why))lvMark('rb_lvm_'+w.model,10*60000);if(w.mi+1<w.models.length){w.mi++;lvWarmOpen(w);return}WMBAD=lvNow()+10*60000}
+  if(!w.ready){const wy=why+(e&&e.code?' ('+e.code+')':'');if(!lvQuota(wy)&&!lvSafe(w.model)){lvSafeOn(w.model,wy);lvWarmOpen(w);return}
+   if(lvQuota(wy))lvMark('rb_lvm_'+w.model,10*60000);else vLSset('rb_lvwhy_'+w.model,wy.slice(0,160));if(w.mi+1<w.models.length){w.mi++;lvWarmOpen(w);return}WMBAD=lvNow()+10*60000}
   WM=null;clearTimeout(w.kill);if(w.ready)setTimeout(lvWarm,1000)}}
 function lvWarmClose(){const w=WM;WM=null;clearTimeout(WMT);if(!w)return;clearTimeout(w.kill);try{w.ws&&w.ws.close()}catch(e){}}
 function lvAdopt(){const w=WM;if(!w||!w.ready||!w.ws||w.ws.readyState!==1||lvNow()-w.t>9*60000){lvWarmClose();return false}
- WM=null;clearTimeout(w.kill);const ws=w.ws;Object.assign(LV,{ws,tok:w.tok,model:w.model,models:w.models,mi:w.mi,handle:w.handle,usedThink:w.usedThink,warmUsed:true,st:'connect',tOpen:lvNow()});
+ WM=null;clearTimeout(w.kill);const ws=w.ws;Object.assign(LV,{ws,tok:w.tok,model:w.model,models:w.models,mi:w.mi,handle:w.handle,warmUsed:true,st:'connect',tOpen:lvNow()});
  ws.onmessage=e=>{if(LV.ws===ws)lvRaw(e.data)};ws.onclose=e=>lvClosed(ws,e);lvMsg('{"setupComplete":{}}');return true}
 // ---- เล่นเสียงผู้ช่วย (24 kHz) · พูดแทรก = หยุดทันที ----
 // มือถือลดเสียงลำโพงตอนเปิดไมค์ (เหมือนโทรศัพท์) → ขยายเสียงผู้ช่วย + ตัวกันเสียงแตก (ปรับความดังได้ในตั้งค่า)
@@ -1848,8 +1855,8 @@ function lvEndSoon(ms){clearTimeout(LV.endT);LV.endT=setTimeout(()=>{if(LV.on||L
 // ---- สายหลุด / ต่อใหม่ / สลับรุ่น / ถอยกลับระบบเดิม ----
 function lvClosed(ws,e){if(ws!==LV.ws||LV.stopping)return;clearTimeout(LV.setupT);const why=String((e&&e.reason)||ws.__why||'')+(e&&e.code?' ('+e.code+')':'');
  if(!LV.on){   // ยังต่อไม่ติด
-  if(LV.usedThink&&/think|budget|invalid|1007/i.test(why)){LV.noThink=false;vLSset('rb_lvnothink','0');lvOpen();return}   // รุ่นนี้ไม่รับค่าปิดการคิด → ลองใหม่แบบไม่ตั้ง
-  if(/quota|exhaust|exceed|limit|rate/i.test(why))lvMark('rb_lvm_'+LV.model,10*60000);
+  if(!lvQuota(why)&&!lvSafe(LV.model)&&!LV.handle&&!/timeout|ต่อไม่ติด/.test(why)){lvSafeOn(LV.model,why);lvOpen();return}   // ไม่รับค่าตั้งเสริม → ลองรุ่นเดิมแบบปลอดภัยก่อน (ไม่ข้ามไปรุ่นที่ช้ากว่า)
+  if(lvQuota(why))lvMark('rb_lvm_'+LV.model,10*60000);else if(LV.model)vLSset('rb_lvwhy_'+LV.model,why.slice(0,160));
   if(LV.handle&&LV.retry<3){LV.retry++;setTimeout(lvReopen,600*LV.retry);return}
   if(LV.mi+1<LV.models.length){LV.mi++;LV.handle='';vStat.textContent='⚡ ลองเสียงสดอีกรุ่น…';lvOpen();return}
   lvFail(why||'ต่อเสียงสดไม่ได้',!LV.ok);return}
