@@ -7,12 +7,13 @@ window.API_URL='https://script.google.com/macros/s/AKfycbxs0znzUTCe8hDx1ufrDRUpt
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#050b24"><meta name="apple-mobile-web-app-title" content="บันทึกงาน">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>ระบบบันทึกงาน - ศิวภัทร ไฟฟ้า เซอร์วิส</title>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050b24;--p:#0a1642;--b:#1d3a8a;--t:#e8eeff;--m:#8fa3d6;--blue:#1e6bff;--cy:#22b8ff}
 *{box-sizing:border-box;margin:0}
-body{font-family:Kanit,Sarabun,sans-serif;background:radial-gradient(1200px 600px at 70% -10%,#1b2a7a55,transparent),var(--bg);color:var(--t);font-size:13px;min-height:100vh}
-button,select,input{font:inherit;color:inherit}
+body{font-family:Kanit,'Noto Sans Thai','Noto Sans Thai UI',Thonburi,'Sukhumvit Set',Tahoma,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:radial-gradient(1200px 600px at 70% -10%,#1b2a7a55,transparent),var(--bg);color:var(--t);font-size:13px;min-height:100vh}
+button,select,input,textarea,option{font-family:inherit;color:inherit}button,select,input{font:inherit}   /* ทุกช่อง/ปุ่มใช้ฟอนต์เดียวกัน (มือถือชอบใช้ฟอนต์ระบบในช่องกรอก) */
 .app{display:grid;grid-template-columns:210px 1fr;gap:14px;padding:12px;max-width:1560px;margin:auto}
 .side{background:linear-gradient(180deg,#0a1a5a,#06103a);border:1px solid var(--b);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;min-height:calc(100vh - 24px);position:sticky;top:12px;height:calc(100vh - 24px)}
 .nav{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:9px;font-size:15px;cursor:pointer;color:#cfe0ff}
@@ -151,7 +152,7 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .vfab.on,.vmic.on{background:#e8334a;border-color:#ff6b7d;animation:vpulse 1s infinite}
 @keyframes vpulse{0%{box-shadow:0 0 0 0 #e8334a99}100%{box-shadow:0 0 0 14px #e8334a00}}
 .vpanel{position:fixed;left:50%;top:10px;transform:translateX(-50%);width:min(560px,calc(100% - 20px));z-index:58;display:none;background:#0a1646;border:1px solid var(--cy);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px #000b}
-.vpanel.show{display:block}.vpanel.mini{top:auto;left:10px;right:82px;bottom:16px;width:auto;transform:none;padding:7px 10px 6px;border-radius:18px;max-height:42vh;overflow:auto;background:rgba(10,22,70,.94)}
+.vpanel.show{display:block}.vpanel.hidev{display:none!important}.vfab.wake{background:linear-gradient(135deg,#5b2bd6,#8a4dff);border-color:#b48cff;box-shadow:0 0 0 3px rgba(176,107,255,.35),0 6px 20px #6a3bff88}.vfab.think::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid transparent;border-top-color:#7fe3ff;border-right-color:#b06bff;animation:vspin .8s linear infinite}@keyframes vspin{to{transform:rotate(360deg)}}.vpanel.mini{top:auto;left:10px;right:82px;bottom:16px;width:auto;transform:none;padding:7px 10px 6px;border-radius:18px;max-height:42vh;overflow:auto;background:rgba(10,22,70,.94)}
 .vpanel.mini .vph{position:absolute;right:4px;top:2px;margin:0}.vpanel.mini .vph b,.vpanel.mini .vex,.vpanel.mini .vchat,.vpanel.mini #vMic{display:none!important}.vpanel.mini .vrow .btn.f{padding:3px 10px;font-size:12px;min-height:0;height:auto}.vpanel.mini .vph .vx{font-size:14px;padding:2px 5px}
 .vpanel.mini .vstat{font-size:11.5px;margin:0 78px 1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
 .vpanel.mini .vrow input{background:transparent;border:0;padding:0;height:auto;min-height:0;font-size:14px;color:#fff;box-shadow:none}
@@ -175,7 +176,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .kpi{padding:10px 8px;gap:6px;flex-direction:column;align-items:flex-start;min-width:0}
 .kpi i{width:34px;height:34px;font-size:18px;border-radius:10px}
 .kpi b{font-size:24px}.kpi span{font-size:12px;overflow-wrap:anywhere}.kpi em{font-size:11px;right:8px;bottom:6px}
-input,select,textarea{font-size:16px!important}
+input,select,textarea,.msel{font-size:16px!important}   /* 16px กัน iPhone ซูมตอนแตะ · ปุ่มเลือกหลายค่าขนาดเท่าช่องเลือกปกติ */
 }
 
 /* v13: ผู้ใช้ · รูป · ตั้งค่า · ข้อมูลเก่า */
@@ -333,7 +334,7 @@ window.IMG={side:'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgw
 <script>
 (window.__loaded=window.__loaded||[]).push("JS1");
 (function(){var b=document.getElementById('boot');if(b)b.style.display='none'})();
-const CLIENT_VER=21;
+const CLIENT_VER=22;
 const COL=['#1e90ff','#22d36b','#ffb02e','#9b5bff','#22b8ff','#e84aa8','#ff5a6e','#ff8a1e','#18c0a0','#c0d63a'];
 const P=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1391,6 +1392,22 @@ function vPreSend(raw,alts){if(!vAIon()||!raw)return;if(VPRE&&VPRE.raw===raw)ret
  if(vSure(o,names)||VWXRE.test(raw)||vSplit(raw).length>1)return;const n=VPRE?VPRE.n+1:1,x={raw,t:Date.now(),n,done:0,res:null,err:null,cb:null};VPRE=x;
  callApi('ai',[raw,Object.assign(vCtx(names,ctx,alts),vLiveKind(o)?{live:vLiveKind(o)}:{})],r=>{x.done=1;x.res=r;if(x.cb)x.cb(1,r)},e=>{x.done=2;x.err=e;if(x.cb)x.cb(2,e)})}
 function vPreTake(raw){const x=VPRE;VPRE=null;if(!x||x.raw!==raw||Date.now()-x.t>20000)return null;return {wait:(ok,bad)=>{if(x.done===1)ok(x.res);else if(x.done===2)bad(x.err);else x.cb=(k,v)=>k===1?ok(v):bad(v)}}}
+// สั่งงานแบบเงียบ (ใช้กับเสียงสด): รับประโยคไทย → แปลในเครื่องก่อน (เร็ว แม่น) → ไม่ชัดค่อยถาม AI ข้อความ → ทำจริง → cb(ผลลัพธ์) ไม่พูดเอง
+function vRunQ(raw,cb){raw=vNorm(raw);const {names,ctx}=vEnv(),out=r=>{try{cb(r)}catch(e){}};
+ const ex=o=>{try{const r=vExec(o,'',true);return r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''}}catch(e){return {msg:'⚠️ ทำไม่สำเร็จ: '+(e&&e.message||e),bad:true}}};
+ if(!raw){out([{msg:'ไม่ได้ยินคำสั่ง',bad:true}]);return}
+ const parts=vSplit(raw);
+ if(parts.length>1){const ps=parts.map(x=>vParse(x,names,Object.assign({},ctx,{formOpen:ctx.formOpen||/^(บันทึกงาน|บันทึกข้อมูล)/.test(parts[0])})));
+  if(ps.every(x=>x.intent!=='none'&&vSure(x,names))){const rs=[];let last=null;ps.forEach(o=>{if(o.intent==='search'&&!o.kind&&last&&last.intent==='nav'&&VPK[last.page])o.kind=VPK[last.page];rs.push(ex(o));last=o});out(rs);return}}
+ const o=vParse(raw,names,ctx);if(o.intent==='search'&&/(กี่|เท่าไร|เท่าไหร่|จำนวน)/.test(o.heard||''))o.count=true;
+ const local=()=>out([o.intent==='none'?{msg:'ไม่เข้าใจคำสั่ง ลองพูดใหม่ให้ชัดขึ้น',bad:true}:ex(o)]);
+ if(vSure(o,names)||!vAIon()){local();return}
+ let done=false;const to=setTimeout(()=>{if(!done){done=true;local()}},10000);
+ callApi('ai',[raw,vCtx(names,ctx,[])],res=>{if(done)return;done=true;clearTimeout(to);const R=res&&res.out;let st=[];
+  try{st=R&&Array.isArray(R.steps)?R.steps.slice(0,5).map(z=>vFromAI(z,raw,names,ctx)).filter(Boolean):[];if(!st.length){const x=vFromAI(R,raw,names,ctx);if(x)st=[x]}}catch(e){st=[]}
+  if(!st.length||st.every(x=>x.intent==='none')){local();return}
+  out(st.map(x=>x.intent==='chat'?{msg:x.say||'',chat:true,sp:x.say||''}:ex(x)))},
+  ()=>{if(done)return;done=true;clearTimeout(to);local()})}
 function vRun(raw,alts){const {names,ctx}=vEnv();
  const parts=vSplit(raw);
  if(parts.length>1){const ps=parts.map(x=>vParse(x,names,Object.assign({},ctx,{formOpen:ctx.formOpen||/^(บันทึกงาน|บันทึกข้อมูล)/.test(parts[0])})));
@@ -1416,19 +1433,26 @@ const VEX=[['หลายค่า','ดูงานปลด ถอด วั�
  ['บันทึก','บันทึกข้อมูล ผ่อนผัน นัด 30 พฤศจิกายน ทริป 400 MRU 704 เครื่อง 55080652 บ้าน 9/81'],['บันทึก','บันทึกข้อมูล เอ็มอาร์ยู 954 956 978 ทริป 700 ก๊อต วันนี้'],['บันทึก','บันทึกข้อมูล ไม่พบข้อมูล ทริป 400 เครื่อง 55009999 บ้าน 9/9 ใกล้เคียง 55009998 และ 55010000'],
  ['ยืนยัน','บันทึก  (พูดตอนฟอร์มเปิด = กดปุ่มบันทึก)'],['ค้นหา','เบอร์ 0812345678'],['เปิดหน้า','เปิดผ่อนผัน · ไปหน้าหลัก · รายงาน · ล้างค่า']];
 // ตอนฟอร์มเปิด: ย้ายแผงไปไว้ด้านล่าง (ไม่บังปุ่ม 🎤 พูดกรอก) และเว้นที่ให้ฟอร์มเลื่อนขึ้นได้ ไม่โดนแผงบัง
-function vDock(){const on=vpanel.classList.contains('show')&&modal.classList.contains('show');document.body.classList.toggle('vdock',on);
+function vDock(){const on=vpanel.classList.contains('show')&&modal.classList.contains('show')&&!vpanel.classList.contains('hidev');document.body.classList.toggle('vdock',on);
  if(on)document.body.style.setProperty('--vph',(vpanel.offsetHeight+20)+'px')}
 // แถบเสียงเล็ก (ค่าเริ่ม): อยู่ด้านล่างข้างปุ่ม 🎤 ไม่บังข้อมูล · ทำเสร็จแล้วหายเองใน 6 วินาที · กด ⤢ เพื่อขยายเป็นแผงเต็ม
-let VMINI=vLS('rb_vmini','1')!=='0',VAH=0;vpanel.classList.toggle('mini',VMINI);
-function vMiniToggle(){VMINI=!VMINI;vLSset('rb_vmini',VMINI?'1':'0');vpanel.classList.toggle('mini',VMINI);vDock()}
-function vMiniSet(on){if(!!on!==VMINI)vMiniToggle()}
+// แผงคำสั่งเสียง 3 แบบ: none = ไม่แสดงเลย ตอบด้วยเสียงอย่างเดียว (ค่าเริ่ม) · mini = แถบเล็กด้านล่าง · full = แผงเต็มด้านบน
+// (เครื่องที่ใช้ไมค์ไม่ได้ ต้องพิมพ์ → แสดงแถบเล็กให้เอง) · ข้อความเตือน ⚠️ ตอนไม่แสดงแผง → ขึ้นแจ้งสั้น ๆ ที่ด้านล่าง
+let VPMODE=(()=>{const m=vLS('rb_vpanel','');if(/^(none|mini|full)$/.test(m))return m;return vLS('rb_vmini','')==='0'?'full':'none'})(),VMINI=VPMODE!=='full',VAH=0;
+const vNeedType=()=>!VSR&&!(typeof lvWant==='function'&&lvWant());
+function vPanelApply(){VMINI=VPMODE!=='full';vpanel.classList.toggle('mini',VMINI);vpanel.classList.toggle('hidev',VPMODE==='none'&&!vNeedType());vDock()}
+function vPanelMode(m){VPMODE=/^(none|mini|full)$/.test(m)?m:'none';vLSset('rb_vpanel',VPMODE);vPanelApply()}
+function vMiniToggle(){vPanelMode(VPMODE==='full'?'mini':'full')}
+function vMiniSet(on){vPanelMode(on?'mini':'full')}
+vPanelApply();
+(function(){let last='';try{new MutationObserver(()=>{const t=vStat.textContent||'';if(!vpanel.classList.contains('hidev')||!/⚠️/.test(t)||t===last)return;last=t;try{toast(t.replace(/^⚠️\s*/,''),false)}catch(e){}}).observe(vStat,{childList:true,characterData:true,subtree:true})}catch(e){}})();
 function vAutoHide(ms){clearTimeout(VAH);if(!VMINI)return;VAH=setTimeout(()=>{const busy=VON||(typeof LV!=='undefined'&&(LV.on||LV.st))||(VSUG||[]).some(x=>!x.done)||VPEND||document.activeElement===vTxt||(VTTS&&VTTS.speaking)||vpanel.classList.contains('think')||!VSR||/⚠️/.test(vStat.textContent);   // มีคำเตือน / ต้องพิมพ์แทนพูด = ไม่ซ่อน
  if(busy){vAutoHide(ms);return}vpanel.classList.remove('show');vDock()},ms||6000)}
 function vPanelOpen(){clearTimeout(VAH);vpanel.classList.add('show');vMuteBtn();vexList.innerHTML=VEX.map(([a,b])=>`<div><i>${a}</i> “${esc(b)}”</div>`).join('');vSup();vDock()}
 function vPanelClose(){if(typeof LV!=='undefined'&&(LV.on||LV.st))lvStop();vStop();VREQ++;if(VTTS)try{VTTS.cancel()}catch(e){}vpanel.classList.remove('show');vDock()}
 function vSup(){if(!VSR){vStat.innerHTML='⚠️ เบราว์เซอร์นี้ไม่รองรับไมค์ในหน้าเว็บ — <b>กดไมค์บนแป้นพิมพ์มือถือ</b> พูดลงช่องด้านล่าง แล้วกด “ทำตาม”';vMic.style.display='none'}}
 let VSUG=[];
-function vThink(on){try{vpanel.classList.toggle('think',!!on)}catch(e){}}
+function vThink(on){try{vpanel.classList.toggle('think',!!on);vfab.classList.toggle('think',!!on)}catch(e){}}   // ปุ่ม 🎤 มีวงหมุน = กำลังคิด (เห็นได้แม้ไม่แสดงแผง)
 function vShow(heard,msg,bad,sugs){if(heard)vTxt.value=heard;VSUG=sugs||[];vRes.className='vres'+(bad?' bad':'');
  vRes.innerHTML=esc(msg)+(VSUG.length?'<div class="vsug">'+VSUG.map((x,i)=>`<button type="button" onclick="vPick(${i})">${esc(x.lab)}</button>`).join('')+'</div>':'');vDock();vAutoHide()}
 function vPick(i){const x=VSUG[i];if(!x||x.done)return;x.fn();const bs=vRes.querySelectorAll('.vsug button');
@@ -1443,7 +1467,7 @@ function vQuickEnd(s){try{if(!s||vSplit(s).length>1)return false;const {names,ct
  if(/\d$/.test(s.trim())&&!/\d{8,}$/.test(s.trim().replace(/\s/g,'')))return false;   // เลขยังพูดไม่ครบ (เช่น เครื่อง 5512…)
  return vSure(o,names)}catch(e){return false}}
 function vSilSet(ms){VSIL=+ms||1000;try{localStorage.setItem('rb_vsil',String(VSIL))}catch(e){}}
-function vStart(keep){if(keep!==true&&typeof lvWant==='function'){if(LV.on||LV.st){lvStop('👋 จบการคุยแล้ว');return}if(lvWant()){if(VON)vStop();lvStart();return}}   // เสียงสดแบบรถยนต์ (JS6) ใช้ได้ → ใช้ก่อน
+function vStart(keep){if(keep!==true&&typeof lvWant==='function'){if(LV.wake&&(LV.on||LV.st)){LV.noAuto=true;lvStop('');if(lvWant()){lvStart();return}}else if(LV.on||LV.st){lvStop('👋 จบการคุยแล้ว');return}if(lvWant()){if(VON)vStop();lvStart();return}}   // รอฟังชื่ออยู่แล้วแตะ 🎤 = คุยเลย   // เสียงสดแบบรถยนต์ (JS6) ใช้ได้ → ใช้ก่อน
  if(!VSR){vPanelOpen();vTxt.focus();return}
  if(VON){try{VREC.stop()}catch(e){}return}
  if(VTTS)try{VTTS.cancel()}catch(e){}
@@ -1518,7 +1542,8 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง'+(LV.lastModel?' · ล่าสุดใช้ '+esc(LV.lastModel):''),` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
   +row('รุ่นเสียงสด',`<select id="sLvfast" onchange="lvFastSet(this.value==='1')"><option value="1"${LVFAST?' selected':''}>เร็ว ตอบทันที (แนะนำ)</option><option value="0"${LVFAST?'':' selected'}>ฉลาด คิดก่อนตอบ (ช้ากว่า)</option></select>`)
   +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',lvAvg('ready')||lvAvg('answer')?'แตะ 🎤 → พร้อมคุย '+(lvAvg('ready')||'-')+' วินาที · พูดจบ → เริ่มตอบ '+(lvAvg('answer')||'-')+' วินาที':'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)')
-  +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vMiniSet(this.value==='1')"><option value="1"${VMINI?' selected':''}>แถบเล็กด้านล่าง ไม่บังข้อมูล (แนะนำ)</option><option value="0"${VMINI?'':' selected'}>แผงเต็มด้านบน</option></select>`)
+  +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
+  +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · จอไม่ดับเอง · ส่งเสียงเฉพาะตอนมีคนพูด · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
   +row('เสียงผู้ช่วย (เสียงสด)',`<select id="sLvoice" onchange="lvVoiceSet(this.value)">${LVVOICES.map(([v,l])=>`<option value="${v}"${v===LVVOICE?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('เสียงผู้ช่วย (แบบเดิม)',(()=>{const vs=vThVoices();if(!vs.length)return 'ใช้เสียงเริ่มต้นของเครื่อง';return `<select id="sVoice" onchange="vVoiceSet(this.value);vSayTest()"><option value="">อัตโนมัติ (เลือกเสียงที่ฟังเป็นธรรมชาติที่สุด)</option>${vs.map(v=>`<option value="${esc(v.name)}"${v.name===VVNAME?' selected':''}>${esc(v.name)}${v.localService?'':' · ออนไลน์'}</option>`).join('')}</select>`})())
   +row('ความเร็วเสียงพูด',`<select id="sRate" onchange="vRateSet(this.value);vSayTest()">${[[0.9,'ช้า ฟังชัด'],[1.05,'ปกติ (แนะนำ)'],[1.2,'เร็ว'],[1.35,'เร็วมาก']].map(([v,l])=>`<option value="${v}"${Math.abs(VRATE-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1641,10 +1666,11 @@ meShow();
 
 <script>
 // ===== 9) เสียงสดแบบรถยนต์ (Gemini Live) =====
-// แตะ 🎤 → คุยต่อเนื่องได้เลย · พูดแทรกตอนผู้ช่วยพูดได้ · สั่งงานแอปได้ (ผู้ช่วยเรียก do_command → ใช้ตัวสั่งงานเดิม vExec)
+// แตะ 🎤 → คุยต่อเนื่องได้เลย · พูดแทรกตอนผู้ช่วยพูดได้ · สั่งงานแอปได้ (ผู้ช่วยเรียก do_command → ตัวแปลคำสั่งเดิม vRunQ → vExec)
+// โหมด "เรียกชื่อ": เปิดรอฟังตลอดตอนเปิดแอป · เรียก "ศิวภัทร" แล้วผู้ช่วยขานรับ
 // มือถือต่อ Google ตรงด้วยกุญแจชั่วคราวจากเซิร์ฟเวอร์ (liveToken) · ใช้ไม่ได้ (เน็ต/โควตา/เบราว์เซอร์) → กลับไปใช้ระบบเสียงแบบเดิมเอง
 const LVVOICES=[['Puck','ผู้ชาย สดใส (แนะนำ)'],['Charon','ผู้ชาย สุขุม นุ่ม'],['Orus','ผู้ชาย หนักแน่น'],['Fenrir','ผู้ชาย กระตือรือร้น'],['Kore','ผู้หญิง ชัดเจน'],['Aoede','ผู้หญิง นุ่มนวล']];
-let LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0';
+let LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0',LVWAKE=vLS('rb_lvwake','0')==='1';
 const LVFASTM='gemini-2.5-flash-native-audio-preview-12-2025';   // เร็ว: ตอบทันทีไม่ต้องคิดก่อน · ฉลาด (3.8 Live) คิดก่อนตอบ ช้ากว่า
 function lvOrder(ms){ms=(ms||[]).slice();const i=ms.indexOf(LVFASTM);if(i>0&&LVFAST){ms.splice(i,1);ms.unshift(LVFASTM)}if(i===0&&!LVFAST&&ms.length>1){ms.shift();ms.push(LVFASTM)}return ms}
 function lvFastSet(on){LVFAST=!!on;vLSset('rb_lvfast',LVFAST?'1':'0')}
@@ -1657,9 +1683,10 @@ let LVPRE=null,LVPREQ=false;
 function lvPrefetch(){if(LVPREQ||!lvWant())return;if(LVPRE&&lvNow()<LVPRE.t+18*60000)return;LVPREQ=true;
  callApi('liveToken',[],t=>{LVPREQ=false;if(t&&t.token)LVPRE={tok:t,t:lvNow()}},()=>{LVPREQ=false})}
 function lvTakeTok(){const p=LVPRE;LVPRE=null;return p&&lvNow()<p.t+20*60000?p.tok:null}
-let LVIDLE=20000,LVSETUP=8000;   // เงียบ 20 วินาที = จบการคุยเอง (ไม่เปลืองโควตา/แบต) · ต่อไม่ติดใน 9 วินาที = ลองรุ่นถัดไป
-const LV={on:false,st:'',ws:null,tok:null,mi:0,model:'',handle:'',retry:0,stopping:false,endAfter:false,
- ctxIn:null,ctxOut:null,stream:null,src:null,proc:null,sink:null,play:[],next:0,idleT:0,setupT:0,endT:0,heard:'',said:'',lastModel:''};
+let LVIDLE=20000,LVSETUP=8000,LVWAKEIDLE=15*60000;   // คุยปกติ: เงียบ 20 วิ จบเอง · โหมดเรียกชื่อ: ไม่มีใครเรียก 15 นาที พักเอง · ต่อไม่ติดใน 8 วิ = ลองรุ่นถัดไป
+const LV={on:false,st:'',ws:null,tok:null,mi:0,model:'',handle:'',retry:0,stopping:false,endAfter:false,wake:false,
+ ctxIn:null,ctxOut:null,stream:null,src:null,proc:null,sink:null,play:[],next:0,idleT:0,setupT:0,endT:0,heard:'',said:'',lastModel:'',qa:[],
+ g:{floor:0.004,open:false,until:0,pre:[],sent:false},noThink:vLS('rb_lvnothink','1')!=='0',lock:null};
 const lvSupported=()=>!!(window.WebSocket&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 const lvNow=()=>Date.now();
 function lvBadUntil(k){try{return +(localStorage.getItem(k)||0)}catch(e){return 0}}
@@ -1667,7 +1694,8 @@ function lvMark(k,ms){vLSset(k,lvNow()+ms)}
 function lvWant(){return LVPREF&&vAIon()&&lvSupported()&&lvBadUntil('rb_lvbad')<lvNow()}
 function lvSet(on){LVPREF=!!on;vLSset('rb_live',LVPREF?'1':'0');if(!LVPREF&&(LV.on||LV.st))lvStop('ปิดเสียงสดแล้ว')}
 function lvVoiceSet(v){LVVOICE=LVVOICES.some(x=>x[0]===v)?v:'Puck';vLSset('rb_lvoice',LVVOICE)}
-function lvUI(){const on=LV.on||!!LV.st;vpanel.classList.toggle('live',on);vfab.classList.toggle('on',on);vMic.classList.toggle('on',on)}
+function lvWakeSet(on){LVWAKE=!!on;vLSset('rb_lvwake',LVWAKE?'1':'0');if(!LVWAKE&&LV.wake&&(LV.on||LV.st))lvStop('ปิดโหมดเรียกชื่อแล้ว');if(LVWAKE)lvArm()}
+function lvUI(){const on=LV.on||!!LV.st;vpanel.classList.toggle('live',on);vfab.classList.toggle('on',on&&!LV.wake);vfab.classList.toggle('wake',on&&LV.wake);vMic.classList.toggle('on',on)}
 const lvB64=buf=>{const b=new Uint8Array(buf);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)};
 const lvUnB64=s=>{const bin=atob(s),b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b.buffer};
 // เสียงไมค์ (อัตราเครื่อง เช่น 48000) → 16000 Hz, 16-bit PCM little-endian
@@ -1675,13 +1703,22 @@ function lvPcm16(f,sr){const ratio=sr/16000,n=Math.floor(f.length/ratio),out=new
  for(let i=0;i<n;i++){const a=Math.floor(i*ratio),b=Math.min(f.length,Math.floor((i+1)*ratio));let s=0;for(let j=a;j<b;j++)s+=f[j];let v=b>a?s/(b-a):0;v=Math.max(-1,Math.min(1,v));out.setInt16(i*2,v<0?v*0x8000:v*0x7fff,true)}
  return out.buffer}
 function lvSend(o){try{if(LV.ws&&LV.ws.readyState===1)LV.ws.send(JSON.stringify(o))}catch(e){}}
-function lvIdle(){clearTimeout(LV.idleT);LV.idleT=setTimeout(()=>{if(LV.on&&!LV.play.length)lvStop('💤 เงียบไปนาน จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่');else if(LV.on)lvIdle()},LVIDLE)}
+const lvAud=b64=>({realtimeInput:{audio:{data:b64,mimeType:'audio/pcm;rate=16000'}}});
+function lvIdle(){clearTimeout(LV.idleT);const ms=LV.wake?LVWAKEIDLE:LVIDLE;LV.idleT=setTimeout(()=>{if(LV.on&&!LV.play.length){if(LV.wake)lvStop('💤 ไม่มีใครเรียกนาน พักการรอฟังแล้ว — แตะ 🎤 เพื่อเริ่มใหม่');else lvStop('💤 เงียบไปนาน จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')}else if(LV.on)lvIdle()},ms)}
+
+// ---- ตัดเสียงเงียบ/เสียงสะท้อน: ส่งเฉพาะช่วงที่มีคนพูด (ประหยัดเน็ต · ผู้ช่วยไม่ได้ยินเสียงตัวเองแล้วหยุดพูดกลางคัน) ----
+function lvGate(f,b64){const g=LV.g,n=lvNow();let s=0;for(let i=0;i<f.length;i++)s+=f[i]*f[i];const rms=Math.sqrt(s/f.length);
+ const speaking=LV.play.length>0,thr=speaking?Math.max(0.03,g.floor*7):Math.max(0.008,g.floor*3);
+ if(!g.open&&rms<g.floor*3+0.002)g.floor=g.floor*0.96+rms*0.04;   // จำระดับเสียงรอบข้าง
+ if(rms>thr){if(!g.open){g.open=true;g.pre.forEach(x=>lvSend(lvAud(x)));g.pre=[]}g.until=n+900}
+ if(g.open){lvSend(lvAud(b64));g.sent=true;if(n>g.until){g.open=false;if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}}}
+ else{g.pre.push(b64);if(g.pre.length>3)g.pre.shift()}}
 
 // ---- เริ่ม / จบ ----
 function lvToggle(){if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว');else lvStart()}
-function lvStart(){vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
- Object.assign(LV,{st:'mic',ok:false,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false});vRes.innerHTML='';vTxt.value='';lvUI();vThink(true);vTone('listen');
- vStat.textContent='⚡ กำลังเปิดเสียงสด…';
+function lvStart(opt){opt=opt||{};const wake=!!opt.wake;if(!wake)vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
+ Object.assign(LV,{st:'mic',ok:false,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false,wake,qa:[],g:{floor:0.004,open:false,until:0,pre:[],sent:false}});
+ if(!wake){vRes.innerHTML='';vTxt.value=''}lvUI();vThink(true);if(!wake)vTone('listen');vStat.textContent=wake?'👂 กำลังเปิดโหมดรอฟัง…':'⚡ กำลังเปิดเสียงสด…';
  try{const AC=window.AudioContext||window.webkitAudioContext;LV.ctxIn=LV.ctxIn||new AC();LV.ctxOut=LV.ctxOut||new AC();LV.ctxIn.resume&&LV.ctxIn.resume();LV.ctxOut.resume&&LV.ctxOut.resume()}catch(e){lvFail('เปิดระบบเสียงไม่ได้',true);return}   // สร้างตอนแตะ (iPhone ต้องการ)
  const go=tok=>{if(LV.stopping||!LV.st)return;if(!tok||!tok.token){lvFail('ไม่ได้กุญแจเสียงสด',true);return}LV.tok=tok;
   const ms=lvOrder(tok.models).filter(m=>lvBadUntil('rb_lvm_'+m)<lvNow());LV.models=ms.length?ms:lvOrder(tok.models);LV.mi=0;lvOpen()};
@@ -1690,20 +1727,28 @@ function lvStart(){vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(st=>{
   if(LV.stopping||(!LV.st&&!LV.on)){st.getTracks().forEach(t=>t.stop());return}LV.stream=st;lvMicOn()},
   e=>lvFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้ไมโครโฟน':'เปิดไมค์ไม่ได้',true))
- setTimeout(lvPrefetch,1500)}   // เตรียมกุญแจสำหรับครั้งถัดไป
+ if(wake)lvLock(true);setTimeout(lvPrefetch,1500)}   // เตรียมกุญแจสำหรับครั้งถัดไป
 function lvMicOn(){const c=LV.ctxIn;LV.src=c.createMediaStreamSource(LV.stream);LV.proc=c.createScriptProcessor(4096,1,1);LV.sink=c.createGain();LV.sink.gain.value=0;
- LV.proc.onaudioprocess=e=>{if(!LV.on)return;lvSend({realtimeInput:{audio:{data:lvB64(lvPcm16(e.inputBuffer.getChannelData(0),c.sampleRate)),mimeType:'audio/pcm;rate=16000'}}})};
+ LV.proc.onaudioprocess=e=>{const f=e.inputBuffer.getChannelData(0),b=lvB64(lvPcm16(f,c.sampleRate));
+  if(!LV.on){if(LV.st&&!LV.wake){LV.qa.push(b);if(LV.qa.length>70)LV.qa.shift()}return}   // ยังต่อไม่ติด: เก็บเสียงไว้ก่อน (พูดทันทีหลังแตะก็ไม่หาย)
+  lvGate(f,b)};
  LV.src.connect(LV.proc);LV.proc.connect(LV.sink);LV.sink.connect(c.destination)}
 function lvMicOff(){try{LV.proc&&(LV.proc.onaudioprocess=null);LV.src&&LV.src.disconnect();LV.proc&&LV.proc.disconnect();LV.sink&&LV.sink.disconnect()}catch(e){}
  try{LV.stream&&LV.stream.getTracks().forEach(t=>t.stop())}catch(e){}LV.src=LV.proc=LV.sink=LV.stream=null}
-function lvSetup(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);delete c.alts;
- const fn=[{name:'do_command',description:'สั่งงานในแอประบบบันทึกงาน (ค้นหา นับ สรุป บันทึก กรอกฟอร์ม แก้ ลบ เปิดหน้า รายงาน คำสั่งสั้น) — ต้องเรียกทุกครั้งที่ผู้ใช้สั่งงาน แล้วพูดสรุปจาก result',
-   parameters:{type:'OBJECT',properties:{cmd:{type:'STRING',description:'คำสั่ง 1 คำสั่งเป็น JSON ตามรูปแบบคำสั่ง เช่น {"act":"count","kind":"jobs","f":{"type":"ปลด","worker":"บาส","date":"2026-11-21"}}'}},required:['cmd']}},
+const lvNm=()=>(LV.tok&&LV.tok.name)||'ศิวภัทร';
+const LVWAKERULE=()=>'โหมดรอฟัง (ไมค์เปิดรอตลอด): รอบตัวผู้ใช้อาจมีคนอื่นคุยกัน ให้เงียบไว้ ห้ามตอบ จนกว่าผู้ใช้จะเรียกชื่อ "'+lvNm()+'" (อาจได้ยินเป็น สิวะพัด ศิวะ ศิวพัฒน์ ศิวภัทร์ ศิวะภัทร) หรือกำลังคุยต่อเนื่องกับคุณภายใน 10 วินาทีหลังคุณตอบ · ถูกเรียกชื่ออย่างเดียว → ขานรับสั้น ๆ "ครับ" แล้วรอฟัง · เรียกชื่อพร้อมคำสั่ง → ทำเลย ไม่ต้องขานรับ · ผู้ใช้บอกว่าพอแล้ว → พูดลาสั้น ๆ แล้วกลับไปเงียบรอ (ห้ามเรียก end_session)';
+function lvSetup(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);delete c.alts;delete c.history;
+ const fn=[{name:'do_command',description:'สั่งงานในแอประบบบันทึกงาน (ค้นหา ดู นับ สรุป บันทึก กรอกฟอร์ม แก้ ลบ เปิดหน้า รายงาน ยืนยัน/ยกเลิก หน้าถัดไป ฯลฯ) — เรียกทันทีทุกครั้งที่ผู้ใช้สั่งงาน แล้วพูดสรุปจาก result',
+   parameters:{type:'OBJECT',properties:{request:{type:'STRING',description:'คำสั่งภาษาไทยที่ชัดเจนครบในประโยคเดียว ใช้เลขอารบิก เช่น "เมื่อวานบาสปลดกี่งาน" "ค้นหางานของแจ็ค สัปดาห์นี้" "บันทึกงาน ปลด ทริป 400 เครื่อง 55121852 บ้าน 24/35 บาส" "บันทึก" "ไปหน้าเบอร์โทร" "ยืนยัน"'}},required:['request']}},
   {name:'end_session',description:'จบการคุยและปิดไมค์ (เมื่อผู้ใช้บอกว่าพอแล้ว/จบ/ไม่มีอะไรแล้ว) — พูดลาก่อนแล้วค่อยเรียก',parameters:{type:'OBJECT',properties:{}}}];
- return {model:'models/'+LV.model,generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}},
-  systemInstruction:{parts:[{text:String(LV.tok.prompt||'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:[{functionDeclarations:fn},{googleSearch:{}}],
+ const native=/native-audio/.test(LV.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
+ if(native&&LV.noThink)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
+ const st={model:'models/'+LV.model,generationConfig:gc,
+  systemInstruction:{parts:[{text:String(LV.tok.prompt||'')+(LV.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:[{functionDeclarations:fn},{googleSearch:{}}],
   realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}},inputAudioTranscription:{},outputAudioTranscription:{},
-  contextWindowCompression:{slidingWindow:{}},sessionResumption:LV.handle?{handle:LV.handle}:{}}}
+  contextWindowCompression:{slidingWindow:{}},sessionResumption:LV.handle?{handle:LV.handle}:{}};
+ if(LV.wake&&native)st.proactivity={proactiveAudio:true};   // ให้ผู้ช่วยเลือกเงียบได้เมื่อเสียงนั้นไม่ได้พูดกับเขา
+ LV.usedThink=!!gc.thinkingConfig;return st}
 function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่มีรุ่นเสียงสดที่ใช้ได้ตอนนี้',true);return}
  const resume=!!LV.handle;LV.st=resume?'resume':'connect';vThink(true);if(resume)vStat.textContent='🔄 กำลังต่อสายใหม่…';
  let ws;try{ws=new WebSocket('wss:'+'/'+'/generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token='+encodeURIComponent(LV.tok.token))}
@@ -1713,33 +1758,39 @@ function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่ม�
 function lvRaw(d){if(typeof d==='string'){lvMsg(d);return}if(d&&d.text){d.text().then(lvMsg);return}try{lvMsg(new TextDecoder().decode(d))}catch(e){}}
 function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
  if(m.setupComplete){clearTimeout(LV.setupT);const first=!LV.on&&LV.st==='connect';LV.on=true;LV.ok=true;LV.st='';LV.retry=0;LV.lastModel=LV.model;if(first)lvStat('ready',lvNow()-LV.t0);vLSset('rb_lvfail','0');vThink(false);lvUI();lvIdle();
-  vStat.textContent='🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
+  const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
+  vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
  if(sc){if(sc.interrupted)lvFlush();
   ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvPlay(p.inlineData.data)}});
   if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;lvIdle()}
   if(sc.outputTranscription&&sc.outputTranscription.text){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
-  if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';lvIdle();if(LV.endAfter)lvEndSoon()}}
- if(m.toolCall&&Array.isArray(m.toolCall.functionCalls)){const out=m.toolCall.functionCalls.map(fc=>({id:fc.id,name:fc.name,response:lvTool(fc)}));lvSend({toolResponse:{functionResponses:out}});lvIdle()}
+  if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;lvIdle();if(LV.endAfter)lvEndSoon()}}
+ if(m.toolCall&&Array.isArray(m.toolCall.functionCalls))lvTools(m.toolCall.functionCalls);
  if(m.sessionResumptionUpdate){const u=m.sessionResumptionUpdate;if(u.resumable!==false&&u.newHandle)LV.handle=u.newHandle}
  if(m.goAway)LV.goAway=true}
 function lvText(t){t=String(t||'').trim();if(!t||!LV.on)return;lvFlush();LV.heard=t;lvSend({realtimeInput:{text:t}});lvIdle()}   // พิมพ์แทนพูด
-// ---- ผู้ช่วยสั่งงานแอป ----
+// ---- ผู้ช่วยสั่งงานแอป (ทำทีละคำสั่ง ส่งผลกลับเมื่อเสร็จครบ) ----
 function lvState(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);return {view:c.view,formOpen:c.formOpen,form:c.form,editing:c.editing,pending:c.pending}}
-function lvTool(fc){const a=fc.args||{};
- if(fc.name==='end_session'){LV.endAfter=true;lvEndSoon(4000);return {result:'กำลังจบการคุย'}}
- if(fc.name!=='do_command')return {result:'ไม่รู้จักฟังก์ชันนี้'};
- let x=a.cmd;if(typeof x==='string'){try{x=JSON.parse(x)}catch(e){return {result:'อ่านคำสั่งไม่ออก ลองส่ง JSON ใหม่',ok:false}}}
- if(!x||typeof x!=='object')return {result:'ไม่มีคำสั่ง',ok:false};
- const {names,ctx}=vEnv(),heard=LV.heard.trim()||vTxt.value||'';const list=Array.isArray(x.steps)&&x.steps.length?x.steps.slice(0,5):[x],res=[];let bad=false,sg=null,shown='';
- for(const s1 of list){let o=null;try{o=vFromAI(s1,heard,names,ctx)}catch(e){o=null}
-  if(!o||o.intent==='none'){res.push('ไม่เข้าใจคำสั่ง');bad=true;continue}
-  if(o.intent==='chat'){res.push('นี่เป็นการคุยเล่น ตอบผู้ใช้เองได้เลย');continue}
-  let r=null;try{r=vExec(o,'',true)}catch(e){r={msg:'⚠️ ทำไม่สำเร็จ: '+(e&&e.message||e),bad:true}}
-  if(!r||typeof r.msg!=='string')r={msg:'ทำแล้ว',sp:''};res.push(String(r.msg).replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').trim()+(r.sp&&r.sp!==r.msg?' (คำพูดแนะนำ: '+r.sp+')':''));
-  if(r.bad)bad=true;if(r.sg&&r.sg.length)sg=r.sg;shown=r.msg}
- try{vShow(heard,shown||res.join(' · '),bad,sg)}catch(e){}
- return {result:res.join(' | '),ok:!bad,choices:sg?sg.map(z=>z.lab):undefined,state:lvState()}}
+const lvClean=t=>String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/\s+/g,' ').trim();
+function lvTools(calls){const ws=LV.ws,out=new Array(calls.length);let left=calls.length;vThink(true);
+ const fin=(i,r)=>{out[i]={id:calls[i].id,name:calls[i].name,response:r};if(--left===0){vThink(false);if(LV.ws===ws)lvSend({toolResponse:{functionResponses:out}});lvIdle()}};
+ calls.forEach((fc,i)=>{try{lvTool(fc,r=>fin(i,r))}catch(e){fin(i,{result:'ทำไม่สำเร็จ',ok:false})}})}
+function lvTool(fc,cb){const a=fc.args||{};
+ if(fc.name==='end_session'){if(LV.wake){cb({result:'โหมดรอฟัง: ไม่ต้องปิด กลับไปเงียบรอฟัง'});return}LV.endAfter=true;lvEndSoon(4000);cb({result:'กำลังจบการคุย'});return}
+ if(fc.name!=='do_command'){cb({result:'ไม่รู้จักฟังก์ชันนี้'});return}
+ const heard=LV.heard.trim();
+ if(a.cmd&&!a.request){let x=a.cmd;if(typeof x==='string'){try{x=JSON.parse(x)}catch(e){x=null}}   // รูปแบบเก่า (JSON) ยังรับได้
+  if(x&&typeof x==='object'){const {names,ctx}=vEnv();const list=Array.isArray(x.steps)&&x.steps.length?x.steps.slice(0,5):[x];
+   const rs=list.map(s1=>{let o=null;try{o=vFromAI(s1,heard,names,ctx)}catch(e){}if(!o||o.intent==='none')return {msg:'ไม่เข้าใจคำสั่ง',bad:true};if(o.intent==='chat')return {msg:'คุยเล่น ตอบเองได้เลย',chat:true};try{return vExec(o,'',true)||{msg:'ทำแล้ว'}}catch(e){return {msg:'ทำไม่สำเร็จ',bad:true}}});
+   lvReply(rs,heard,cb);return}}
+ const req=String(a.request||a.cmd||heard||'').trim();
+ if(!req){cb({result:'ไม่ได้รับคำสั่ง ถามผู้ใช้ใหม่',ok:false});return}
+ vRunQ(req,rs=>lvReply(rs,req,cb))}
+function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''});const bad=rs.some(r=>r.bad),sg=(rs.find(r=>r.sg&&r.sg.length)||{}).sg;
+ const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
+ try{vShow(heard,rs.map(r=>r.msg).join(' · '),bad,sg)}catch(e){}
+ cb({result:txt||'ทำแล้ว',ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
 // ---- เล่นเสียงผู้ช่วย (24 kHz) · พูดแทรก = หยุดทันที ----
 function lvPlay(b64){const c=LV.ctxOut;if(!c)return;let pcm;try{pcm=new Int16Array(lvUnB64(b64))}catch(e){return}if(!pcm.length)return;
  const buf=c.createBuffer(1,pcm.length,24000),ch=buf.getChannelData(0);for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/0x8000;
@@ -1749,23 +1800,34 @@ function lvFlush(){LV.play.forEach(s=>{try{s.onended=null;s.stop()}catch(e){}});
 function lvEndSoon(ms){clearTimeout(LV.endT);LV.endT=setTimeout(()=>{if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')},ms==null?(LV.play.length?600:300):ms)}
 // ---- สายหลุด / ต่อใหม่ / สลับรุ่น / ถอยกลับระบบเดิม ----
 function lvClosed(ws,e){if(ws!==LV.ws||LV.stopping)return;clearTimeout(LV.setupT);const why=String((e&&e.reason)||ws.__why||'')+(e&&e.code?' ('+e.code+')':'');
- if(!LV.on){   // ยังต่อไม่ติด → ลองรุ่นถัดไป
+ if(!LV.on){   // ยังต่อไม่ติด
+  if(LV.usedThink&&/think|budget|invalid|1007/i.test(why)){LV.noThink=false;vLSset('rb_lvnothink','0');lvOpen();return}   // รุ่นนี้ไม่รับค่าปิดการคิด → ลองใหม่แบบไม่ตั้ง
   if(/quota|exhaust|exceed|limit|rate/i.test(why))lvMark('rb_lvm_'+LV.model,10*60000);
   if(LV.handle&&LV.retry<3){LV.retry++;setTimeout(lvReopen,600*LV.retry);return}
   if(LV.mi+1<LV.models.length){LV.mi++;LV.handle='';vStat.textContent='⚡ ลองเสียงสดอีกรุ่น…';lvOpen();return}
   lvFail(why||'ต่อเสียงสดไม่ได้',!LV.ok);return}
  LV.on=false;lvFlush();
  if(LV.handle&&LV.retry<3){LV.retry++;LV.goAway=false;lvReopen();return}   // ครบ ~10 นาที/สายหลุด → ต่อใหม่ คุยต่อจากเดิม
+ if(LV.wake&&LV.retry<3){LV.retry++;lvReopen();return}   // โหมดรอฟัง: ต่อใหม่เองเงียบ ๆ
  lvFail(why||'สายหลุด',false)}
 function lvReopen(){if(LV.stopping)return;if(LV.tok&&LV.tok.exp&&lvNow()>LV.tok.exp-90000){LV.st='token';callApi('liveToken',[],t=>{if(LV.stopping)return;LV.tok=t;lvOpen()},e=>lvFail((e&&e.message)||String(e),false));return}lvOpen()}
-function lvFail(msg,early){const n=(+vLS('rb_lvfail','0')||0)+1;vLSset('rb_lvfail',n);if(n>=2){lvMark('rb_lvbad',10*60000);vLSset('rb_lvfail','0')}   // ล้ม 2 ครั้งติด → พักเสียงสด 10 นาที
- lvStop('');vTone('err');vStat.innerHTML='⚠️ เสียงสดใช้ไม่ได้ตอนนี้ ('+esc(String(msg).slice(0,140))+') — '+(early?'ใช้ระบบเสียงแบบเดิมแทน':'แตะ 🎤 เพื่อคุยต่อแบบเดิม');
- if(early&&VSR&&vpanel.classList.contains('show'))setTimeout(()=>{if(!VON&&!LV.on&&!LV.st)vStart(true)},300)}
+function lvFail(msg,early){LV.noAuto=true;const n=(+vLS('rb_lvfail','0')||0)+1;vLSset('rb_lvfail',n);if(n>=2){lvMark('rb_lvbad',10*60000);vLSset('rb_lvfail','0')}   // ล้ม 2 ครั้งติด → พักเสียงสด 10 นาที
+ const wake=LV.wake;lvStop('');vTone('err');vStat.innerHTML='⚠️ เสียงสดใช้ไม่ได้ตอนนี้ ('+esc(String(msg).slice(0,140))+') — '+(early&&!wake?'ใช้ระบบเสียงแบบเดิมแทน':'แตะ 🎤 เพื่อคุยแบบเดิม');
+ if(early&&!wake&&VSR&&vpanel.classList.contains('show'))setTimeout(()=>{if(!VON&&!LV.on&&!LV.st)vStart(true)},300)}
 function lvStop(msg){LV.stopping=true;clearTimeout(LV.idleT);clearTimeout(LV.setupT);clearTimeout(LV.endT);const ws=LV.ws;LV.ws=null;
  try{if(ws&&ws.readyState===1)ws.send(JSON.stringify({realtimeInput:{audioStreamEnd:true}}))}catch(e){}try{ws&&ws.close()}catch(e){}
- lvMicOff();lvFlush();LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;vThink(false);lvUI();if(msg)vStat.textContent=msg;try{vAutoHide(4000)}catch(e){}setTimeout(lvPrefetch,800)}
-// เปิดแอป/กลับมาที่แอป → เตรียมกุญแจเสียงสดไว้ก่อน
-setTimeout(()=>{try{lvPrefetch()}catch(e){}},4000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>{try{lvPrefetch()}catch(e){}},800)});
+ const wasWake=LV.wake,auto=!LV.noAuto;LV.noAuto=false;lvMicOff();lvFlush();lvLock(false);LV.on=false;LV.st='';LV.handle='';LV.endAfter=false;LV.qa=[];LV.wake=false;vThink(false);lvUI();if(msg)vStat.textContent=msg;try{vAutoHide(4000)}catch(e){}setTimeout(lvPrefetch,800)
+ if(LVWAKE&&!wasWake&&auto)setTimeout(()=>{if(!LV.on&&!LV.st&&!VON)lvWakeGo()},2500)}   // คุยปกติจบ → กลับไปรอฟังชื่อต่อ
+// ---- โหมดเรียกชื่อ: แตะหน้าจอครั้งแรกหลังเปิดแอป = เริ่มรอฟัง (เบราว์เซอร์บังคับให้แตะก่อนเปิดไมค์/เสียง) · สลับไปแอปอื่น = พัก · กลับมา = รอฟังต่อ ----
+function lvLock(on){try{if(on&&navigator.wakeLock&&!LV.lock)navigator.wakeLock.request('screen').then(l=>{LV.lock=l}).catch(()=>{});else if(!on&&LV.lock){LV.lock.release().catch(()=>{});LV.lock=null}}catch(e){}}   // รอฟังอยู่ = จอไม่ดับเอง
+function lvWakeGo(){if(!LVWAKE||LV.on||LV.st||VON||!lvWant()||document.visibilityState==='hidden')return false;lvStart({wake:true});return true}
+let LVARMED=false;
+function lvArm(){if(LVARMED)return;LVARMED=true;const h=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#vfab,#vMic'))return;   // แตะปุ่ม 🎤 = คุยปกติ
+  document.removeEventListener('pointerdown',h,true);LVARMED=false;setTimeout(lvWakeGo,50)};document.addEventListener('pointerdown',h,true)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(LV.wake&&(LV.on||LV.st)){lvStop('');LV.wakeBack=true}}
+ else{setTimeout(()=>{try{lvPrefetch()}catch(e){}},800);if(LVWAKE&&(LV.wakeBack||LVARMED)){LV.wakeBack=false;try{if(LV.ctxIn&&LV.ctxIn.state!=='suspended')lvWakeGo();else lvArm()}catch(e){lvArm()}}}});
+// เปิดแอป → เตรียมกุญแจเสียงสดไว้ก่อน · โหมดเรียกชื่อรอการแตะครั้งแรก
+setTimeout(()=>{try{lvPrefetch()}catch(e){}},4000);if(LVWAKE)lvArm();
 </script>
 
 <script>
