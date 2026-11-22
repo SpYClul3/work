@@ -1546,7 +1546,8 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +row('ต่อสายรอไว้ล่วงหน้า','แตะ 🎤 แล้วคุยได้ทันที (ไม่เปิดไมค์ ไม่ส่งเสียงจนกว่าจะแตะ)',` <label><input type="checkbox" id="sWarm"${LVWARM?' checked':''} onchange="lvWarmSet(this.checked)"> เปิด</label>`)
   +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=LVST.warm||[];if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
     return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ต่อสายรอไว้แล้ว '+w.filter(x=>x).length+'/'+w.length+' ครั้ง)':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
-     +'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
+     +'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · พูดจบ→ผู้ช่วยสั่งแอป '+a('call')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'
+     +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(LV.lastAiReq?' · ล่าสุดที่ต้องถาม AI: “'+esc(String(LV.lastAiReq).slice(0,60))+'”':'')+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · จอไม่ดับเอง · ส่งเสียงเฉพาะตอนมีคนพูด · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
   +row('เสียงผู้ช่วย (เสียงสด)',`<select id="sLvoice" onchange="lvVoiceSet(this.value)">${LVVOICES.map(([v,l])=>`<option value="${v}"${v===LVVOICE?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1772,9 +1773,9 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
  const sc=m.serverContent;
  if(sc){if(sc.interrupted)lvFlush();
   ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
-  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
+  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
   if(sc.outputTranscription&&sc.outputTranscription.text){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
-  if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
+  if(sc.turnComplete){if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
  if(m.toolCall&&Array.isArray(m.toolCall.functionCalls))lvTools(m.toolCall.functionCalls);
  if(m.sessionResumptionUpdate){const u=m.sessionResumptionUpdate;if(u.resumable!==false&&u.newHandle)LV.handle=u.newHandle}
  if(m.goAway)LV.goAway=true}
@@ -1783,6 +1784,7 @@ function lvText(t){t=String(t||'').trim();if(!t||!LV.on)return;lvFlush();LV.hear
 function lvState(){const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);return {view:c.view,formOpen:c.formOpen,form:c.form,editing:c.editing,pending:c.pending}}
 const lvClean=t=>String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/\s+/g,' ').trim();
 function lvTools(calls){const ws=LV.ws,out=new Array(calls.length),t0=lvNow();let left=calls.length;vThink(true);
+ if(LV.callWait&&calls.some(c=>c.name==='do_command')){LV.callWait=false;lvStat('call',t0-LV.tEnd)}   // พูดจบ → ผู้ช่วยสั่งแอป
  const fin=(i,r)=>{out[i]={id:calls[i].id,name:calls[i].name,response:r};if(--left===0){vThink(false);if(LV.ws===ws){lvSend({toolResponse:{functionResponses:out}});if(calls.some(c=>c.name==='do_command')){lvStat('tool',Math.max(1,lvNow()-t0));LV.tResp=lvNow();LV.waitGen=true;LV.waitAns=false}}lvIdle()}};
  calls.forEach((fc,i)=>{try{lvTool(fc,r=>fin(i,r))}catch(e){fin(i,{result:'ทำไม่สำเร็จ',ok:false})}})}
 function lvTool(fc,cb){const a=fc.args||{};
@@ -1796,6 +1798,7 @@ function lvTool(fc,cb){const a=fc.args||{};
  const req=String(a.request||a.cmd||heard||'').trim();
  if(!req){cb({result:'ไม่ได้รับคำสั่ง ถามผู้ใช้ใหม่',ok:false});return}
  const sp=LV.spec;if(sp&&lvNow()-sp.t<10000&&lvSame(req,sp)){LV.spec=null;lvReply(sp.rs,req,cb);return}   // ทำไปแล้วตอนผู้ใช้พูดจบ → ส่งผลกลับทันที
+ try{const q=lvParseQ(req);lvStat('ai',vSure(q.o,q.names)||vSplit(req).length>1?1:2);LV.lastAiReq=vSure(q.o,q.names)?LV.lastAiReq:req}catch(e){}   // 1 = แอปแปลเองได้ · 2 = ต้องถาม AI ข้อความเพิ่ม
  vRunQ(req,rs=>lvReply(rs,req,cb))}
 function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''});const bad=rs.some(r=>r.bad),sg=(rs.find(r=>r.sg&&r.sg.length)||{}).sg;
  const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
@@ -1872,6 +1875,9 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
  else{setTimeout(()=>{try{lvPrefetch()}catch(e){}},800);setTimeout(()=>{try{lvWarm()}catch(e){}},1500);if(LVWAKE&&(LV.wakeBack||LVARMED)){LV.wakeBack=false;try{if(LV.ctxIn&&LV.ctxIn.state!=='suspended')lvWakeGo();else lvArm()}catch(e){lvArm()}}}});
 // เปิดแอป → เตรียมกุญแจเสียงสดไว้ก่อน · โหมดเรียกชื่อรอการแตะครั้งแรก
 setTimeout(()=>{try{lvPrefetch()}catch(e){}},4000);setTimeout(()=>{try{lvWarm()}catch(e){}},6000);if(LVWAKE)lvArm();
+// ตรวจทุก 15 วินาที: ถ้ายังไม่มีสายรอไว้ (เช่น ตอนเปิดแอปข้อมูลยังโหลดไม่เสร็จ หรือสายหลุด) → ต่อรอไว้ใหม่
+function lvWarmTick(){try{if(!WM&&lvCanWarm())lvWarm()}catch(e){}}
+setInterval(lvWarmTick,15000);
 </script>
 
 <script>
