@@ -1545,6 +1545,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +row('รุ่นเสียงสดที่ใช้ล่าสุด',(()=>{const m=LV.lastModel||(WM&&WM.ready?WM.model:''),F=LVFASTM,nm=x=>/native-audio/.test(x)?'เร็ว (2.5)':/3\.8/.test(x)?'ฉลาด (3.8 คิดก่อนตอบ ช้ากว่า)':x,why=vLS('rb_lvwhy_'+F,''),sf=lvSafe(F);
     return (m?nm(m)+(lvSafe(m)?' · โหมดปลอดภัย':''):'ยังไม่ได้ใช้')+(why&&(!m||m!==F||sf)?'<div style="font-size:12px" class="no">รุ่นเร็วไม่รับค่าตั้งบางอย่าง: '+esc(why)+'</div>':'')})())
   +row('ความดังเสียงผู้ช่วย (เสียงสด)',`<select id="sLvol" onchange="lvVolSet(this.value)">${[[1,'ปกติ'],[2.5,'ดัง (แนะนำ)'],[3.5,'ดังมาก (ที่เสียงดัง)']].map(([v,l])=>`<option value="${v}"${Math.abs(LVVOL-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
+  +row('🔊 ลำโพงดัง (เสียงสด)','ถ้ายังเบา: เปิดข้อนี้ เสียงดังเต็มที่เหมือนเปิดเพลง · ระหว่างผู้ช่วยพูดจะพูดแทรกด้วยเสียงไม่ได้ (แตะ 🎤 เพื่อหยุด)',` <label><input type="checkbox" id="sLoud"${LVLOUD?' checked':''} onchange="lvLoudSet(this.checked)"> เปิด</label>`)
   +row('ต่อสายรอไว้ล่วงหน้า','แตะ 🎤 แล้วคุยได้ทันที (ไม่เปิดไมค์ ไม่ส่งเสียงจนกว่าจะแตะ)',` <label><input type="checkbox" id="sWarm"${LVWARM?' checked':''} onchange="lvWarmSet(this.checked)"> เปิด</label>`)
   +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=LVST.warm||[];if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
     return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ต่อสายรอไว้แล้ว '+w.filter(x=>x).length+'/'+w.length+' ครั้ง)':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
@@ -1678,7 +1679,7 @@ meShow();
 // โหมด "เรียกชื่อ": เปิดรอฟังตลอดตอนเปิดแอป · เรียก "ศิวภัทร" แล้วผู้ช่วยขานรับ
 // มือถือต่อ Google ตรงด้วยกุญแจชั่วคราวจากเซิร์ฟเวอร์ (liveToken) · ใช้ไม่ได้ (เน็ต/โควตา/เบราว์เซอร์) → กลับไปใช้ระบบเสียงแบบเดิมเอง
 const LVVOICES=[['Puck','ผู้ชาย สดใส (แนะนำ)'],['Charon','ผู้ชาย สุขุม นุ่ม'],['Orus','ผู้ชาย หนักแน่น'],['Fenrir','ผู้ชาย กระตือรือร้น'],['Kore','ผู้หญิง ชัดเจน'],['Aoede','ผู้หญิง นุ่มนวล']];
-let LVVOL=+vLS('rb_lvvol','2.5')||2.5,LVWARM=vLS('rb_lvwarm','1')!=='0',LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0',LVWAKE=vLS('rb_lvwake','0')==='1';
+let LVLOUD=vLS('rb_lvloud','0')==='1',LVVOL=+vLS('rb_lvvol','2.5')||2.5,LVWARM=vLS('rb_lvwarm','1')!=='0',LVPREF=vLS('rb_live','1')!=='0',LVVOICE=vLS('rb_lvoice','Puck'),LVFAST=vLS('rb_lvfast','1')!=='0',LVWAKE=vLS('rb_lvwake','0')==='1';
 const LVFASTM='gemini-2.5-flash-native-audio-preview-12-2025';   // เร็ว: ตอบทันทีไม่ต้องคิดก่อน · ฉลาด (3.8 Live) คิดก่อนตอบ ช้ากว่า
 function lvOrder(ms){ms=(ms||[]).slice();const i=ms.indexOf(LVFASTM);if(i>0&&LVFAST){ms.splice(i,1);ms.unshift(LVFASTM)}if(i===0&&!LVFAST&&ms.length>1){ms.shift();ms.push(LVFASTM)}return ms}
 function lvFastSet(on){LVFAST=!!on;vLSset('rb_lvfast',LVFAST?'1':'0')}
@@ -1718,7 +1719,8 @@ const lvAud=b64=>({realtimeInput:{audio:{data:b64,mimeType:'audio/pcm;rate=16000
 function lvIdle(){clearTimeout(LV.idleT);const ms=LV.wake?LVWAKEIDLE:LVIDLE;LV.idleT=setTimeout(()=>{if(LV.on&&!LV.play.length){if(LV.wake)lvStop('💤 ไม่มีใครเรียกนาน พักการรอฟังแล้ว — แตะ 🎤 เพื่อเริ่มใหม่');else lvStop('💤 เงียบไปนาน จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')}else if(LV.on)lvIdle()},ms)}
 
 // ---- ตัดเสียงเงียบ/เสียงสะท้อน: ส่งเฉพาะช่วงที่มีคนพูด (ประหยัดเน็ต · ผู้ช่วยไม่ได้ยินเสียงตัวเองแล้วหยุดพูดกลางคัน) ----
-function lvGate(f,b64){const g=LV.g,n=lvNow();let s=0;for(let i=0;i<f.length;i++)s+=f[i]*f[i];const rms=Math.sqrt(s/f.length);
+function lvGate(f,b64){const g=LV.g,n=lvNow();if(LVLOUD&&LV.play.length){g.open=false;g.pre=[];if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}return}   // ลำโพงดัง: ไม่ส่งเสียงตอนผู้ช่วยพูด (กันได้ยินเสียงตัวเอง)
+ let s=0;for(let i=0;i<f.length;i++)s+=f[i]*f[i];const rms=Math.sqrt(s/f.length);
  const speaking=LV.play.length>0,thr=speaking?Math.max(0.025+0.006*LVVOL,g.floor*7):Math.max(0.008,g.floor*3);   // เปิดเสียงดัง → เกณฑ์ตอนผู้ช่วยพูดสูงขึ้นตาม
  if(!g.open&&rms<g.floor*3+0.002)g.floor=g.floor*0.96+rms*0.04;   // จำระดับเสียงรอบข้าง
  if(rms>thr){if(!g.open){g.open=true;g.pre.forEach(x=>lvSend(lvAud(x)));g.pre=[]}g.until=n+900}
@@ -1736,7 +1738,7 @@ function lvStart(opt){opt=opt||{};const wake=!!opt.wake;if(!wake)vPanelOpen();if
  if(!wake&&lvAdopt()){}   // มีสายต่อรอไว้แล้ว → คุยได้ทันที
  else{const pre=lvTakeTok();   // ไมค์กับการต่อ Google ทำพร้อมกัน (เร็วขึ้น)
  if(pre)go(pre);else{LV.st='token';callApi('liveToken',[],go,e=>lvFail((e&&e.message)||String(e),true))}}
- navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(st=>{
+ navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!LVLOUD,noiseSuppression:true,autoGainControl:true,channelCount:1}}).then(st=>{
   if(LV.stopping||(!LV.st&&!LV.on)){st.getTracks().forEach(t=>t.stop());return}LV.stream=st;lvMicOn();lvReadyMark()},
   e=>lvFail(e&&e.name==='NotAllowedError'?'ยังไม่ได้อนุญาตให้ใช้ไมโครโฟน':'เปิดไมค์ไม่ได้',true))
  if(wake)lvLock(true);setTimeout(lvPrefetch,1500)}   // เตรียมกุญแจสำหรับครั้งถัดไป
@@ -1843,8 +1845,9 @@ function lvAdopt(){const w=WM;if(!w||!w.ready||!w.ws||w.ws.readyState!==1||lvNow
  ws.onmessage=e=>{if(LV.ws===ws)lvRaw(e.data)};ws.onclose=e=>lvClosed(ws,e);lvMsg('{"setupComplete":{}}');return true}
 // ---- เล่นเสียงผู้ช่วย (24 kHz) · พูดแทรก = หยุดทันที ----
 // มือถือลดเสียงลำโพงตอนเปิดไมค์ (เหมือนโทรศัพท์) → ขยายเสียงผู้ช่วย + ตัวกันเสียงแตก (ปรับความดังได้ในตั้งค่า)
-function lvOut(c){if(!LV.outN||LV.outN.context!==c){const cp=c.createDynamicsCompressor();cp.threshold.value=-20;cp.knee.value=10;cp.ratio.value=8;cp.attack.value=0.003;cp.release.value=0.2;
+function lvOut(c){if(!LV.outN||LV.outN.context!==c){const cp=c.createDynamicsCompressor();cp.threshold.value=-3;cp.knee.value=0;cp.ratio.value=20;cp.attack.value=0.002;cp.release.value=0.12;   // กันแตกเฉพาะตอนใกล้เต็ม (เดิมบีบหนักไป ดังขึ้นแค่นิดเดียว)
   const g=c.createGain();g.gain.value=LVVOL;g.connect(cp);cp.connect(c.destination);LV.outN=g}return LV.outN}
+function lvLoudSet(on){LVLOUD=!!on;vLSset('rb_lvloud',LVLOUD?'1':'0')}   // ลำโพงดัง: ปิดตัดเสียงสะท้อนของมือถือ (มือถือไม่ลดเสียงลำโพงแบบตอนโทร) · ผู้ช่วยพูดอยู่ = ไม่ส่งเสียงไมค์ (แตะ 🎤 เพื่อหยุด)
 function lvVolSet(v){LVVOL=Math.max(0.5,Math.min(4,+v||2.5));vLSset('rb_lvvol',LVVOL);try{if(LV.outN)LV.outN.gain.value=LVVOL}catch(e){}}
 function lvPlay(b64){const c=LV.ctxOut;if(!c)return;let pcm;try{pcm=new Int16Array(lvUnB64(b64))}catch(e){return}if(!pcm.length)return;
  const buf=c.createBuffer(1,pcm.length,24000),ch=buf.getChannelData(0);for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/0x8000;
