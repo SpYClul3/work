@@ -1408,8 +1408,9 @@ function vPreSend(raw,alts){if(!vAIon()||!raw)return;if(VPRE&&VPRE.raw===raw)ret
  callApi('ai',[raw,Object.assign(vCtx(names,ctx,alts),vLiveKind(o)?{live:vLiveKind(o)}:{})],r=>{x.done=1;x.res=r;if(x.cb)x.cb(1,r)},e=>{x.done=2;x.err=e;if(x.cb)x.cb(2,e)})}
 function vPreTake(raw){const x=VPRE;VPRE=null;if(!x||x.raw!==raw||Date.now()-x.t>20000)return null;return {wait:(ok,bad)=>{if(x.done===1)ok(x.res);else if(x.done===2)bad(x.err);else x.cb=(k,v)=>k===1?ok(v):bad(v)}}}
 // ส่งประโยคที่แอปแปลเองไม่ได้ (ต้องถาม AI) ขึ้น Sheet แท็บ "คำสั่งที่ AI ช่วยแปล" → รวมจากทั้งทีม เอาไปสอนแอปเพิ่ม · ไม่ส่งซ้ำในรอบเปิดแอปเดียวกัน · ส่งไม่ได้ก็ไม่เป็นไร
-// มุมมองผลลัพธ์บนมือถือ: การ์ด (ค่าเริ่ม) หรือ ตาราง
-let VCARD=vLS('rb_cards','1')!=='0';function vCardSet(on){VCARD=!!on;vLSset('rb_cards',VCARD?'1':'0');document.body.classList.toggle('cardv',VCARD)}
+// มุมมองผลลัพธ์บนมือถือ: ตาราง (ค่าเริ่ม) หรือ การ์ด
+let VCARD=vLS('rb_cards','0')==='1';
+function vCardSet(on){VCARD=!!on;vLSset('rb_cards',VCARD?'1':'0');document.body.classList.toggle('cardv',VCARD)}
 document.body.classList.toggle('cardv',VCARD);
 const VAIQ=new Set();
 function vLogAi(text,via,out){try{text=String(text||'').replace(/\s+/g,' ').trim();if(!text||VAIQ.has(text)||!run)return;VAIQ.add(text);
@@ -1574,7 +1575,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
     return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ใช้สายที่ต่อรอไว้ '+w.filter(x=>x===1).length+'/'+w.length+' ครั้ง'+(LVWAKE?' · โหมดเรียกชื่อไม่ใช้สายรอ':'')+')':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
      +'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · พูดจบ→ผู้ช่วยสั่งแอป '+a('call')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'
      +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]')}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
-  +row('ผลลัพธ์บนมือถือ',`<select id="sCard" onchange="vCardSet(this.value==='1')"><option value="1"${VCARD?' selected':''}>การ์ด 1 รายการต่อ 1 กล่อง (แนะนำ)</option><option value="0"${VCARD?'':' selected'}>ตาราง (เลื่อนซ้ายขวา)</option></select>`)
+  +row('ผลลัพธ์บนมือถือ',`<select id="sCard" onchange="vCardSet(this.value==='1')"><option value="0"${VCARD?'':' selected'}>ตาราง (แบบเดิม)</option><option value="1"${VCARD?' selected':''}>การ์ด 1 รายการต่อ 1 กล่อง</option></select>`)
   +row('ประโยคที่ทั้งทีมพูดแล้วแอปแปลเองไม่ได้','เก็บไว้ใน Sheet แท็บ “คำสั่งที่ AI ช่วยแปล” · คัดลอกส่งให้ Claude สอนแอปเพิ่ม → คำสั่งเร็วขึ้น',' <button class="btn" onclick="aiqShow()">ดูรายการ</button>')+'<div id="aiqBox"></div>'
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · ทำงานเฉพาะเมื่อได้ยินชื่อ “ศิวภัทร” (ปุ่ม 🎤 ม่วง = รอ · แดง = คุยอยู่) · เงียบ 12 วิ กลับไปรอชื่อ · จอไม่ดับเอง · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
