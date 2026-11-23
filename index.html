@@ -1067,7 +1067,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  if(!t){o.intent='none';return o}
  const low=t.toLowerCase().replace(/\s/g,'');
  // คำสั่งสั้น
- const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ทั้งหมด|ทุกอย่าง|หมด|ให้หมด)?(เลย)?(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน|บันทึกงานใหม่|เพิ่มงาน|เพิ่มงานใหม่|เพิ่มข้อมูลใหม่|(เปิด|ไป|ไปที่|ขอ)?(หน้า|ฟอร์ม|หน้าฟอร์ม)?(บันทึก|กรอก)(งาน|ข้อมูล)?(ใหม่)?)(ให้หน่อย|หน่อย)?(ครับ|ค่ะ|คะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
+ const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง|รีเซ็ต|รีเซต|รีเซ็ท|reset|เคลียร์|เคลียร์ค่า)(ตัวกรอง|ค่า|การค้นหา)?(ทั้งหมด|ทุกอย่าง|หมด|ให้หมด)?(เลย)?(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน|บันทึกงานใหม่|เพิ่มงาน|เพิ่มงานใหม่|เพิ่มข้อมูลใหม่|(เปิด|ไป|ไปที่|ขอ)?(หน้า|ฟอร์ม|หน้าฟอร์ม)?(บันทึก|กรอก)(งาน|ข้อมูล)?(ใหม่)?)(ให้หน่อย|หน่อย)?(ครับ|ค่ะ|คะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
   [/^(หน้าถัดไป|ถัดไป|หน้าต่อไป|next)(ครับ|ค่ะ)?$/,'next'],[/^(หน้าก่อน|หน้าที่แล้ว|ก่อนหน้า|ย้อนกลับ)(ครับ|ค่ะ)?$/,'prev'],[/^(ปิดเสียง|ปิดเสียงตอบ|เงียบ)(ครับ|ค่ะ)?$/,'mute'],[/^(เปิดเสียง|เปิดเสียงตอบ)(ครับ|ค่ะ)?$/,'unmute'],
   [/^(ดาวน์โหลด|ดาวโหลด|โหลดไฟล์|ดาวน์โหลดเลย|download)(ครับ|ค่ะ)?$/,'download'],[/^(ช่วยด้วย|วิธีใช้|ทำอะไรได้บ้าง|สั่งอะไรได้บ้าง|help)(ครับ|ค่ะ)?$/,'help'],[/^(หยุด|หยุดฟัง|พอแล้ว|เลิกฟัง|พอก่อน|แค่นี้ก่อน)(ครับ|ค่ะ)?$/,'stop'],[/^(ล้างบทสนทนา|เริ่มคุยใหม่|ลืมที่คุย|ลืมที่คุยกัน)(ครับ|ค่ะ)?$/,'reset'],
   [/^(สแกน|สแกนเลข|สแกนเลขเครื่อง|สแกนเลขเครื่องวัด|สแกนมิเตอร์|ถ่ายรูปเลขเครื่อง|อ่านเลขจากรูป)(ครับ|ค่ะ)?$/,'scan'],[/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)(ครับ|ค่ะ)?$/,'photo'],
@@ -1342,8 +1342,8 @@ const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
 let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Date.now();try{callApi('ping',[],()=>{},()=>{})}catch(e){}}
 // ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
 const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ไหนบ้าง|ก่อนหน้า|เทียบ|เฉลี่ย|ไม่ใช่)/i;
-const VFILL=/(กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
-function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase();
+const VFILL=/(รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
+function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
  const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
  names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
  VK.forEach(([f,ws])=>ws.forEach(kill));['เอ็มอาร์ยู','ไม่พบข้อมูล','ผ่อนผัน','ค่าไฟ','ใกล้เคียง'].forEach(kill);
@@ -1554,7 +1554,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  h+='<div class="sh">🗣️ การฟังและพูดตอบ</div>'+row('พูดจบแล้วรอกี่วินาที',`<select id="sSil" onchange="vSilSet(this.value)">${[[700,'0.7 วินาที (เร็วมาก)'],[1000,'1 วินาที (แนะนำ)'],[1500,'1.5 วินาที'],[2500,'2.5 วินาที (พูดช้า/หยุดคิดบ่อย)']].map(([v,l])=>`<option value="${v}"${+VSIL===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('⚡ เสียงสดแบบรถยนต์','คุยต่อเนื่อง พูดแทรกได้ สั่งงานได้ · ใช้ไม่ได้จะกลับไปใช้แบบเดิมเอง',` <label><input type="checkbox" id="sLive"${LVPREF?' checked':''}${lvSupported()?'':' disabled'} onchange="lvSet(this.checked)"> เปิด</label>${lvSupported()?'':' <span class="no">เบราว์เซอร์นี้ไม่รองรับ</span>'}`)
   +row('รุ่นเสียงสด',`<select id="sLvfast" onchange="lvFastSet(this.value==='1')"><option value="1"${LVFAST?' selected':''}>เร็ว ตอบทันที (แนะนำ)</option><option value="0"${LVFAST?'':' selected'}>ฉลาด คิดก่อนตอบ (ช้ากว่า)</option></select>`)
-  +row('รุ่นเสียงสดที่ใช้ล่าสุด',(()=>{const m=LV.lastModel||(WM&&WM.ready?WM.model:''),F=LVFASTM,nm=x=>/native-audio/.test(x)?'เร็ว (2.5)':/3\.8/.test(x)?'ฉลาด (3.8 คิดก่อนตอบ ช้ากว่า)':x,why=vLS('rb_lvwhy_'+F,''),sf=lvSafe(F);
+  +row('รุ่นเสียงสดที่ใช้ล่าสุด',(()=>{const m=LV.lastModel||(WM&&WM.ready?WM.model:'')||vLS('rb_lvlast',''),F=LVFASTM,nm=x=>/native-audio/.test(x)?'เร็ว (2.5)':/3\.8/.test(x)?'ฉลาด (3.8 คิดก่อนตอบ ช้ากว่า)':x,why=vLS('rb_lvwhy_'+F,''),sf=lvSafe(F);
     return (m?nm(m)+(lvSafe(m)?' · โหมดปลอดภัย':''):'ยังไม่ได้ใช้')+(why&&(!m||m!==F||sf)?'<div style="font-size:12px" class="no">รุ่นเร็วไม่รับค่าตั้งบางอย่าง: '+esc(why)+'</div>':'')})())
   +row('ความดังเสียงผู้ช่วย (เสียงสด)',`<select id="sLvol" onchange="lvVolSet(this.value)">${[[1,'ปกติ'],[2.5,'ดัง (แนะนำ)'],[3.5,'ดังมาก (ที่เสียงดัง)']].map(([v,l])=>`<option value="${v}"${Math.abs(LVVOL-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('🔊 ลำโพงดัง (เสียงสด)','เสียงดังเต็มที่เหมือนเปิดเพลง (แนะนำ) · ระหว่างผู้ช่วยพูดจะพูดแทรกด้วยเสียงไม่ได้ ให้แตะ 🎤 · ปิดข้อนี้ = พูดแทรกได้แต่เสียงเบาลง',` <label><input type="checkbox" id="sLoud"${LVLOUD?' checked':''} onchange="lvLoudSet(this.checked)"> เปิด</label>`)
@@ -1743,7 +1743,7 @@ function lvGate(f,b64){const g=LV.g,n=lvNow();if(LVLOUD&&LV.play.length){g.open=
 // ---- เริ่ม / จบ ----
 function lvToggle(){if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว');else lvStart()}
 function lvStart(opt){opt=opt||{};const wake=!!opt.wake;if(!wake)vPanelOpen();if(VTTS)try{VTTS.cancel()}catch(e){}
- if(wake)lvWarmClose();Object.assign(LV,{awake:false,awakeUntil:0,st:'mic',ok:false,readyMarked:false,warmUsed:false,spec:null,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false,wake,qa:[],g:{floor:0.004,open:false,until:0,pre:[],sent:false}});
+ if(wake)lvWarmClose();Object.assign(LV,{netRetry:0,awake:false,awakeUntil:0,st:'mic',ok:false,readyMarked:false,warmUsed:false,spec:null,stopping:false,endAfter:false,handle:'',retry:0,heard:'',said:'',mi:0,t0:lvNow(),tEnd:0,waitAns:false,wake,qa:[],g:{floor:0.004,open:false,until:0,pre:[],sent:false}});
  if(!wake){vRes.innerHTML='';vTxt.value=''}lvUI();vThink(true);if(!wake)vTone('listen');vStat.textContent=wake?'👂 กำลังเปิดโหมดรอฟัง…':'⚡ กำลังเปิดเสียงสด…';
  try{const AC=window.AudioContext||window.webkitAudioContext;LV.ctxIn=LV.ctxIn||new AC();LV.ctxOut=LV.ctxOut||new AC();LV.ctxIn.resume&&LV.ctxIn.resume();LV.ctxOut.resume&&LV.ctxOut.resume()}catch(e){lvFail('เปิดระบบเสียงไม่ได้',true);return}   // สร้างตอนแตะ (iPhone ต้องการ)
  const go=tok=>{if(LV.stopping||!LV.st)return;if(!tok||!tok.token){lvFail('ไม่ได้กุญแจเสียงสด',true);return}LV.tok=tok;
@@ -1787,6 +1787,9 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
 const lvSafe=m=>lvBadUntil('rb_lvsafe_'+m)>lvNow();
 function lvSafeOn(m,why){vLSset('rb_lvsafe_'+m,lvNow()+7*86400000);vLSset('rb_lvwhy_'+m,String(why||'').slice(0,160))}
 const lvQuota=why=>/quota|exhaust|exceed|limit|rate/i.test(why);
+const lvRefused=why=>/\(100[78]\)|invalid|unknown|not supported|unsupported|not allowed|bad request|cannot find field|INVALID_ARGUMENT/i.test(why);   // ปฏิเสธค่าตั้งจริง (ไม่ใช่เน็ตหลุด 1006 / หมดเวลา)
+// ล้างโหมดปลอดภัยที่ตั้งผิดจากเน็ตหลุด (เวอร์ชันก่อนถือว่า 1006 = ไม่รับค่าตั้ง)
+try{Object.keys(localStorage).filter(k=>/^rb_lvwhy_/.test(k)).forEach(k=>{if(!lvRefused(localStorage.getItem(k)||'')){const m=k.slice(9);localStorage.removeItem(k);localStorage.removeItem('rb_lvsafe_'+m)}})}catch(e){}
 function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่มีรุ่นเสียงสดที่ใช้ได้ตอนนี้',true);return}
  const resume=!!LV.handle;LV.st=resume?'resume':'connect';vThink(true);if(resume)vStat.textContent='🔄 กำลังต่อสายใหม่…';
  let ws;try{ws=new WebSocket('wss:'+'/'+'/generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token='+encodeURIComponent(LV.tok.token))}
@@ -1795,7 +1798,7 @@ function lvOpen(){LV.model=LV.models[LV.mi];if(!LV.model){lvFail('ไม่ม�
  clearTimeout(LV.setupT);LV.setupT=setTimeout(()=>{if(LV.ws===ws&&!LV.on){ws.__why='ต่อไม่ติดภายในเวลา';try{ws.close()}catch(e){}lvClosed(ws,{code:4000,reason:'timeout'})}},LVSETUP)}
 function lvRaw(d){if(typeof d==='string'){lvMsg(d);return}if(d&&d.text){d.text().then(lvMsg);return}try{lvMsg(new TextDecoder().decode(d))}catch(e){}}
 function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
- if(m.setupComplete){clearTimeout(LV.setupT);const first=!LV.on&&LV.st==='connect';LV.on=true;LV.ok=true;LV.st='';LV.retry=0;LV.lastModel=LV.model;if(first){lvStat('conn',lvNow()-(LV.tOpen||LV.t0));lvReadyMark()}vLSset('rb_lvfail','0');vThink(false);lvUI();lvIdle();
+ if(m.setupComplete){clearTimeout(LV.setupT);const first=!LV.on&&LV.st==='connect';LV.on=true;LV.ok=true;LV.st='';LV.retry=0;LV.lastModel=LV.model;vLSset('rb_lvlast',LV.model);if(first){lvStat('conn',lvNow()-(LV.tOpen||LV.t0));lvReadyMark()}vLSset('rb_lvfail','0');vThink(false);lvUI();lvIdle();
   const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
@@ -1857,7 +1860,7 @@ function lvWarmOpen(w){w.model=w.models[w.mi];if(!w.model){WM=null;return}let ws
   if(m.sessionResumptionUpdate&&m.sessionResumptionUpdate.newHandle&&m.sessionResumptionUpdate.resumable!==false)w.handle=m.sessionResumptionUpdate.newHandle;if(m.goAway){lvWarmClose();setTimeout(lvWarm,200)}};
   if(typeof e.data==='string')h(e.data);else if(e.data&&e.data.text)e.data.text().then(h)};
  ws.onerror=()=>{};ws.onclose=e=>{if(WM!==w)return;const why=String((e&&e.reason)||'');
-  if(!w.ready){const wy=why+(e&&e.code?' ('+e.code+')':'');if(!lvQuota(wy)&&!lvSafe(w.model)){lvSafeOn(w.model,wy);lvWarmOpen(w);return}
+  if(!w.ready){const wy=why+(e&&e.code?' ('+e.code+')':'');if(lvRefused(wy)&&!lvSafe(w.model)){lvSafeOn(w.model,wy);lvWarmOpen(w);return}if(!lvQuota(wy)&&!lvRefused(wy)&&!w.netRetry){w.netRetry=1;setTimeout(()=>{if(WM===w)lvWarmOpen(w)},800);return}
    if(lvQuota(wy))lvMark('rb_lvm_'+w.model,10*60000);else vLSset('rb_lvwhy_'+w.model,wy.slice(0,160));if(w.mi+1<w.models.length){w.mi++;lvWarmOpen(w);return}WMBAD=lvNow()+10*60000}
   WM=null;clearTimeout(w.kill);if(w.ready)setTimeout(lvWarm,1000)}}
 function lvWarmClose(){const w=WM;WM=null;clearTimeout(WMT);if(!w)return;clearTimeout(w.kill);try{w.ws&&w.ws.close()}catch(e){}}
@@ -1879,7 +1882,8 @@ function lvEndSoon(ms){clearTimeout(LV.endT);LV.endT=setTimeout(()=>{if(LV.on||L
 // ---- สายหลุด / ต่อใหม่ / สลับรุ่น / ถอยกลับระบบเดิม ----
 function lvClosed(ws,e){if(ws!==LV.ws||LV.stopping)return;clearTimeout(LV.setupT);const why=String((e&&e.reason)||ws.__why||'')+(e&&e.code?' ('+e.code+')':'');
  if(!LV.on){   // ยังต่อไม่ติด
-  if(!lvQuota(why)&&!lvSafe(LV.model)&&!LV.handle&&!/timeout|ต่อไม่ติด/.test(why)){lvSafeOn(LV.model,why);lvOpen();return}   // ไม่รับค่าตั้งเสริม → ลองรุ่นเดิมแบบปลอดภัยก่อน (ไม่ข้ามไปรุ่นที่ช้ากว่า)
+  if(lvRefused(why)&&!lvSafe(LV.model)&&!LV.handle){lvSafeOn(LV.model,why);lvOpen();return}
+  if(!lvQuota(why)&&!lvRefused(why)&&!/timeout|ต่อไม่ติด/.test(why)&&!LV.handle&&!LV.netRetry){LV.netRetry=1;setTimeout(()=>{if(!LV.stopping)lvOpen()},500);return}   // เน็ตสะดุด → ลองรุ่นเดิมอีกครั้ง (ไม่ใช่ปัญหาค่าตั้ง)   // ไม่รับค่าตั้งเสริม → ลองรุ่นเดิมแบบปลอดภัยก่อน (ไม่ข้ามไปรุ่นที่ช้ากว่า)
   if(lvQuota(why))lvMark('rb_lvm_'+LV.model,10*60000);else if(LV.model)vLSset('rb_lvwhy_'+LV.model,why.slice(0,160));
   if(LV.handle&&LV.retry<3){LV.retry++;setTimeout(lvReopen,600*LV.retry);return}
   if(LV.mi+1<LV.models.length){LV.mi++;LV.handle='';vStat.textContent='⚡ ลองเสียงสดอีกรุ่น…';lvOpen();return}
