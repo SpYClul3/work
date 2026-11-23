@@ -152,7 +152,7 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .vfab.on,.vmic.on{background:#e8334a;border-color:#ff6b7d;animation:vpulse 1s infinite}
 @keyframes vpulse{0%{box-shadow:0 0 0 0 #e8334a99}100%{box-shadow:0 0 0 14px #e8334a00}}
 .vpanel{position:fixed;left:50%;top:10px;transform:translateX(-50%);width:min(560px,calc(100% - 20px));z-index:58;display:none;background:#0a1646;border:1px solid var(--cy);border-radius:14px;padding:12px 14px;box-shadow:0 10px 30px #000b}
-.vpanel.show{display:block}.vpanel.hidev{display:none!important}.vfab.wake{background:linear-gradient(135deg,#5b2bd6,#8a4dff);border-color:#b48cff;box-shadow:0 0 0 3px rgba(176,107,255,.35),0 6px 20px #6a3bff88}.vfab.think::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid transparent;border-top-color:#7fe3ff;border-right-color:#b06bff;animation:vspin .8s linear infinite}@keyframes vspin{to{transform:rotate(360deg)}}.vpanel.mini{top:auto;left:10px;right:82px;bottom:16px;width:auto;transform:none;padding:7px 10px 6px;border-radius:18px;max-height:42vh;overflow:auto;background:rgba(10,22,70,.94)}
+.vpanel.show{display:block}.tab .tc{display:inline-block;min-width:18px;margin-left:6px;padding:0 6px;border-radius:9px;background:#ffffff26;font-size:12px;line-height:18px;text-align:center}.tab.on .tc{background:#ffffff40}.t2cnt{display:inline-block;margin-left:6px;padding:1px 10px;border-radius:12px;background:linear-gradient(90deg,#1e6bff,#2b8cff);color:#fff;font-size:13px;vertical-align:middle}.t2cnt:empty{display:none}.vpanel.hidev{display:none!important}.vfab.wake{background:linear-gradient(135deg,#5b2bd6,#8a4dff);border-color:#b48cff;box-shadow:0 0 0 3px rgba(176,107,255,.35),0 6px 20px #6a3bff88}.vfab.think::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:3px solid transparent;border-top-color:#7fe3ff;border-right-color:#b06bff;animation:vspin .8s linear infinite}@keyframes vspin{to{transform:rotate(360deg)}}.vpanel.mini{top:auto;left:10px;right:82px;bottom:16px;width:auto;transform:none;padding:7px 10px 6px;border-radius:18px;max-height:42vh;overflow:auto;background:rgba(10,22,70,.94)}
 .vpanel.mini .vph{position:absolute;right:4px;top:2px;margin:0}.vpanel.mini .vph b,.vpanel.mini .vex,.vpanel.mini .vchat,.vpanel.mini #vMic{display:none!important}.vpanel.mini .vrow .btn.f{padding:3px 10px;font-size:12px;min-height:0;height:auto}.vpanel.mini .vph .vx{font-size:14px;padding:2px 5px}
 .vpanel.mini .vstat{font-size:11.5px;margin:0 78px 1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
 .vpanel.mini .vrow input{background:transparent;border:0;padding:0;height:auto;min-height:0;font-size:14px;color:#fff;box-shadow:none}
@@ -250,7 +250,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
   <div class="card"><h3>📊 สถิติผู้ปฏิบัติงาน (จำนวนงาน)<small class="mft" id="mfT3"></small></h3><div class="cols" id="cols"></div><div class="labs" id="labs"></div></div>
  </div>
 </div>
-<div class="card" id="vSearch" style="display:none"><h3>📋 ข้อมูลรายละเอียด</h3><div class="tabs" id="tabs"></div><div class="tabs" id="cfbar"></div><div id="dpl" class="dpl"></div><div class="sc"><table id="t2"></table></div><div class="pg"><span id="info"></span><div id="pgs"></div></div></div>
+<div class="card" id="vSearch" style="display:none"><h3>📋 ข้อมูลรายละเอียด <span id="t2cnt" class="t2cnt"></span></h3><div class="tabs" id="tabs"></div><div class="tabs" id="cfbar"></div><div id="dpl" class="dpl"></div><div class="sc"><table id="t2"></table></div><div class="pg"><span id="info"></span><div id="pgs"></div></div></div>
 <div class="card" id="vPhones" style="display:none"><h3>📞 รายการเบอร์โทรศัพท์</h3><div class="sc"><table id="t3"></table></div><div class="pg"><span id="info3"></span><div id="pgs3"></div></div></div>
 <div class="card" id="vDefer" style="display:none"><h3>💡 ผ่อนผันค่าไฟ</h3><div id="dpl4" class="dpl"></div><div id="dfSum" class="dpl"></div><div class="sc"><table id="t4"></table></div><div class="pg"><span id="info4"></span><div id="pgs4"></div></div></div>
 <div class="card" id="vTrack" style="display:none"><h3>🔌 ติดตามใส่สาย</h3><div class="dpl">จับคู่งาน ปลด/ถอด กับงาน ใส่สาย/ต่อกลับ: เครื่องวัดเลขที่ + บ้านเลขที่ ต้องตรง · บริษัท/ทริปงาน ถ้ามีทั้งสองฝั่งต้องตรง · งานซ้ำยึดวันเวลาล่าสุด · เรียงวันที่ปลด/ถอด ล่าสุดขึ้นก่อน · <b>จำนวนวัน</b> = ค้างมากี่วัน (ยังไม่ใส่สาย) หรือใช้เวลากี่วันจนใส่สาย</div><div class="tabs" id="trkTabs"></div><div class="sc"><table id="t7"></table></div><div class="pg"><span id="info7"></span><div id="pgs7"></div></div></div>
@@ -539,6 +539,8 @@ function cols(){const w=wc().slice(0,10);WL=w.map(x=>x[0]);const mx=Math.max(1,.
 
 <script>
 (window.__loaded=window.__loaded||[]).push("JS2");
+// จำนวนในแต่ละแท็บ (ตามตัวกรองอื่น ๆ ที่ใช้อยู่ ไม่นับตัวกรองประเภทงาน) → เห็นเลยว่าปลดกี่งาน ถอดกี่งาน
+function tabCounts_(){const o={};try{const tt=F.type;F.type='';const j=jobsV();F.type=tt;o.all=j.length;tp().forEach(t=>o[t]=0);j.forEach(r=>{const t=g(r,'ประเภทงาน');if(t in o)o[t]++});o.defer=deferV().length}catch(e){}return o}
 function rowsT2(skip){let kd,v;if(tab==='defer'){kd='defer';v=deferV()}else{kd='jobs';const j=jobsV();v=tab==='all'?j:j.filter(r=>g(r,'ประเภทงาน')===tab)}
  const dp=dpm(),ks=Object.keys(CF).filter(h=>h!==skip&&TH[kd].includes(h));
  if(ks.length)v=v.filter(r=>ks.every(h=>cell(r,h,dp,kd)===CF[h]));return[kd,v]}
@@ -553,11 +555,11 @@ function openCF(e,h){e.stopPropagation();CFH=h;cfq.value='';cfItems('');const b=
 function pickCF(i){const v=CFV[i];if(v===undefined)return;if(v===null)delete CF[CFH];else CF[CFH]=v;page=1;cfm.style.display='none';t2()}
 function clrCF(h){delete CF[h];page=1;t2()}
 function goto(p){page=p;t2()}
-function t2(){tabs_.innerHTML=tabsList().map(([k,l])=>`<button class="tab ${tab===k?'on':''}" onclick="setTabK('${k}')">${l}</button>`).join('');
+function t2(){const TC=tabCounts_();tabs_.innerHTML=tabsList().map(([k,l])=>`<button class="tab ${tab===k?'on':''}" onclick="setTabK('${k}')">${l}${TC[k]!=null?`<span class="tc">${TC[k]}</span>`:''}</button>`).join('');
  const ks=Object.keys(CF);cfbar.innerHTML=ks.length?ks.map(h=>`<button class="tab on" onclick="clrCF('${h}')">${h}: ${esc(CF[h]===''?'(ว่าง)':CF[h])} ✕</button>`).join('')+`<button class="tab" onclick="CF={};page=1;t2()">ล้างทั้งหมด</button>`:'';
  const [kd,v]=rowsT2(),per=10,pc=Math.max(1,Math.ceil(v.length/per));if(page>pc)page=pc;const s=v.slice((page-1)*per,page*per);
  dpl.innerHTML=TH[kd].some(h=>dueCols.includes(h))?LEG:'';t2_.innerHTML=tbl(kd,s,(page-1)*per,kd==='jobs'||kd==='defer',true);
- info.textContent=v.length?`แสดง ${(page-1)*per+1}-${(page-1)*per+s.length} จาก ${v.length} รายการ`:'ไม่มีรายการ';
+ info.textContent=v.length?`แสดง ${(page-1)*per+1}-${(page-1)*per+s.length} จาก ${v.length} รายการ`:'ไม่มีรายการ';try{t2cnt.textContent=v.length+' รายการ'}catch(e){}   // จำนวนบนหัวตาราง เห็นทันทีไม่ต้องเลื่อนลงไปท้ายตาราง
  let h=`<button onclick="goto(${Math.max(1,page-1)})">‹</button>`;for(let i=Math.max(1,page-2);i<=Math.min(pc,page+2);i++)h+=`<button class="${i===page?'on':''}" onclick="goto(${i})">${i}</button>`;
  pgs.innerHTML=h+`<button onclick="goto(${Math.min(pc,page+1)})">›</button>`}
 let view='home',p3=1,p4=1,p6=1,p7=1,p8=1,TT='wait';
@@ -1061,7 +1063,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  if(!t){o.intent='none';return o}
  const low=t.toLowerCase().replace(/\s/g,'');
  // คำสั่งสั้น
- const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน)(ครับ|ค่ะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
+ const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน|บันทึกงานใหม่|เพิ่มงาน|เพิ่มงานใหม่|เพิ่มข้อมูลใหม่|(เปิด|ไป|ไปที่|ขอ)?(หน้า|ฟอร์ม|หน้าฟอร์ม)?(บันทึก|กรอก)(งาน|ข้อมูล)?(ใหม่)?)(ให้หน่อย|หน่อย)?(ครับ|ค่ะ|คะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
   [/^(หน้าถัดไป|ถัดไป|หน้าต่อไป|next)(ครับ|ค่ะ)?$/,'next'],[/^(หน้าก่อน|หน้าที่แล้ว|ก่อนหน้า|ย้อนกลับ)(ครับ|ค่ะ)?$/,'prev'],[/^(ปิดเสียง|ปิดเสียงตอบ|เงียบ)(ครับ|ค่ะ)?$/,'mute'],[/^(เปิดเสียง|เปิดเสียงตอบ)(ครับ|ค่ะ)?$/,'unmute'],
   [/^(ดาวน์โหลด|ดาวโหลด|โหลดไฟล์|ดาวน์โหลดเลย|download)(ครับ|ค่ะ)?$/,'download'],[/^(ช่วยด้วย|วิธีใช้|ทำอะไรได้บ้าง|สั่งอะไรได้บ้าง|help)(ครับ|ค่ะ)?$/,'help'],[/^(หยุด|หยุดฟัง|พอแล้ว|เลิกฟัง|พอก่อน|แค่นี้ก่อน)(ครับ|ค่ะ)?$/,'stop'],[/^(ล้างบทสนทนา|เริ่มคุยใหม่|ลืมที่คุย|ลืมที่คุยกัน)(ครับ|ค่ะ)?$/,'reset'],
   [/^(สแกน|สแกนเลข|สแกนเลขเครื่อง|สแกนเลขเครื่องวัด|สแกนมิเตอร์|ถ่ายรูปเลขเครื่อง|อ่านเลขจากรูป)(ครับ|ค่ะ)?$/,'scan'],[/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)(ครับ|ค่ะ)?$/,'photo'],
@@ -1074,9 +1076,9 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  const pg=VPAGES.find(([w])=>cand.includes(w.toLowerCase().replace(/\s/g,'')));if(pg){o.intent='nav';o.page=pg[1];return o}
  // ค้นหา หรือ บันทึก
  // ค่าเริ่มต้น = ค้นหา · จะบันทึกต้องขึ้นต้นด้วย "บันทึกงาน / บันทึกข้อมูล / บันทึก…" (หรือพูดตอนฟอร์มบันทึกเปิดอยู่)
- const SAVERE=/^(บันทึกงาน|บันทึกข้อมูล|บันทึก|เพิ่มงาน|เพิ่มข้อมูล|ลงงาน|ลงข้อมูล)\s*/,SRCHRE=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)\s*/;
+ const SAVERE=/^(บันทึกงาน|บันทึกข้อมูล|บันทึก|เพิ่มงาน|เพิ่มข้อมูล|ลงงาน|ลงข้อมูล|กรอกข้อมูล|กรอก|ใส่ข้อมูล)\s*/,SRCHRE=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)\s*/;
  const saidSave=SAVERE.test(t),saidSearch=SRCHRE.test(t),isSearch=saidSearch||!(saidSave||ctx.formOpen);
- o.intent=isSearch?'search':'save';
+ o.intent=isSearch?'search':'save';o.formOpen=!!ctx.formOpen;o.saidSave=saidSave;
  t=t.replace(saidSave?SAVERE:SRCHRE,'');
  if(isSearch){   // เรียงลำดับ / สรุปแยก / ค้นทุกหมวด
   if(/เก่า\s*(ไป|มา)\s*ใหม่|เรียง\s*(ลำดับ)?\s*(จาก)?\s*เก่า|เก่าก่อน/.test(t)){o.sort='old';t=t.replace(/(เรียง\s*(ลำดับ)?\s*(จาก)?\s*)?(เก่า\s*(ไป|มา)\s*ใหม่|เก่า(ก่อน|สุด)?)/g,' ')}
@@ -1159,6 +1161,9 @@ function vFill(o){const f=o.fields,done=[];
  if(f.note)put('note',mNote,f.note);
  try{rcHintDraw();mruHintDraw()}catch(e){}
  return {k,done}}
+// สั่งด้วยเสียงบนมือถือ → เลื่อนไปที่ผลลัพธ์ให้เลย (ผลอยู่ใต้ช่องตัวกรอง ต้องเลื่อนลงไปไกล)
+function vScrollRes(pg){if(window.innerWidth>900)return;const id={search:'vSearch',phones:'vPhones',defer:'vDefer',track:'vTrack',nf:'vNf',mru:'vMru'}[pg],el=id&&document.getElementById(id);if(!el)return;
+ setTimeout(()=>{try{const y=el.getBoundingClientRect().top+window.scrollY-8;window.scrollTo({top:Math.max(0,y),behavior:'smooth'})}catch(e){}},250)}
 function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={};
  for(const k of Object.keys(F))F[k]='';CF={};
  const MV=(k,one)=>{const inc=o.multi&&o.multi[k]&&o.multi[k].length?o.multi[k]:(one?[one]:[]),exc=(o.not&&o.not[k])||[];return inc.concat(exc.map(x=>'!'+x)).join('|')};
@@ -1168,7 +1173,7 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={};
  let pg=o.kind==='phones'||f.phone?'phones':o.kind==='defer'?'defer':o.kind==='mru'||(f.mru&&!o.kind)?'mru':o.kind==='nf'?'nf':'search';
  if(fl.rc&&fl.rc!==RC_NONE){pg='track';TT=fl.rc===RC_WAIT?'wait':fl.rc===RC_DONE?'done':'end'}else if(fl.rc)set.rc=fl.rc;
  Object.assign(F,set);if(pg==='search'){tab='all';syncTabFromType()}page=p3=p4=p6=p7=p8=1;
- go(pg);filt();draw();
+ go(pg);filt();draw();vScrollRes(pg);
  const n={search:'info',phones:'info3',defer:'info4',mru:'info6',track:'info7',nf:'info8'}[pg],el=n&&document.getElementById(n);
  const lab={trip:'ทริป',comp:'บริษัท',worker:'ผู้ปฏิบัติงาน',type:'ประเภทงาน',date:'วันที่',mru:'MRU',dp:'ผ่อนผัน',rc:'สถานะใส่สาย',q:'ค้นหา'};
  return{pg,txt:Object.keys(set).map(k=>lab[k]+' '+(k==='date'?dlab(set[k]).replace(/^📅 /,''):['trip','comp','worker','type','mru'].includes(k)?fLab(set[k]):set[k])).join(' · ')+(o.sort?' · เรียง'+(SORTD==='old'?'เก่า→ใหม่':'ใหม่→เก่า'):'')+(fl.rc&&pg==='track'?(Object.keys(set).length?' · ':'')+fl.rc:''),count:el?el.textContent:''}}
@@ -1330,7 +1335,7 @@ const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
 let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Date.now();try{callApi('ping',[],()=>{},()=>{})}catch(e){}}
 // ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
 const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ไหนบ้าง|ก่อนหน้า|เทียบ|เฉลี่ย|ไม่ใช่)/i;
-const VFILL=/(ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
+const VFILL=/(กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
 function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase();
  const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
  names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
@@ -1339,7 +1344,7 @@ function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase();
  return t.replace(VFILL,' ').replace(/[\d\/\-.,:a-z]+/g,' ').replace(/[่้๊๋์็ํ]/g,'').replace(/\s+/g,'').trim()}
 function vSure(o,names){if(o.intent==='cmd'||o.intent==='nav'||o.intent==='me')return true;
  if(o.unknownName||VASK.test(o.heard||''))return false;if(vLeft(o,names).length>1)return false;
- if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone);
+ if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone||((o.formOpen||o.saidSave)&&Object.keys(o.fields).length));   // ฟอร์มเปิดอยู่/สั่งกรอกชัด ๆ + มีข้อมูล = ทำได้เลย
  if(o.intent==='search')return !!(Object.keys(o.fields).length||Object.keys(o.filters).length||o.kind||o.summary||o.all||o.sort||(o.not&&Object.values(o.not).some(x=>x.length))||/\d/.test(o.free||''));
  return false}
 let VREQ=0;
@@ -1755,7 +1760,7 @@ const lvNm=()=>(LV.tok&&LV.tok.name)||'ศิวภัทร';
 function lvIsWake(t){const x=String(t||'').toLowerCase().replace(/[่้๊๋์็ํ\s.,!?"'“”]/g,'').replace(/[ศษ]/g,'ส').replace(/[ภ]/g,'พ').replace(/ทร|ฒน|ฒ|ฑ|ท|ต|ธ/g,'ด');
  return /สิ?ว[ะ]?พ[ัา]?ด|สิวะ(ครับ|คับ|จ้า|จ๋า|เอ๊ย|เอย)?$|^สิวะ|sivapat|siwapat|siwaphat/.test(x)}
 const LVAWAKE=12000;   // ถูกเรียกชื่อแล้ว คุยต่อได้โดยไม่ต้องเรียกซ้ำ จนกว่าจะเงียบ 12 วินาที
-function lvAwake(on){if(on){if(!LV.awake){LV.awake=true;vTone('ok');lvUI()}LV.awakeUntil=lvNow()+LVAWAKE}else if(LV.awake){LV.awake=false;lvFlush();lvUI()}}
+function lvAwake(on){if(on){if(!LV.awake){LV.awake=true;vTone('ok');lvUI();const h=LV.hold||[];LV.hold=[];h.forEach(lvPlay)}LV.awakeUntil=lvNow()+LVAWAKE}else if(LV.awake){LV.awake=false;lvFlush();lvUI()}}
 const LVWAKERULE=()=>'โหมดรอฟัง (ไมค์เปิดรอตลอด): รอบตัวผู้ใช้อาจมีคนอื่นคุยกัน ให้เงียบไว้ ห้ามตอบ จนกว่าผู้ใช้จะเรียกชื่อ "'+lvNm()+'" (อาจได้ยินเป็น สิวะพัด ศิวะ ศิวพัฒน์ ศิวภัทร์ ศิวะภัทร) หรือกำลังคุยต่อเนื่องกับคุณภายใน 10 วินาทีหลังคุณตอบ · ถูกเรียกชื่ออย่างเดียว → ขานรับสั้น ๆ "ครับ" (เรียกชื่อผู้ใช้ด้วยถ้ารู้) แล้วรอฟัง · เรียกชื่อพร้อมคำสั่ง → ทำเลย ไม่ต้องขานรับ · ผู้ใช้บอกว่าพอแล้ว → พูดลาสั้น ๆ แล้วกลับไปเงียบรอ (ห้ามเรียก end_session)';
 function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handle};const {names,ctx}=vEnv(),c=vCtx(names,ctx,[]);delete c.alts;delete c.history;
  const fn=[{name:'do_command',description:'สั่งงานในแอประบบบันทึกงาน (ค้นหา ดู นับ สรุป บันทึก กรอกฟอร์ม แก้ ลบ เปิดหน้า รายงาน ยืนยัน/ยกเลิก หน้าถัดไป ฯลฯ) — เรียกทันทีทุกครั้งที่ผู้ใช้สั่งงาน แล้วพูดสรุปจาก result',
@@ -1786,12 +1791,12 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
   const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
- if(sc){if(sc.interrupted)lvFlush();
-  const mute=LV.wake&&!LV.awake;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ไม่เล่นเสียงตอบ (คนรอบข้างคุยกันไม่เกี่ยว)
-  if(!mute)((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
+ if(sc){if(sc.interrupted){lvFlush();LV.hold=[]}
   if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
+  const mute=LV.wake&&!LV.awake;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ยังไม่เล่นเสียงตอบ (เก็บไว้ก่อน ถ้ายืนยันว่าเรียกชื่อในรอบนี้ค่อยเล่นทันที)
+  ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(mute){(LV.hold=LV.hold||[]).push(p.inlineData.data);if(LV.hold.length>200)LV.hold.shift();return}if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
   if(sc.outputTranscription&&sc.outputTranscription.text&&!mute){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
-  if(sc.turnComplete){if(LV.awake)LV.awakeUntil=lvNow()+LVAWAKE;if(mute){LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;return}if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
+  if(sc.turnComplete){LV.hold=[];if(LV.awake)LV.awakeUntil=lvNow()+LVAWAKE;if(mute){LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;return}if(LV.heard||LV.said)vHist(LV.heard.trim(),LV.said.trim(),true);LV.heard='';LV.said='';LV.waitAns=false;LV.callWait=false;LV.spec=null;clearTimeout(LV.specT);lvIdle();if(LV.endAfter)lvEndSoon()}}
  if(m.toolCall&&Array.isArray(m.toolCall.functionCalls))lvTools(m.toolCall.functionCalls);
  if(m.sessionResumptionUpdate){const u=m.sessionResumptionUpdate;if(u.resumable!==false&&u.newHandle)LV.handle=u.newHandle}
  if(m.goAway)LV.goAway=true}
