@@ -1143,6 +1143,10 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
   if(M2.type.length||N2.type.length)o.kind=o.kind||'jobs';
   o.multi=M2;o.not=N2;if(o.unknownName&&(M2.worker.length||N2.worker.length))o.unknownName='';
  }
+ const VW=typeof view!=='undefined'?view:'',vk=VPK[VW]||'';
+ if(/^(อ่าน|บอก)\s*(วันที่|วัน)?\s*นัด/.test(heard)){o.intent='search';o.kind='defer';o.summary={by:'date'};o.keep=VW==='defer'}
+ else if(/^นับ/.test(heard)&&o.intent!=='save'){o.intent='search';o.count=true;if(/ทั้งหมด/.test(heard)&&!Object.keys(o.fields).length)o.kind=o.kind||(/งาน/.test(heard)||!vk?'jobs':vk);else if(!o.kind&&vk){o.kind=vk;o.keep=true}}
+ if(o.intent==='search'&&!o.kind&&vk&&(/(เฉพาะ|คนเดียว|แทน|แบ่งเป็น|แยกเป็น|อย่างเดียว)/.test(heard)||/^ของ/.test(heard))){o.kind=vk;o.keep=true}
  const anyNot=o.not&&Object.values(o.not).some(x=>x.length);
  if(!o.kind&&!Object.keys(o.fields).length&&!Object.keys(o.filters).length&&!o.unknownName&&!anyNot&&!o.summary&&!o.sort&&!(isSearch&&(saidSearch||/\d/.test(o.free||''))))o.intent='none';
  return o}
@@ -1173,7 +1177,7 @@ function vFill(o){const f=o.fields,done=[];
 // สั่งด้วยเสียงบนมือถือ → เลื่อนไปที่ผลลัพธ์ให้เลย (ผลอยู่ใต้ช่องตัวกรอง ต้องเลื่อนลงไปไกล)
 function vScrollRes(pg){if(window.innerWidth>900)return;const id={search:'vSearch',phones:'vPhones',defer:'vDefer',track:'vTrack',nf:'vNf',mru:'vMru'}[pg],el=id&&document.getElementById(id);if(!el)return;
  setTimeout(()=>{try{const y=el.getBoundingClientRect().top+window.scrollY-8;window.scrollTo({top:Math.max(0,y),behavior:'smooth'})}catch(e){}},250)}
-function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={};
+function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={},keepF=o.keep?Object.assign({},F):null;
  for(const k of Object.keys(F))F[k]='';CF={};
  const MV=(k,one)=>{const inc=o.multi&&o.multi[k]&&o.multi[k].length?o.multi[k]:(one?[one]:[]),exc=(o.not&&o.not[k])||[];return inc.concat(exc.map(x=>'!'+x)).join('|')};
  ['trip','comp','worker','type'].forEach(k=>{const v=MV(k,f[k]);if(v)set[k]=v});if(o.sort)SORTD=o.sort==='old'?'old':'new';
@@ -1181,6 +1185,7 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={};
  const q=f.meter||f.phone||f.house||(f.nb&&f.nb[0])||(o.free&&o.free.length>1&&/[\dA-Za-z]/.test(o.free)?o.free:'');if(q)set.q=q;
  let pg=o.kind==='phones'||f.phone?'phones':o.kind==='defer'?'defer':o.kind==='mru'||(f.mru&&!o.kind)?'mru':o.kind==='nf'?'nf':'search';
  if(fl.rc&&fl.rc!==RC_NONE){pg='track';TT=fl.rc===RC_WAIT?'wait':fl.rc===RC_DONE?'done':'end'}else if(fl.rc)set.rc=fl.rc;
+ if(keepF)Object.keys(keepF).forEach(k=>{if(keepF[k]&&!(k in set))set[k]=keepF[k]});
  Object.assign(F,set);if(pg==='search'){tab='all';syncTabFromType()}page=p3=p4=p6=p7=p8=1;
  go(pg);filt();draw();vScrollRes(pg);
  const n={search:'info',phones:'info3',defer:'info4',mru:'info6',track:'info7',nf:'info8'}[pg],el=n&&document.getElementById(n);
@@ -1191,7 +1196,7 @@ const THM=['มกราคม','กุมภาพันธ์','มีนา�
 const vDSay=d=>{const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return '';const y=+m[1]+543;return (+m[3])+' '+THM[+m[2]-1]+(+m[1]===new Date().getFullYear()?'':' '+y)};
 function vWhen(){if(!F.date)return '';if(F.date.startsWith('r:')){const l=dlab(F.date).replace(/^📅 /,'');return /สัปดาห์|เดือน|วัน/.test(l)?l:'ช่วง '+F.date.slice(2).split(':').map(vDSay).join(' ถึง ')}return 'วันที่ '+vDSay(F.date)}
 function vRowsNow(pg){return pg==='phones'?phonesV():pg==='defer'?deferV():pg==='mru'?mruV():pg==='nf'?nfV():pg==='track'?trackRows().map(x=>x._o):(tab==='defer'?deferV():tab==='all'?jobsV():jobsV().filter(r=>g(r,'ประเภทงาน')===tab))}
-const VBYF={type:r=>[g(r,'ประเภทงาน')||'-'],worker:r=>{const w=splitL(g(r,'ผู้ปฏิบัติงาน'));return w.length?w:['ไม่ระบุชื่อ']},trip:r=>[g(r,'ทริปงาน')||'-'],comp:r=>[g(r,'บริษัท')||'-'],date:r=>[dkey(PDATE.jobs(r))||'-']};
+const VBYF={type:r=>[g(r,'ประเภทงาน')||'-'],worker:r=>{const w=splitL(g(r,'ผู้ปฏิบัติงาน'));return w.length?w:['ไม่ระบุชื่อ']},trip:r=>[g(r,'ทริปงาน')||'-'],comp:r=>[g(r,'บริษัท')||'-'],date:r=>[dkey(g(r,'วันที่นัดชำระ')||PDATE.jobs(r))||'-']};
 function vBreak(o,pg){const k=['type','worker','trip','comp'].find(x=>o.multi&&(o.multi[x]||[]).length>=2);if(!k)return null;const rows=vRowsNow(pg),c={};o.multi[k].forEach(v=>c[v]=0);
  rows.forEach(r=>VBYF[k](r).forEach(v=>{if(v in c)c[v]++}));const parts=o.multi[k].map(v=>v+' '+c[v]),w=vWhen();
  return {txt:parts.join(' · ')+' · รวม '+rows.length,sp:(w?w+' ':'')+parts.join(' ')+' รวม '+rows.length+' รายการ'}}
@@ -1350,7 +1355,7 @@ const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
 let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Date.now();try{callApi('ping',[],()=>{},()=>{})}catch(e){}}
 // ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
 const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ไหนบ้าง|ก่อนหน้า|เทียบ|เฉลี่ย|ไม่ใช่)/i;
-const VFILL=/(รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
+const VFILL=/(เฉพาะ|คนเดียว|อย่างเดียว|แทน|แบ่งเป็น|แยกเป็น|วันที่นัด|นัด|อ่าน|บอก|นับ|รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี)/g;
 function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
  const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
  names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
@@ -1393,7 +1398,7 @@ function vGeo(cb){if(VGEO&&Date.now()-VGEOT<30*60000||!navigator.geolocation){cb
  try{navigator.geolocation.getCurrentPosition(p=>{VGEO={lat:Math.round(p.coords.latitude*100)/100,lon:Math.round(p.coords.longitude*100)/100};VGEOT=Date.now();fin()},()=>fin(),{timeout:4500,maximumAge:30*60000,enableHighAccuracy:false})}catch(e){fin()}}
 const VLIVE=/(อากาศ|ฝน|พายุ|ข่าว|ราคา|ทอง|น้ำมัน|ค่าเงิน|ดอลลาร์|หุ้น|บอล|ฟุตบอล|ผลการแข่ง|สกอร์|หวย|ลอตเตอรี่|รถติด|จราจร|ล่าสุด|ตอนนี้|วันนี้)/;
 // ---- 4.6) หลายคำสั่งในประโยคเดียว: “ไปหน้าเบอร์โทร ค้นหาบาส” / “บันทึกงานปลด … บันทึกเลย” ----
-const VSPLIT=/\s+(?=(?:ไปที่หน้า|ไปหน้า|กลับไปหน้า|เปิดหน้า|ค้นหา|บันทึกงาน|บันทึกข้อมูล|บันทึกเลย|ดาวน์โหลด|โหลดรายงาน|สรุปงาน))|\s*(?:แล้วก็|แล้ว|จากนั้น|ต่อด้วย)\s*(?=(?:ไป|เปิด|ค้น|หา|ดู|บันทึก|ลบ|แก้|โหลด|ดาวน์โหลด|สรุป))/;
+const VSPLIT=/\s+(?=(?:ไปที่หน้า|ไปหน้า|กลับไปหน้า|เปิดหน้า|ค้นหา|บันทึกงาน|บันทึกข้อมูล|บันทึกเลย|ดาวน์โหลด|โหลดรายงาน|สรุปงาน))|\s*(?:และ|แล้วก็|แล้ว)\s*(?=กลับ(?:ไป)?หน้า)|\s*(?:แล้วก็|แล้ว|จากนั้น|ต่อด้วย)\s*(?=(?:ไป|เปิด|ค้น|หา|ดู|บันทึก|ลบ|แก้|โหลด|ดาวน์โหลด|สรุป))/;
 function vSplit(raw){return vNorm(raw).split(VSPLIT).map(x=>x.trim()).filter(Boolean)}
 const VPK={phones:'phones',defer:'defer',mru:'mru',nf:'nf',search:'jobs'};
 function vChain(list,raw){const out=[];let last=null;
