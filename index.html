@@ -1063,7 +1063,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  if(!t){o.intent='none';return o}
  const low=t.toLowerCase().replace(/\s/g,'');
  // คำสั่งสั้น
- const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน|บันทึกงานใหม่|เพิ่มงาน|เพิ่มงานใหม่|เพิ่มข้อมูลใหม่|(เปิด|ไป|ไปที่|ขอ)?(หน้า|ฟอร์ม|หน้าฟอร์ม)?(บันทึก|กรอก)(งาน|ข้อมูล)?(ใหม่)?)(ให้หน่อย|หน่อย)?(ครับ|ค่ะ|คะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
+ const CMDS=[[/^(บันทึก|ยืนยัน|ตกลง|เซฟ|save)(เลย|ข้อมูล)?(ครับ|ค่ะ|คะ)?$/,'save'],[/^(ล้างค่า|ล้างตัวกรอง|ล้างการค้นหา|ล้าง)(ทั้งหมด|ทุกอย่าง|หมด|ให้หมด)?(เลย)?(ครับ|ค่ะ)?$/,'clear'],[/^(รีเฟรช|รีเฟรชข้อมูล|โหลดใหม่)(ครับ|ค่ะ)?$/,'refresh'],[/^(ปิด|ยกเลิก|ปิดหน้าต่าง)(ครับ|ค่ะ)?$/,'close'],[/^(บันทึกใหม่|เพิ่มข้อมูล|บันทึกข้อมูลใหม่|บันทึกงาน|บันทึกงานใหม่|เพิ่มงาน|เพิ่มงานใหม่|เพิ่มข้อมูลใหม่|(เปิด|ไป|ไปที่|ขอ)?(หน้า|ฟอร์ม|หน้าฟอร์ม)?(บันทึก|กรอก)(งาน|ข้อมูล)?(ใหม่)?)(ให้หน่อย|หน่อย)?(ครับ|ค่ะ|คะ)?$/,'new'],[/^(ใช่|ใช่แล้ว|ถูกต้อง|ถูก|yes|เลือกอันแรก|เอาเลย|ลบเลย|ได้เลย)(ครับ|ค่ะ|คะ)?$/,'yes'],[/^(ไม่|ไม่ใช่|ไม่เอา|ไม่ต้อง|no)(ครับ|ค่ะ|คะ)?$/,'no'],
   [/^(หน้าถัดไป|ถัดไป|หน้าต่อไป|next)(ครับ|ค่ะ)?$/,'next'],[/^(หน้าก่อน|หน้าที่แล้ว|ก่อนหน้า|ย้อนกลับ)(ครับ|ค่ะ)?$/,'prev'],[/^(ปิดเสียง|ปิดเสียงตอบ|เงียบ)(ครับ|ค่ะ)?$/,'mute'],[/^(เปิดเสียง|เปิดเสียงตอบ)(ครับ|ค่ะ)?$/,'unmute'],
   [/^(ดาวน์โหลด|ดาวโหลด|โหลดไฟล์|ดาวน์โหลดเลย|download)(ครับ|ค่ะ)?$/,'download'],[/^(ช่วยด้วย|วิธีใช้|ทำอะไรได้บ้าง|สั่งอะไรได้บ้าง|help)(ครับ|ค่ะ)?$/,'help'],[/^(หยุด|หยุดฟัง|พอแล้ว|เลิกฟัง|พอก่อน|แค่นี้ก่อน)(ครับ|ค่ะ)?$/,'stop'],[/^(ล้างบทสนทนา|เริ่มคุยใหม่|ลืมที่คุย|ลืมที่คุยกัน)(ครับ|ค่ะ)?$/,'reset'],
   [/^(สแกน|สแกนเลข|สแกนเลขเครื่อง|สแกนเลขเครื่องวัด|สแกนมิเตอร์|ถ่ายรูปเลขเครื่อง|อ่านเลขจากรูป)(ครับ|ค่ะ)?$/,'scan'],[/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)(ครับ|ค่ะ)?$/,'photo'],
@@ -1107,7 +1107,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  if(seg.meter!==undefined){const v=vDigits(seg.meter);if(v)o.fields.meter=v}
  if(seg.house!==undefined){const v=vFirst(seg.house,/^[0-9][0-9\/\-.]*(?:[ก-ฮ](?=\s|$))?/);if(v)o.fields.house=v.replace(/[.\-]$/,'')}
  if(seg.phone!==undefined){const v=String(seg.phone).replace(/[^\d\s\-]/g,' ').replace(/\D/g,'');if(v)o.fields.phone=v;else if(!o.kind)o.kind='phones'}
- if(seg.mru!==undefined){const c=vLetters(seg.mru).replace(/\b([A-Za-z])\s+(\d)/g,'$1$2').split(/[\s,]+/).filter(x=>/^[0-9A-Za-z]{2,}$/.test(x));if(c.length)o.fields.mru=c}
+ if(seg.mru!==undefined){const c=vLetters(seg.mru).replace(/\b([A-Za-z])\s+(\d)/g,'$1$2').split(/[\s,]+/).filter(x=>/^[0-9A-Za-z]{2,}$/.test(x));if(c.length)o.fields.mru=c;else if(!o.kind)o.kind='mru'}   // พูดแค่ "MRU" = หมวด MRU
  if(seg.nb!==undefined){const parts=String(seg.nb).split(/\s*(?:และ|กับ|,)\s*/).map(vDigits).filter(Boolean);
   const nb=parts.length>=2?parts:String(seg.nb).trim().split(' ').filter(x=>/^\d{4,}$/.test(x));o.fields.nb=(nb.length?nb:parts).slice(0,2)}
  if(seg.date!==undefined&&!o.fields.dateTo){const d=vDate(seg.date);if(d)o.fields.date=d}
@@ -1270,6 +1270,9 @@ function vPage(d){const fns={search:['goto','page'],phones:['goP3','p3'],defer:[
 const vNum=t=>{const m=String(t||'').match(/จาก\s*([\d,]+)/);return m?+m[1].replace(/,/g,''):/ไม่มีรายการ/.test(t)?0:null};
 
 // ---- 4.4) ทำตามคำสั่ง (มาจาก AI หรือจากตัวแยกคำสั่งพื้นฐาน) ----
+// ขานชื่อผู้ใช้ทุกครั้งที่ตอบ (ปิดได้ในตั้งค่า): "ครับ คุณบาส มี 2 รายการ"
+let VADDR=vLS('rb_vaddr','1')!=='0';function vAddrSet(on){VADDR=!!on;vLSset('rb_vaddr',VADDR?'1':'0')}
+function vAddr(t){t=String(t||'');let n='';try{n=meGet()||''}catch(e){}if(!VADDR||!t.trim()||!n||t.includes(n))return t;return 'ครับ คุณ'+n+' '+t}
 function vExec(o,note,quiet){let msg='',sp='',bad=false,listen=false,sg=null;const it=o.intent,formOn=()=>modal.classList.contains('show');
  if(it==='cmd'){const c=o.cmd;
   if((c==='yes'||c==='save')&&VPEND){const p=VPEND;VPEND=null;p.fn();msg='✅ '+p.done;sp=p.done}
@@ -1327,7 +1330,7 @@ function vExec(o,note,quiet){let msg='',sp='',bad=false,listen=false,sg=null;con
  if(note)msg+=' '+note;
  if(quiet)return {msg,sp,bad,sg,listen};
  if(it!=='chat'&&o.cmd!=='reset'&&o.heard)vHist(o.heard,msg.replace(/^\S+\s/,'').slice(0,160),VHIST.length&&document.getElementById('vChat')&&vChat.style.display==='block');
- vShow(o.heard,msg,bad,sg);vSay(sp,listen&&VSR&&vpanel.classList.contains('show')?()=>{if(!VON&&vpanel.classList.contains('show'))vStart(true)}:null);return o}
+ vShow(o.heard,msg,bad,sg);vSay(vAddr(sp),listen&&VSR&&vpanel.classList.contains('show')?()=>{if(!VON&&vpanel.classList.contains('show'))vStart(true)}:null);return o}
 
 // ---- 4.5) ส่งให้ AI ตีความ (ถ้า Code.gs มี GEMINI_KEY) · คำสั่งสั้น/เปิดหน้า ทำทันทีไม่ต้องรอ AI ----
 const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
@@ -1344,7 +1347,7 @@ function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase();
  return t.replace(VFILL,' ').replace(/[\d\/\-.,:a-z]+/g,' ').replace(/[่้๊๋์็ํ]/g,'').replace(/\s+/g,'').trim()}
 function vSure(o,names){if(o.intent==='cmd'||o.intent==='nav'||o.intent==='me')return true;
  if(o.unknownName||VASK.test(o.heard||''))return false;if(vLeft(o,names).length>1)return false;
- if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone||((o.formOpen||o.saidSave)&&Object.keys(o.fields).length));   // ฟอร์มเปิดอยู่/สั่งกรอกชัด ๆ + มีข้อมูล = ทำได้เลย
+ if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone||((o.formOpen||o.saidSave)&&Object.keys(o.fields).length)||(o.saidSave&&o.kind));   // "บันทึกงาน MRU / บันทึกเบอร์โทร" = เปิดฟอร์มหมวดนั้น   // ฟอร์มเปิดอยู่/สั่งกรอกชัด ๆ + มีข้อมูล = ทำได้เลย
  if(o.intent==='search')return !!(Object.keys(o.fields).length||Object.keys(o.filters).length||o.kind||o.summary||o.all||o.sort||(o.not&&Object.values(o.not).some(x=>x.length))||/\d/.test(o.free||''));
  return false}
 let VREQ=0;
@@ -1385,7 +1388,7 @@ function vChain(list,raw){const out=[];let last=null;
  list.forEach(o=>{if(o.intent==='search'&&!o.kind&&last&&last.intent==='nav'&&VPK[last.page])o.kind=VPK[last.page];out.push(vExec(o,'',true));last=o});
  const msg=out.map((r,i)=>(i+1)+') '+r.msg).join('  '),sp=out.map(r=>r.sp).filter(Boolean).join(' · '),sg=[].concat(...out.map(r=>r.sg||[])),listen=out.some(r=>r.listen);
  vHist(raw,msg.slice(0,200),VHIST.length&&vChat.style.display==='block');vShow(vNorm(raw),msg,out.some(r=>r.bad),sg.length?sg:null);
- vSay(sp,listen&&VSR&&vpanel.classList.contains('show')?()=>{if(!VON&&vpanel.classList.contains('show'))vStart(true)}:null)}
+ vSay(vAddr(sp),listen&&VSR&&vpanel.classList.contains('show')?()=>{if(!VON&&vpanel.classList.contains('show'))vStart(true)}:null)}
 const vEnv=()=>({names:[...new Set(fw().concat(wk()))],ctx:{comps:compOpts(),trips:tripOpts(),formOpen:modal.classList.contains('show')}});
 // ข้อมูลสดที่ไม่ใช่คำสั่งงาน → ให้เซิร์ฟเวอร์ไปเช็กเลยรอบเดียว (ไม่ต้องถาม AI ก่อนว่าเป็นคำสั่งอะไร) · อากาศ: เฉพาะเมื่อไม่ได้บอกชื่อที่
 const VLIVEW=/(ข่าว|ราคาทอง|ทองคำ|ทองวันนี้|ราคาน้ำมัน|น้ำมันวันนี้|ค่าเงิน|ดอลลาร์|ราคาหุ้น|หุ้นวันนี้|ผลบอล|ฟุตบอล|ผลการแข่ง|สกอร์|หวย|ลอตเตอรี่|รถติด|จราจร)/,VWXONLY=/(อากาศ|ฝนจะตก|ฝนตกไหม|ฝนตกมั้ย|ร้อนไหม|ร้อนมั้ย|อุณหภูมิ|กี่องศา)/,VPLACE=/(ที่|จังหวัด|เมือง|อำเภอ|เชียง|ภูเก็ต|พัทยา|หาดใหญ่|ขอนแก่น|โคราช|อุดร|อุบล|กรุงเทพ|ต่างประเทศ|ญี่ปุ่น|เกาหลี)/;
@@ -1558,6 +1561,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
      +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]')}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · ทำงานเฉพาะเมื่อได้ยินชื่อ “ศิวภัทร” (ปุ่ม 🎤 ม่วง = รอ · แดง = คุยอยู่) · เงียบ 12 วิ กลับไปรอชื่อ · จอไม่ดับเอง · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
+  +row('ขานชื่อผู้ใช้ทุกครั้งที่ตอบ','เช่น “ครับ คุณ'+esc((typeof meGet==='function'&&meGet())||'…')+' มี 2 รายการ” (ชื่อที่เลือกตอนเปิดแอป)',` <label><input type="checkbox" id="sAddr"${VADDR?' checked':''} onchange="vAddrSet(this.checked)"> เปิด</label>`)
   +row('เสียงผู้ช่วย (เสียงสด)',`<select id="sLvoice" onchange="lvVoiceSet(this.value)">${LVVOICES.map(([v,l])=>`<option value="${v}"${v===LVVOICE?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('เสียงผู้ช่วย (แบบเดิม)',(()=>{const vs=vThVoices();if(!vs.length)return 'ใช้เสียงเริ่มต้นของเครื่อง';return `<select id="sVoice" onchange="vVoiceSet(this.value);vSayTest()"><option value="">อัตโนมัติ (เลือกเสียงที่ฟังเป็นธรรมชาติที่สุด)</option>${vs.map(v=>`<option value="${esc(v.name)}"${v.name===VVNAME?' selected':''}>${esc(v.name)}${v.localService?'':' · ออนไลน์'}</option>`).join('')}</select>`})())
   +row('ความเร็วเสียงพูด',`<select id="sRate" onchange="vRateSet(this.value);vSayTest()">${[[0.9,'ช้า ฟังชัด'],[1.05,'ปกติ (แนะนำ)'],[1.2,'เร็ว'],[1.35,'เร็วมาก']].map(([v,l])=>`<option value="${v}"${Math.abs(VRATE-v)<.01?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1691,7 +1695,7 @@ function lvFastSet(on){LVFAST=!!on;vLSset('rb_lvfast',LVFAST?'1':'0')}
 // วัดความเร็วจริง (แสดงในตั้งค่า): แตะ→พร้อมคุย และ พูดจบ→เริ่มได้ยินคำตอบ
 let LVST=(()=>{try{return JSON.parse(localStorage.getItem('rb_lvst')||'{}')||{}}catch(e){return {}}})();
 function lvStat(k,ms){if(!(ms>0&&ms<60000))return;const a=(LVST[k]=(LVST[k]||[]).concat(Math.round(ms)).slice(-8));vLSset('rb_lvst',JSON.stringify(LVST));return a}
-function lvStatReset(){LVST={};vLSset('rb_lvst','{}')}
+function lvStatReset(){LVST={};vLSset('rb_lvst','{}');vLSset('rb_lvaireq','[]');LV.lastAiReq=''}   // ล้างรายการประโยคที่ต้องถาม AI ด้วย
 const lvAvg=k=>{const a=LVST[k]||[];return a.length?(a.reduce((x,y)=>x+y,0)/a.length/1000).toFixed(1):''};
 // กุญแจล่วงหน้า: ขอไว้ตั้งแต่เปิดแอป (ใช้ได้ 25 นาที) → แตะ 🎤 แล้วต่อ Google ทันที ไม่ต้องรอเซิร์ฟเวอร์
 let LVPRE=null,LVPREQ=false,LVPRECB=[];
@@ -1769,7 +1773,7 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
  const native=/native-audio/.test(o.model),safe=lvSafe(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
  if(native&&!safe)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
  const st={model:'models/'+o.model,generationConfig:gc,
-  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'" (ไม่ต้องเรียกชื่อทุกประโยค)':'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
+  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" เสมอ (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา':'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
   inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
  if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}};   // ตรวจพูดจบไว
