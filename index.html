@@ -1817,10 +1817,10 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
  const native=/native-audio/.test(o.model),safe=lvSafe(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
  if(native&&!safe)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
  const st={model:'models/'+o.model,generationConfig:gc,
-  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" เสมอ (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา':'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
+  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" เสมอ (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา':'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+'\nผลของ do_command มี say = ประโยคที่แอปเตรียมไว้แล้ว: พูด say ทันทีคำต่อคำ ไม่ต้องคิด ไม่เรียบเรียงใหม่ ไม่เติมคำ ไม่ขึ้นต้นชื่อซ้ำ (ถ้าไม่มี say ค่อยสรุปจาก result เอง)'+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
   inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
- if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:500,endOfSpeechSensitivity:'END_SENSITIVITY_HIGH',prefixPaddingMs:20}};   // ตรวจพูดจบไว
+ if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:600,endOfSpeechSensitivity:'END_SENSITIVITY_LOW',prefixPaddingMs:20}};   // ตรวจพูดจบไว
  if(o.wake&&native&&!safe)st.proactivity={proactiveAudio:true};   // ให้ผู้ช่วยเลือกเงียบได้เมื่อเสียงนั้นไม่ได้พูดกับเขา
  return st}
 // โหมดปลอดภัย: รุ่นไหนไม่รับค่าตั้งเสริม (ปิดการคิด/ตรวจพูดจบไว/ค้น Google/เลือกเงียบ) → ใช้เฉพาะค่าที่จำเป็น · จำไว้ 7 วัน · เก็บเหตุผลไว้ดูในตั้งค่า
@@ -1876,9 +1876,11 @@ function lvTool(fc,cb){const a=fc.args||{};
  if(!vChatOnly(req))try{const q=lvParseQ(req);lvStat('ai',vSure(q.o,q.names)||vSplit(req).length>1?1:2);if(!vSure(q.o,q.names)&&vSplit(req).length<2){LV.lastAiReq=req;try{const a=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]').filter(x=>x!==req);a.unshift(req);vLSset('rb_lvaireq',JSON.stringify(a.slice(0,5)))}catch(e){}}}catch(e){}   // 1 = แอปแปลเองได้ · 2 = ต้องถาม AI ข้อความเพิ่ม
  vRunQ(req,rs=>lvReply(rs,req,cb))}
 function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''});const bad=rs.some(r=>r.bad),sg=(rs.find(r=>r.sg&&r.sg.length)||{}).sg;
+ const chat=rs.some(r=>r.chat),sp1=rs.map(r=>lvClean(r.sp||'')).filter(Boolean).join(' '),say=!chat&&sp1?vAddr(sp1):'';
  const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
  try{vShow(heard,rs.map(r=>r.msg).join(' · '),bad,sg)}catch(e){}
- cb({result:txt||'ทำแล้ว',ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
+ if(say)vSaidAdd(say);
+ cb({result:txt||'ทำแล้ว',say:say||undefined,ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
 function lvReadyMark(){if(LV.readyMarked||!LV.on||!LV.stream)return;LV.readyMarked=true;lvStat('ready',lvNow()-LV.t0);lvStat('warm',LV.warmUsed?1:2)}
 // ---- ทำล่วงหน้า: ระหว่างผู้ใช้พูด แปลในเครื่องไปด้วย · คำสั่งดู/ค้นหา/นับ/เปิดหน้าที่ชัดแล้ว → โชว์ผลบนจอทันที (บันทึก/แก้/ลบ รอผู้ช่วยสั่งเท่านั้น) ----
 const lvKey=o=>JSON.stringify([o.intent,o.kind||'',o.fields,o.filters,o.multi||{},o.not||{},!!o.count,o.summary||'',o.page||'',o.sort||'',!!o.all]);
