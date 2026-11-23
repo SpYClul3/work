@@ -41,7 +41,7 @@ header h1{font-size:23px;font-weight:600;color:#cfe0ff}header h1 small{display:b
 .card{border:1px solid var(--b);border-radius:12px;background:linear-gradient(180deg,#0a1646ee,#070f33ee);padding:12px 14px;min-width:0}
 .card h3{font-size:15px;font-weight:500;margin-bottom:10px;display:flex;gap:8px;align-items:center}
 .row1{display:grid;grid-template-columns:1fr 210px;gap:12px}
-.filt{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.filt{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}.filt select,.filt .msel,.filt input{height:40px;box-sizing:border-box}   /* ทุกช่องสูงเท่ากัน ป้ายชื่อเรียงตรงกัน */
 .filt label{display:flex;flex-direction:column;gap:3px;font-size:12px;flex:1;min-width:110px}
 select,input[type=text],input[type=datetime-local]{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6px 8px;width:100%}
 .btn{border:1px solid var(--cy);background:transparent;border-radius:8px;padding:7px 16px;cursor:pointer;color:#bfe6ff}
@@ -123,6 +123,9 @@ input[type=date]{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;p
 .rm b{white-space:normal;line-height:1.35}.rm small{white-space:normal;line-height:1.45}
 .rm i,.rt em{font-style:normal;color:var(--m);font-weight:400;font-size:12px}.rt em{display:block}
 .rbw{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}.rbw small{font-size:10.5px;color:var(--m)}
+.rm .kv{white-space:nowrap}
+@media(max-width:600px){.ri{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:3px;align-items:start}.rbw{grid-row:span 2;padding-top:2px}.rb{min-width:60px}
+ .rt{grid-column:2;text-align:left;display:flex;flex-wrap:wrap;gap:0 6px;align-items:baseline;font-size:11.5px}.rt em,.rt b{display:inline}.rt b{font-weight:400;color:var(--m)}.rm b{font-size:13.5px}}   /* มือถือ: เวลาบันทึกย้ายลงใต้ข้อความ ข้อความไม่ถูกเบียด */
 .mft{font-size:12px;font-weight:400;color:var(--cy);margin-left:6px}
 .mid{align-items:center}.mid .banner{align-self:center;height:auto;min-height:0}
 .mside{min-width:0}
@@ -523,7 +526,8 @@ function t1(){t1_.innerHTML=tbl('phones',phonesV().slice(0,8),0,false)}
 const RB={'MRU':'#d4a017','ปลด':'#e8731e','ถอด':'#18a85a','ใส่สาย':'#d63a8a','ต่อกลับ':'#7a4bff','เลิกใช้':'#6b7280','ไม่พบข้อมูล':'#b45309','เบอร์โทร':'#1a9fd8','ผ่อนผัน':'#c9a010'};
 function whenL(ts){const t=pts(ts);if(!t)return['',''];const d=new Date(t),n=new Date(),day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),df=Math.round((day(n)-day(d))/864e5);
  const m=String(ts).match(/(\d{1,2}):(\d{2})/),hm=m?P(m[1])+':'+m[2]:'',dl=df===0?'วันนี้':df===1?'เมื่อวาน':fmtD(String(ts).split(',')[0]);return[dl,hm]}
-function rec(){const L=(l,v)=>`<i>${l}</i> ${esc(v)}`,mh=r=>L('เครื่องวัดเลขที่',g(r,'เครื่องวัดเลขที่'))+' · '+L('บ้านเลขที่',g(r,'บ้านเลขที่')||'-'),tp=r=>(g(r,'ทริปงาน')?' · '+L('ทริปงาน',g(r,'ทริปงาน')):'')+(g(r,'MRU')?' · '+L('MRU',g(r,'MRU')):'');
+function rec(){const L=(l,v)=>`<span class="kv"><i>${l}</i> ${esc(v)}</span>`,   // ป้าย+ค่า ไม่ถูกตัดกลางคำ (เดิม "บ้านเลข / ที่")
+ mh=r=>L('เครื่องวัดเลขที่',g(r,'เครื่องวัดเลขที่'))+' · '+L('บ้านเลขที่',g(r,'บ้านเลขที่')||'-'),tp=r=>(g(r,'ทริปงาน')?' · '+L('ทริปงาน',g(r,'ทริปงาน')):'')+(g(r,'MRU')?' · '+L('MRU',g(r,'MRU')):'');
  const ev=[...DB.jobs.map(r=>({k:key(r),b:g(r,'ประเภทงาน')||'งาน',c:'ประเภทงาน',m:mh(r),s:L('ผู้ปฏิบัติงาน',g(r,'ผู้ปฏิบัติงาน')||'-')+(g(r,'บริษัท')?' · '+L('บริษัท',g(r,'บริษัท')):'')+tp(r),t:g(r,'เวลาบันทึก')||g(r,'วันที่ปฏิบัติงาน')})),
  ...DB.phones.map(r=>({k:key(r),b:'เบอร์โทร',c:'',m:mh(r),s:(g(r,'เบอร์โทร')&&g(r,'เบอร์โทร')!=='0'?L('เบอร์โทร',g(r,'เบอร์โทร'))+' · ':'')+L('ผู้ปฏิบัติงาน',g(r,'ผู้ปฏิบัติงาน')||'-')+tp(r),t:g(r,'เวลาบันทึก')})),
  ...DB.defer.filter(r=>!g(r,'ซ่อน')).map(r=>({k:key(r),b:'ผ่อนผัน',c:'',m:mh(r),s:L('วันที่นัดชำระ',fmtD(g(r,'วันที่นัดชำระ')))+tp(r),t:g(r,'เวลาบันทึก')})),...(DB.mru||[]).map(r=>({k:key(r),b:'MRU',c:'',m:L('MRU',g(r,'MRU')),s:L('ผู้ปฏิบัติงาน',g(r,'ผู้ปฏิบัติงาน')||'-')+' · '+L('วันที่',fmtD(g(r,'วันที่')))+(g(r,'บริษัท')?' · '+L('บริษัท',g(r,'บริษัท')):'')+(g(r,'ทริปงาน')?' · '+L('ทริปงาน',g(r,'ทริปงาน')):''),t:g(r,'เวลาบันทึก')})),...(DB.nf||[]).map(r=>({k:key(r),b:'ไม่พบข้อมูล',c:'',m:mh(r),s:([g(r,'เครื่องวัดใกล้เคียง 1'),g(r,'เครื่องวัดใกล้เคียง 2')].filter(Boolean).length?L('ใกล้เคียง',[g(r,'เครื่องวัดใกล้เคียง 1'),g(r,'เครื่องวัดใกล้เคียง 2')].filter(Boolean).join(', '))+' · ':'')+L('ผู้ปฏิบัติงาน',g(r,'ผู้ปฏิบัติงาน')||'-')+tp(r),t:g(r,'เวลาบันทึก')}))].sort((a,b)=>b.k-a.k).slice(0,5);
