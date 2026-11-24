@@ -390,6 +390,11 @@ function dupInfo(){if(DUPC&&DUPC.src===DB.jobs&&DUPC.n===DB.jobs.length)return D
   const k=m+'|'+g(r,'บ้านเลขที่').replace(/\s+/g,'')+'|'+t+'|'+d;(G.get(k)||G.set(k,[]).get(k)).push([r,pts(g(r,'เวลาบันทึก')),i])});
  G.forEach(a=>{if(a.length<2)return;a.sort((x,y)=>(x[1]-y[1])||(x[2]-y[2]));const L=a[a.length-1][0];a.forEach(([r])=>{grp.add(r);last.set(r,L);if(r!==L)old.add(r)})});
  DUPC={src:DB.jobs,n:DB.jobs.length,old,grp,last};return DUPC}
+// งานที่จะบันทึก (d) มีอยู่แล้วในวันเดียวกันไหม → คืนรายการล่าสุดที่ตรงกัน (ใช้เตือนก่อนบันทึกซ้ำ)
+function dupFind(d){const t=String(d['ประเภทงาน']||'').trim(),m=String(d['เครื่องวัดเลขที่']||'').replace(/\s+/g,'').toUpperCase(),h=String(d['บ้านเลขที่']||'').replace(/\s+/g,''),dt=dkey(d['วันที่ปฏิบัติงาน']);
+ if(!DUPT.includes(t)||!m||!dt)return null;const a=DB.jobs.filter(r=>g(r,'ประเภทงาน')===t&&g(r,'เครื่องวัดเลขที่').replace(/\s+/g,'').toUpperCase()===m&&g(r,'บ้านเลขที่').replace(/\s+/g,'')===h&&dkey(g(r,'วันที่ปฏิบัติงาน'))===dt);
+ return a.sort((x,y)=>pts(g(y,'เวลาบันทึก'))-pts(g(x,'เวลาบันทึก')))[0]||null}
+let SAVE_DUP_OK=false;
 const isDupOld=r=>dupInfo().old.has(r),noDup=a=>a.filter(r=>!isDupOld(r));
 const dupHM=r=>{const m=String(g(r,'เวลาบันทึก')).match(/(\d{1,2}):(\d{2})/);return m?P(m[1])+':'+m[2]:''};
 function dupTag(r){const I=dupInfo();if(!I.grp.has(r))return '';const L=I.last.get(r);
@@ -905,6 +910,8 @@ function save(){const m=mMeter.value.trim(),w=mWorker.value;
  if(!run){alert('โหมดตัวอย่าง: ยังไม่ได้บันทึกลง Google Sheet');return}
 if(EDIT){if(kind==='mru'&&mruTokens(mMru.value).length>1){alert('แก้ไขได้ทีละ 1 MRU');return}saveEdit(d);return}
 if(kind==='mru'){saveMru(d);return}
+ if(kind==='jobs'&&!SAVE_DUP_OK){const ex=dupFind(d);if(ex){const msg='งาน'+d['ประเภทงาน']+' เครื่อง '+m+(h?' บ้าน '+h:'')+' ลงไปแล้ววันเดียวกัน'+(dupHM(ex)?' เมื่อ '+dupHM(ex):'')+(g(ex,'ผู้ปฏิบัติงาน')?' โดย'+g(ex,'ผู้ปฏิบัติงาน'):'');
+  if(window.__dupVoice){window.__dupVoice(msg);return}if(!confirm('⚠️ '+msg+'\n\nบันทึกซ้ำอีกครั้งไหม? (ระบบจะนับเฉพาะรายการล่าสุด)'))return}}
  d.ID=uid();const kd=kind,lab={jobs:'บันทึกงาน',phones:'บันทึกเบอร์โทรศัพท์',defer:'บันทึกผ่อนผันค่าไฟ',mru:'บันทึก MRU',nf:'บันทึกงานไม่พบข้อมูล'}[kd];
  let rec=null,mergedLocal=false;
  if(kd==='phones'&&d['เครื่องวัดเลขที่']){rec=[...(DB.phones||[])].reverse().find(r=>['ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่'].every(k=>g(r,k)===String(d[k]||'').trim()))||null;if(rec){mergePhoneRec(rec,d);rec._p=1;mergedLocal=true}}
@@ -1313,9 +1320,12 @@ function vAddr(t){t=String(t||'');let n='';try{n=meGet()||''}catch(e){}if(!VADDR
 function vExec(o,note,quiet){let msg='',sp='',bad=false,listen=false,sg=null;const it=o.intent,formOn=()=>modal.classList.contains('show');
  if(it==='cmd'){const c=o.cmd;
   if((c==='yes'||c==='save')&&VPEND){const p=VPEND;VPEND=null;p.fn();msg='✅ '+p.done;sp=p.done}
-  else if((c==='no'||c==='close')&&VPEND){VPEND=null;msg=sp='ยกเลิกแล้ว ไม่ได้ลบ'}
+  else if((c==='no'||c==='close')&&VPEND){const p=VPEND;VPEND=null;msg=sp=p.no||'ยกเลิกแล้ว ไม่ได้ลบ'}
   else if(c==='yes'){const i=VSUG.findIndex(x=>!x.done);if(i>=0){vPick(i);vStat.textContent='คำสั่ง:';vTxt.value=o.heard;vSay('เปลี่ยนให้แล้ว');return o}msg=sp='ไม่มีอะไรให้ยืนยัน'}
-  else if(c==='save'){if(formOn()){const w=vQuiet(()=>save());if(formOn()){msg='⚠️ ยังบันทึกไม่ได้: '+(w||'ดูข้อความเตือนในฟอร์ม');sp='ยังบันทึกไม่ได้ '+(w.replace(/^กรุณา/,'ต้อง')||'');bad=true;listen=true}else{msg='✅ บันทึกแล้ว';sp='บันทึกแล้ว'}}
+  else if(c==='save'){let dupM='';window.__dupVoice=x=>{dupM=x};const wasOpen=formOn();let w0='';try{w0=wasOpen?vQuiet(()=>save()):''}finally{window.__dupVoice=null}
+   if(dupM){VPEND={fn:()=>{SAVE_DUP_OK=true;try{vQuiet(()=>save())}finally{SAVE_DUP_OK=false}},done:'บันทึกซ้ำแล้ว',ask:'บันทึกงานซ้ำ',no:'ยกเลิกแล้ว ยังไม่ได้บันทึก'};msg='⚠️ '+dupM+' — พูดว่า “ยืนยัน” เพื่อบันทึกซ้ำ หรือ “ยกเลิก”';sp=dupM+' จะบันทึกซ้ำไหม พูดว่า ยืนยัน หรือ ยกเลิก';listen=true;
+    sg=[{g:'p',lab:'บันทึกซ้ำ',fn:()=>vExec({intent:'cmd',cmd:'yes',heard:''})},{g:'p',lab:'ยกเลิก',fn:()=>vExec({intent:'cmd',cmd:'no',heard:''})}]}
+   else if(wasOpen){const w=w0;if(formOn()){msg='⚠️ ยังบันทึกไม่ได้: '+(w||'ดูข้อความเตือนในฟอร์ม');sp='ยังบันทึกไม่ได้ '+(w.replace(/^กรุณา/,'ต้อง')||'');bad=true;listen=true}else{msg='✅ บันทึกแล้ว';sp='บันทึกแล้ว'}}
    else if(rmodal.classList.contains('show')){dlXlsx();msg=sp='กำลังดาวน์โหลดรายงาน'}
    else{vCloseAll();openM();msg='📝 เปิดฟอร์มบันทึกแล้ว พูดข้อมูลได้เลย';sp='เปิดฟอร์มแล้ว พูดข้อมูลได้เลย';listen=true}}
   else if(c==='download'){if(!rmodal.classList.contains('show'))openR();dlXlsx();msg=sp='กำลังดาวน์โหลดรายงาน Excel'}
@@ -1447,6 +1457,8 @@ function vLogAi(text,via,out){try{text=String(text||'').replace(/\s+/g,' ').trim
  let u='';try{const x=Object.assign({},out||{});delete x.say;delete x.sources;u=JSON.stringify(x).slice(0,400)}catch(e){}
  callApi('logAiReq',[text,via,u],()=>{},()=>{})}catch(e){}}
 // สั่งงานแบบเงียบ (ใช้กับเสียงสด): รับประโยคไทย → แปลในเครื่องก่อน (เร็ว แม่น) → ไม่ชัดค่อยถาม AI ข้อความ → ทำจริง → cb(ผลลัพธ์) ไม่พูดเอง
+// ประโยคนี้แอปแปลเองได้แล้วไหม (ใช้ซ่อนประโยคที่สอนแล้วออกจากรายการ)
+function vKnown(t){try{t=vNorm(t);if(!t)return false;if(vChatOnly(t))return true;const ps=vSplit(t),{names,ctx}=vEnv();return ps.length>0&&ps.every(p=>vSure(vParse(p,names,ctx),names))}catch(e){return false}}
 function vRunQ(raw,cb){raw=vNorm(raw);const {names,ctx}=vEnv(),out=r=>{try{cb(r)}catch(e){}};
  const ex=o=>{try{const r=vExec(o,'',true);return r&&typeof r.msg==='string'?r:{msg:'ทำแล้ว',sp:''}}catch(e){return {msg:'⚠️ ทำไม่สำเร็จ: '+(e&&e.message||e),bad:true}}};
  if(!raw){out([{msg:'ไม่ได้ยินคำสั่ง',bad:true}]);return}
@@ -1607,7 +1619,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
   +row('ความเร็วเสียงสด (เฉลี่ยล่าสุด)',(()=>{const a=k=>lvAvg(k)||'-',w=(LVST.warm||[]).filter(x=>x===1||x===2);if(!lvAvg('ready')&&!lvAvg('answer'))return 'ยังไม่มีข้อมูล (ลองคุยสักครั้ง)';
     return 'แตะ 🎤 → พร้อมคุย '+a('ready')+' วินาที'+(w.length?' (ใช้สายที่ต่อรอไว้ '+w.filter(x=>x===1).length+'/'+w.length+' ครั้ง'+(LVWAKE?' · โหมดเรียกชื่อไม่ใช้สายรอ':'')+')':'')+' · พูดจบ → เริ่มตอบ '+a('answer')+' วินาที'
      +(lvAvg('phone')?'<div style="font-size:12px;opacity:.8">มือถือพูดคำตอบคำสั่งงาน: พูดจบ → เริ่มตอบ '+lvAvg('phone')+' วิ</div>':'')+'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · พูดจบ→ผู้ช่วยสั่งแอป '+a('call')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'
-     +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]')}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
+     +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]').filter(x=>!vKnown(x))}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
   +row('ผลลัพธ์บนมือถือ',`<select id="sCard" onchange="vCardSet(this.value==='1')"><option value="0"${VCARD?'':' selected'}>ตาราง (แบบเดิม)</option><option value="1"${VCARD?' selected':''}>การ์ด 1 รายการต่อ 1 กล่อง</option></select>`)
   +row('ประโยคที่ทั้งทีมพูดแล้วแอปแปลเองไม่ได้','เก็บไว้ใน Sheet แท็บ “คำสั่งที่ AI ช่วยแปล” · คัดลอกส่งให้ Claude สอนแอปเพิ่ม → คำสั่งเร็วขึ้น',' <button class="btn" onclick="aiqShow()">ดูรายการ</button>')+'<div id="aiqBox"></div>'
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
@@ -1632,9 +1644,11 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  sBody.innerHTML=h}
 // รายการประโยคที่ต้องถาม AI (รวมทั้งทีม) + ปุ่มคัดลอก
 function aiqShow(){const b=document.getElementById('aiqBox');if(!b)return;b.innerHTML='<div class="dpl">กำลังโหลด…</div>';
- callApi('aiReqs',[40],r=>{const rows=(r&&r.rows)||[];if(!rows.length){b.innerHTML='<div class="dpl">ยังไม่มีประโยคที่ต้องถาม AI 👍</div>';return}
+ callApi('aiReqs',[60],r=>{const all=(r&&r.rows)||[],isChat=x=>/"act"\s*:\s*"chat"/.test(x.ai||''),known=all.filter(x=>vKnown(x.t)).length,chat=all.filter(x=>!vKnown(x.t)&&isChat(x)).length,rows=all.filter(x=>!vKnown(x.t)&&!isChat(x));
+  const note=known||chat?'<div class="dpl">ซ่อน '+(known?known+' ประโยคที่แอปเข้าใจแล้ว':'')+(known&&chat?' · ':'')+(chat?chat+' ประโยคคุยเล่น (ให้ AI ตอบ)':'')+'</div>':'';
+  if(!rows.length){window.__aiqTxt='';b.innerHTML='<div class="dpl">ไม่มีประโยคที่ต้องสอนเพิ่ม 👍</div>'+note;return}
   window.__aiqTxt='ประโยคที่แอปแปลเองไม่ได้ (รวมทั้งทีม '+rows.length+' แบบ จาก '+r.total+' ครั้ง)\n'+rows.map((x,i)=>(i+1)+') '+x.t+'  ×'+x.n+(x.ai?'  → AI: '+x.ai:'')).join('\n');
-  b.innerHTML='<div class="aiq">'+rows.map(x=>'<div><b>×'+x.n+'</b> '+esc(x.t)+' <small>'+esc(x.who.join(', '))+' · ล่าสุด '+esc(x.last)+'</small></div>').join('')+'</div><button class="btn" onclick="aiqCopy()">📋 คัดลอกส่งให้ Claude</button> <span id="aiqMsg" class="dpl"></span>'},
+  b.innerHTML='<div class="aiq">'+rows.map(x=>'<div><b>×'+x.n+'</b> '+esc(x.t)+' <small>'+esc(x.who.join(', '))+' · ล่าสุด '+esc(x.last)+'</small></div>').join('')+'</div>'+note+'<button class="btn" onclick="aiqCopy()">📋 คัดลอกส่งให้ Claude</button> <span id="aiqMsg" class="dpl"></span>'},
   e=>{b.innerHTML='<div class="dpl">โหลดไม่ได้: '+esc((e&&e.message)||String(e))+'</div>'})}
 function aiqCopy(){const t=window.__aiqTxt||'',done=ok=>{const m=document.getElementById('aiqMsg');if(m)m.textContent=ok?'✅ คัดลอกแล้ว วางในแชตกับ Claude ได้เลย':'กดค้างที่ข้อความเพื่อคัดลอกเอง'};
  try{navigator.clipboard.writeText(t).then(()=>done(true),()=>{aiqFallback(t);done(true)})}catch(e){aiqFallback(t);done(true)}}
