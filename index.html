@@ -141,7 +141,7 @@ input[type=date]{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;p
 @media(max-width:1100px){.sc th,.sc td{white-space:nowrap}#kChips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}}
 .syncb{position:fixed;top:10px;right:12px;z-index:55;padding:6px 14px;border-radius:20px;border:1px solid var(--cy);background:#0a1646ee;color:#bfe6ff;font-size:13px;display:flex;align-items:center;box-shadow:0 4px 16px #0008;cursor:default}
 .syncb.bad{border-color:#e8334a;background:#4a1018;color:#ffc2ca;cursor:pointer}
-tr.rp td{opacity:.6;font-style:italic}tr.rf td{background:#4a101899}
+tr.rp td{opacity:.6;font-style:italic}tr.rdup td{opacity:.5;text-decoration:line-through;text-decoration-color:#ff8a8a88}tr.rdup td.no,tr.rdup td.act{opacity:1;text-decoration:none}.dupb,.dupl{display:inline-block;margin-left:4px;padding:0 6px;border-radius:8px;font-size:11px;line-height:17px;font-style:normal;vertical-align:middle;cursor:help}.dupb{background:#c0392b;color:#fff}.dupl{background:#1e8e4e;color:#fff}tr.rf td{background:#4a101899}
 textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6px 8px;width:100%;resize:vertical;font:inherit;color:inherit}
 .dph select{width:auto;padding:2px 4px;font-size:13px}.dph{gap:4px}
 #kTabs .tab{padding:5px 9px;font-size:13px}
@@ -377,12 +377,23 @@ const goQ=()=>{const e=document.getElementById('f_q');if(e)e.focus()};
 const goTo=id=>{const e=document.getElementById(id);if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth',block:'center'})};
 const DEMO_MSG=(/^https?:/.test(location.protocol)&&!(typeof google!=='undefined'&&google.script)?'⚠️ ยังไม่ได้ใส่ลิงก์ API_URL ในไฟล์ index.html (บรรทัดบน ๆ ของไฟล์) — ':'')+'โหมดตัวอย่าง: หน้านี้ยังไม่ได้เชื่อม Google Sheet เพราะไม่ได้เปิดผ่านลิงก์เว็บแอปของ Apps Script (ข้อมูลที่เห็นเป็นข้อมูลสมมติ)';
 let LOADALL=false;const LOAD_M=3;   // ตอนเปิดโหลดย้อนหลัง 3 เดือน (กด “โหลดข้อมูลทั้งหมด” เพื่อดูเก่ากว่านั้น)
-let DB={jobs:[],phones:[],defer:[],mru:[],nf:[],workers:[]},F={type:'',comp:'',trip:'',mru:'',dp:'',date:'',worker:'',q:''},page=1,tab='all',kind='jobs';
+let DB={jobs:[],phones:[],defer:[],mru:[],nf:[],workers:[]},F={type:'',comp:'',trip:'',mru:'',dp:'',date:'',worker:'',q:'',dup:''},page=1,tab='all',kind='jobs';
 const g=(r,k)=>r[k]==null?'':String(r[k]).trim();
 const splitL=s=>String(s||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean),digs=s=>String(s).replace(/\D/g,'');
 const pts=s=>{const m=String(s||'').match(/(\d+)\/(\d+)\/(\d+)(?:,?\s*(\d+):(\d+)(?::(\d+))?)?/);if(m)return new Date(+m[3],m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();const d=Date.parse(s);return isNaN(d)?0:d};
 const key=r=>pts(g(r,'เวลาบันทึก'))||pts(g(r,'วันที่ปฏิบัติงาน'));
 const byNew=(a,b)=>key(b)-key(a);
+// ---- งานลงซ้ำ: ปลด/ถอด/ใส่สาย/ต่อกลับ ที่ เครื่องวัด+บ้าน+ประเภท+วันที่ปฏิบัติงาน เดียวกัน → ยึดรายการเวลาบันทึกล่าสุดของวันนั้น ----
+const DUPT=['ปลด','ถอด','ใส่สาย','ต่อกลับ'];let DUPC=null;
+function dupInfo(){if(DUPC&&DUPC.src===DB.jobs&&DUPC.n===DB.jobs.length)return DUPC;const G=new Map(),old=new Set(),grp=new Set(),last=new Map();
+ DB.jobs.forEach((r,i)=>{const t=g(r,'ประเภทงาน'),m=g(r,'เครื่องวัดเลขที่').replace(/\s+/g,'').toUpperCase(),d=dkey(g(r,'วันที่ปฏิบัติงาน'));if(!DUPT.includes(t)||!m||!d)return;
+  const k=m+'|'+g(r,'บ้านเลขที่').replace(/\s+/g,'')+'|'+t+'|'+d;(G.get(k)||G.set(k,[]).get(k)).push([r,pts(g(r,'เวลาบันทึก')),i])});
+ G.forEach(a=>{if(a.length<2)return;a.sort((x,y)=>(x[1]-y[1])||(x[2]-y[2]));const L=a[a.length-1][0];a.forEach(([r])=>{grp.add(r);last.set(r,L);if(r!==L)old.add(r)})});
+ DUPC={src:DB.jobs,n:DB.jobs.length,old,grp,last};return DUPC}
+const isDupOld=r=>dupInfo().old.has(r),noDup=a=>a.filter(r=>!isDupOld(r));
+const dupHM=r=>{const m=String(g(r,'เวลาบันทึก')).match(/(\d{1,2}):(\d{2})/);return m?P(m[1])+':'+m[2]:''};
+function dupTag(r){const I=dupInfo();if(!I.grp.has(r))return '';const L=I.last.get(r);
+ return L===r?'<span class="dupl" title="ลงงานนี้ซ้ำในวันเดียวกัน · ใช้รายการนี้ (เวลาบันทึกล่าสุด)">ล่าสุด</span>':'<span class="dupb" title="ลงซ้ำในวันเดียวกัน · ไม่นับรายการนี้ ยึดรายการเวลา '+dupHM(L)+'">ซ้ำ</span>'}
 // ===== ตัวกรองกลาง: ใช้กับทุกตาราง/การ์ด/กราฟ ตัวกรองที่ชุดข้อมูลนั้นไม่มีช่องให้กรอง = ไม่กรองชุดนั้น =====
 const dkey=x=>{const m=fmtD(x).match(/^(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''};
 const PDATE={jobs:r=>g(r,'วันที่ปฏิบัติงาน')||g(r,'เวลาบันทึก'),phones:r=>g(r,'เวลาบันทึก'),defer:r=>g(r,'วันที่นัดชำระ'),mru:r=>g(r,'วันที่'),nf:r=>g(r,'วันที่ปฏิบัติงาน')||g(r,'เวลาบันทึก')};
@@ -396,6 +407,8 @@ let SORTD='new';const srt=a=>SORTD==='old'?a.reverse():a;
 function setSort(d){SORTD=d==='old'?'old':'new';page=p3=p4=p6=p7=p8=1;filt();draw()}
 function matchF(kd,r,M){
  if(F.trip&&!fOk(F.trip,[g(r,'ทริปงาน')]))return false;
+ if(F.dup&&kd==='jobs'&&!dupInfo().grp.has(r))return false;
+ if(F.dup&&kd!=='jobs')return false;
  if(F.worker){const ws=splitL(kd==='defer'?cell(r,'ผู้ปฏิบัติงาน',M,'defer'):g(r,'ผู้ปฏิบัติงาน'));if(!fOk(F.worker,ws))return false}
  if(F.type&&kd==='jobs'&&!fOk(F.type,[g(r,'ประเภทงาน')]))return false;
  if(F.rc&&kd==='jobs'&&rcOf(r)!==F.rc)return false;
@@ -477,7 +490,7 @@ function drawMF(){const ks=[...new Set([...DB.jobs.map(jobM),...DB.phones.map(ot
  if(MF&&!ks.includes(MF))ks.unshift(MF);
  mf.innerHTML='<option value="">ทั้งหมด (ทุกเดือน)</option>'+ks.map(k=>`<option value="${k}" ${k===MF?'selected':''}>${esc(mLab(k))}</option>`).join('');
  const t=MF?' · '+mLab(MF):'';['mfT1','mfT2','mfT3'].forEach(i=>{document.getElementById(i).textContent=t})}
-const wc=()=>{const m={};jm().forEach(r=>{const w=g(r,'ผู้ปฏิบัติงาน');if(w)m[w]=(m[w]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+const wc=()=>{const m={};noDup(jm()).forEach(r=>{const w=g(r,'ผู้ปฏิบัติงาน');if(w)m[w]=(m[w]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
 const TH={jobs:['ประเภทงาน','บริษัท','ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่','ผู้ปฏิบัติงาน','วันที่ปฏิบัติงาน','สถานะใส่สาย','หมายเหตุ','เวลาบันทึก','นัดชำระ'],track:['สถานะใส่สาย','ประเภทงาน','บริษัท','ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่','ผู้ปฏิบัติงาน','วันที่ปลด/ถอด','งานคืนไฟ','วันที่คืนไฟ','ผู้คืนไฟ','จำนวนวัน','หมายเหตุ'],nf:['บริษัท','ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่','เครื่องวัดใกล้เคียง 1','เครื่องวัดใกล้เคียง 2','ผู้ปฏิบัติงาน','วันที่ปฏิบัติงาน','หมายเหตุ','เวลาบันทึก'],phones:['ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่','เบอร์โทร','ผู้ปฏิบัติงาน','หมายเหตุ','เวลาบันทึก'],mru:['บริษัท','ทริปงาน','MRU','ผู้ปฏิบัติงาน','วันที่','หมายเหตุ','เวลาบันทึก'],defer:['วันที่นัดชำระ','บริษัท','ทริปงาน','MRU','ผู้ปฏิบัติงาน','เครื่องวัดเลขที่','บ้านเลขที่','เบอร์โทรศัพท์','หมายเหตุ','เวลาบันทึก']};
 const TYPES=['ปลด','ถอด','ใส่สาย','ต่อกลับ','เลิกใช้'];
 const COMP=['ST','SP'];
@@ -494,9 +507,9 @@ function kpis(){const all=[...DB.jobs,...DB.phones,...DB.defer],S=a=>a.filter(x=
  const u=k=>new Set(S(all.map(r=>g(r,k)))).size;
  const trips=new Set(S(tripsAll())).size;
  const ph=new Set(S([...DB.phones.map(r=>g(r,'เบอร์โทร')),...DB.defer.map(r=>g(r,'เบอร์โทรศัพท์'))])).size;
- const n=[['📋','งานทั้งหมด',DB.jobs.length,'k1','jobs'],['🚚','เครื่องวัดเลขที่',u('เครื่องวัดเลขที่'),'k2','meter'],['🚌','ทริปงาน',trips,'k3','trip'],['🏠','บ้านเลขที่',u('บ้านเลขที่'),'k4','house'],['📞','เบอร์โทรศัพท์',ph,'k5','phone'],['👥','ผู้ปฏิบัติงาน',wk().length,'k6','worker']];
+ const n=[['📋','งานทั้งหมด',noDup(DB.jobs).length,'k1','jobs'],['🚚','เครื่องวัดเลขที่',u('เครื่องวัดเลขที่'),'k2','meter'],['🚌','ทริปงาน',trips,'k3','trip'],['🏠','บ้านเลขที่',u('บ้านเลขที่'),'k4','house'],['📞','เบอร์โทรศัพท์',ph,'k5','phone'],['👥','ผู้ปฏิบัติงาน',wk().length,'k6','worker']];
  kpis_.innerHTML=n.map(k=>`<div class="kpi ${k[3]}" onclick="showK('${k[4]}')" title="คลิกเพื่อดูข้อมูล"><i>${k[0]}</i><div><span>${k[1]}</span><b>${k[2]}</b></div></div>`).join('')}
-const SUP={rc:['jobs'],trip:['jobs','phones','defer','mru','nf'],mru:['defer','mru'],type:['jobs'],comp:['jobs','defer','mru','nf'],dp:['jobs','phones','defer'],date:['jobs','phones','defer','mru','nf'],worker:['jobs','phones','defer','mru','nf'],q:['jobs','phones','defer','mru','nf']};
+const SUP={dup:['jobs'],rc:['jobs'],trip:['jobs','phones','defer','mru','nf'],mru:['defer','mru'],type:['jobs'],comp:['jobs','defer','mru','nf'],dp:['jobs','phones','defer'],date:['jobs','phones','defer','mru','nf'],worker:['jobs','phones','defer','mru','nf'],q:['jobs','phones','defer','mru','nf']};
 const viewData=()=>view==='nf'?['nf']:view==='track'?['jobs']:view==='home'?['jobs','phones','defer']:view==='search'?[tab==='defer'?'defer':'jobs']:view==='phones'?['phones']:view==='defer'?['defer']:['mru'];
 function dimF(){const vd=viewData();document.querySelectorAll('#filt label[data-f]').forEach(l=>{const na=!SUP[l.dataset.f].some(d=>vd.includes(d));l.classList.toggle('na',na);l.title=na?'ตัวกรองนี้ไม่มีผลกับหน้านี้ (ข้อมูลหน้านี้ไม่มีช่องนี้)':(l.dataset.tip||'')})}
 function syncTabFromType(){if(tab!=='defer')tab=F.type&&fvs(F.type).length===1&&F.type[0]!=='!'?F.type:'all'}
@@ -512,7 +525,7 @@ function dlab(x){x=String(x||'');if(!x.startsWith('r:'))return fmtD(x);const hit
 function filt(){const dates=[...new Set([...DB.jobs.map(PDATE.jobs),...DB.phones.map(PDATE.phones),...DB.defer.filter(r=>!g(r,'ซ่อน')).map(PDATE.defer),...(DB.mru||[]).map(PDATE.mru),...(DB.nf||[]).map(PDATE.nf)].map(dkey).filter(Boolean))].sort().reverse();
  const ms=(k,l,v,tip)=>{const lb=fLab(F[k]);return `<label data-f="${k}" data-tip="${esc(tip||'')}" title="${esc(tip||'')}">${l}<button type="button" class="msel${F[k]?' on':''}" onclick="mselOpen(event,'${k}')">${esc(lb||'ทั้งหมด')}</button></label>`};
  const sel=(k,l,v,lab,tip)=>{const vs=F[k]&&!v.includes(F[k])?[...v,F[k]]:v;return `<label data-f="${k}" data-tip="${esc(tip||'')}" title="${esc(tip||'')}">${l}<select onchange="F.${k}=this.value;page=p3=p4=p6=p7=p8=1;syncTabFromType();draw()"><option value="">ทั้งหมด</option>${vs.map(x=>`<option value="${esc(x)}" ${F[k]===x?'selected':''}>${esc(lab?lab(x):x)}</option>`).join('')}</select></label>`};
- filt_.innerHTML=ms('trip','ทริปงาน',tripOpts())+ms('mru','MRU',mruOpts(),'ใช้กับ ผ่อนผันค่าไฟ และ MRU')+ms('type','ประเภทงาน',tp(),'ใช้กับตารางงาน')+ms('comp','บริษัท',compOpts(),'ใช้กับ งาน ผ่อนผันค่าไฟ และ MRU')+sel('rc','สถานะใส่สาย',[RC_WAIT,RC_DONE,RC_END,RC_NONE],x=>(x===RC_WAIT?'🔴 ':x===RC_DONE?'🟢 ':x===RC_END?'⚫ ':'⚠️ ')+x,'ใช้กับตารางงาน และหน้าติดตามใส่สาย')+sel('dp','ผ่อนผันค่าไฟ',['ครบกำหนด','ยังไม่ครบกำหนด'],x=>(x==='ครบกำหนด'?'🔴 ':'🟢 ')+x,'งาน/เบอร์โทร: ดูจากเครื่องวัดที่มีผ่อนผัน')+sel('date','วันที่',DPRE().concat(dates),dlab,'งาน = วันที่ปฏิบัติงาน · เบอร์โทร = วันที่บันทึก · ผ่อนผัน = วันที่นัดชำระ · MRU = วันที่')+ms('worker','ผู้ปฏิบัติงาน',fw(),'ผ่อนผันค่าไฟ = ผู้ปฏิบัติงานที่ดึงมาจาก MRU')+`<label data-f="q" data-tip="ค้นได้ทุกคอลัมน์ที่เห็นในตาราง">ค้นหา<input type="text" id="f_q" value="${esc(F.q)}" placeholder="ชื่อ เลขเครื่อง บ้านเลขที่ เบอร์ MRU วันที่…" oninput="F.q=this.value.trim();page=p3=p4=p6=p7=p8=1;draw()"></label><button class="btn" title="ค้นคำนี้ในทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล)" onclick="searchAll(F.q)">🔎 ทุกหมวด</button><button class="btn" title="สลับการเรียงลำดับ" onclick="setSort(SORTD==='old'?'new':'old')">${SORTD==='old'?'⬆️ เก่า→ใหม่':'⬇️ ใหม่→เก่า'}</button><button class="btn" onclick="clearF()">ล้างค่า</button>`;dimF()}
+ filt_.innerHTML=ms('trip','ทริปงาน',tripOpts())+ms('mru','MRU',mruOpts(),'ใช้กับ ผ่อนผันค่าไฟ และ MRU')+ms('type','ประเภทงาน',tp(),'ใช้กับตารางงาน')+ms('comp','บริษัท',compOpts(),'ใช้กับ งาน ผ่อนผันค่าไฟ และ MRU')+sel('rc','สถานะใส่สาย',[RC_WAIT,RC_DONE,RC_END,RC_NONE],x=>(x===RC_WAIT?'🔴 ':x===RC_DONE?'🟢 ':x===RC_END?'⚫ ':'⚠️ ')+x,'ใช้กับตารางงาน และหน้าติดตามใส่สาย')+sel('dup','ลงงานซ้ำ',['ซ้ำ'],()=>'⚠️ ดูเฉพาะที่ลงซ้ำ','ปลด/ถอด/ใส่สาย/ต่อกลับ ที่เครื่องวัด+บ้าน+ประเภท+วันเดียวกัน ลงมากกว่า 1 ครั้ง (นับเฉพาะเวลาบันทึกล่าสุด)')+sel('dp','ผ่อนผันค่าไฟ',['ครบกำหนด','ยังไม่ครบกำหนด'],x=>(x==='ครบกำหนด'?'🔴 ':'🟢 ')+x,'งาน/เบอร์โทร: ดูจากเครื่องวัดที่มีผ่อนผัน')+sel('date','วันที่',DPRE().concat(dates),dlab,'งาน = วันที่ปฏิบัติงาน · เบอร์โทร = วันที่บันทึก · ผ่อนผัน = วันที่นัดชำระ · MRU = วันที่')+ms('worker','ผู้ปฏิบัติงาน',fw(),'ผ่อนผันค่าไฟ = ผู้ปฏิบัติงานที่ดึงมาจาก MRU')+`<label data-f="q" data-tip="ค้นได้ทุกคอลัมน์ที่เห็นในตาราง">ค้นหา<input type="text" id="f_q" value="${esc(F.q)}" placeholder="ชื่อ เลขเครื่อง บ้านเลขที่ เบอร์ MRU วันที่…" oninput="F.q=this.value.trim();page=p3=p4=p6=p7=p8=1;draw()"></label><button class="btn" title="ค้นคำนี้ในทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล)" onclick="searchAll(F.q)">🔎 ทุกหมวด</button><button class="btn" title="สลับการเรียงลำดับ" onclick="setSort(SORTD==='old'?'new':'old')">${SORTD==='old'?'⬆️ เก่า→ใหม่':'⬇️ ใหม่→เก่า'}</button><button class="btn" onclick="clearF()">ล้างค่า</button>`;dimF()}
 // ---- ช่องตัวกรองแบบเลือกหลายค่า: แตะ 1 ครั้ง = เอา ✅ · 2 ครั้ง = ยกเว้น 🚫 · 3 ครั้ง = ไม่เลือก ----
 const MSOPT={trip:()=>tripOpts(),mru:()=>mruOpts(),type:()=>tp(),comp:()=>compOpts(),worker:()=>fw()};let MSK='';
 function mselOpen(e,k){e.stopPropagation();const pop=document.getElementById('mpop');if(MSK===k&&pop.style.display==='block'){mselClose();return}MSK=k;mselDraw();
@@ -523,7 +536,7 @@ function mselTap(i){const o=mpop._o[i],vs=fvs(F[MSK]);let nv;if(vs.includes(o))n
 function mselSet(v,keep){F[MSK]=v;page=p3=p4=p6=p7=p8=1;syncTabFromType();const k=MSK;filt();draw();if(keep){MSK=k;mselDraw()}else mselClose()}
 function mselClose(){const p=document.getElementById('mpop');if(p)p.style.display='none';MSK=''}
 document.addEventListener('click',e=>{const p=document.getElementById('mpop');if(p&&p.style.display==='block'&&e.target.isConnected&&!p.contains(e.target))mselClose()});
-function tbl(kd,rows,start,del,cf){const H=TH[kd],dp=dpm();return '<tr><th>#'+H.map(h=>cf?`<th class="hd${CF[h]!==undefined?' act':''}" onclick="openCF(event,'${h}')">${h} ${CF[h]!==undefined?'●':'▾'}`:'<th>'+h).join('')+(del?'<th>จัดการ':'')+'</tr>'+(rows.length?rows.map((r,i)=>'<tr'+(r._f?' class="rf" title="ส่งขึ้น Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ กดป้ายมุมขวาบนเพื่อส่งอีกครั้ง"':r._p?' class="rp"':'')+'><td class="no">'+(start+i+1)+(g(r,'รูป')?`<button class="ic" title="ดูรูป" onclick="phView('${kd}','${esc(g(r,'ID'))}')">📷</button>`:'')+H.map(h=>{const v=cell(r,h,dp,kd),nod=kd==='defer'&&h==='ผู้ปฏิบัติงาน'&&!v;   // data-l = ชื่อช่อง (มุมมองการ์ดบนมือถือ) · data-e = ช่องว่าง (การ์ดซ่อนไว้)
+function tbl(kd,rows,start,del,cf){const H=TH[kd],dp=dpm();return '<tr><th>#'+H.map(h=>cf?`<th class="hd${CF[h]!==undefined?' act':''}" onclick="openCF(event,'${h}')">${h} ${CF[h]!==undefined?'●':'▾'}`:'<th>'+h).join('')+(del?'<th>จัดการ':'')+'</tr>'+(rows.length?rows.map((r,i)=>'<tr'+(r._f?' class="rf" title="ส่งขึ้น Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ กดป้ายมุมขวาบนเพื่อส่งอีกครั้ง"':r._p?' class="rp"':kd==='jobs'&&isDupOld(r)?' class="rdup"':'')+'><td class="no">'+(start+i+1)+(kd==='jobs'?dupTag(r):'')+(g(r,'รูป')?`<button class="ic" title="ดูรูป" onclick="phView('${kd}','${esc(g(r,'ID'))}')">📷</button>`:'')+H.map(h=>{const v=cell(r,h,dp,kd),nod=kd==='defer'&&h==='ผู้ปฏิบัติงาน'&&!v;   // data-l = ชื่อช่อง (มุมมองการ์ดบนมือถือ) · data-e = ช่องว่าง (การ์ดซ่อนไว้)
   return '<td data-l="'+h+'"'+(h==='หมายเหตุ'?' class="tn"':'')+(!nod&&String(v==null?'':v).trim()===''?' data-e="1"':'')+'>'+(nod?(g(r,'MRU')?'<span class="nodata" title="ยังไม่มี MRU นี้ในแท็บ MRU">ยังไม่มีใน MRU</span>':'<span class="nodata">ไม่ได้ใส่ MRU</span>'):dc(h,v))}).join('')+(del?`<td class="act"><button class="ic e" title="แก้ไข" onclick="editRow('${kd}','${esc(g(r,'ID'))}')">✎</button><button class="ic d" title="ลบ" onclick="del('${kd}','${esc(g(r,'ID'))}')">🗑</button>`:'')+'</tr>').join(''):'<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>')}
 function t1(){t1_.innerHTML=tbl('phones',phonesV().slice(0,8),0,false)}
 const RB={'MRU':'#d4a017','ปลด':'#e8731e','ถอด':'#18a85a','ใส่สาย':'#d63a8a','ต่อกลับ':'#7a4bff','เลิกใช้':'#6b7280','ไม่พบข้อมูล':'#b45309','เบอร์โทร':'#1a9fd8','ผ่อนผัน':'#c9a010'};
@@ -547,7 +560,7 @@ function cols(){const w=wc().slice(0,10);WL=w.map(x=>x[0]);const mx=Math.max(1,.
 <script>
 (window.__loaded=window.__loaded||[]).push("JS2");
 // จำนวนในแต่ละแท็บ (ตามตัวกรองอื่น ๆ ที่ใช้อยู่ ไม่นับตัวกรองประเภทงาน) → เห็นเลยว่าปลดกี่งาน ถอดกี่งาน
-function tabCounts_(){const o={};try{const tt=F.type;F.type='';const j=jobsV();F.type=tt;o.all=j.length;tp().forEach(t=>o[t]=0);j.forEach(r=>{const t=g(r,'ประเภทงาน');if(t in o)o[t]++});o.defer=deferV().length}catch(e){}return o}
+function tabCounts_(){const o={};try{const tt=F.type;F.type='';const j=jobsV();F.type=tt;o.all=noDup(j).length;tp().forEach(t=>o[t]=0);noDup(j).forEach(r=>{const t=g(r,'ประเภทงาน');if(t in o)o[t]++});o.defer=deferV().length}catch(e){}return o}
 function rowsT2(skip){let kd,v;if(tab==='defer'){kd='defer';v=deferV()}else{kd='jobs';const j=jobsV();v=tab==='all'?j:j.filter(r=>g(r,'ประเภทงาน')===tab)}
  const dp=dpm(),ks=Object.keys(CF).filter(h=>h!==skip&&TH[kd].includes(h));
  if(ks.length)v=v.filter(r=>ks.every(h=>cell(r,h,dp,kd)===CF[h]));return[kd,v]}
@@ -566,7 +579,7 @@ function t2(){const TC=tabCounts_();tabs_.innerHTML=tabsList().map(([k,l])=>`<bu
  const ks=Object.keys(CF);cfbar.innerHTML=ks.length?ks.map(h=>`<button class="tab on" onclick="clrCF('${h}')">${h}: ${esc(CF[h]===''?'(ว่าง)':CF[h])} ✕</button>`).join('')+`<button class="tab" onclick="CF={};page=1;t2()">ล้างทั้งหมด</button>`:'';
  const [kd,v]=rowsT2(),per=10,pc=Math.max(1,Math.ceil(v.length/per));if(page>pc)page=pc;const s=v.slice((page-1)*per,page*per);
  dpl.innerHTML=TH[kd].some(h=>dueCols.includes(h))?LEG:'';t2_.innerHTML=tbl(kd,s,(page-1)*per,kd==='jobs'||kd==='defer',true);
- info.textContent=v.length?`แสดง ${(page-1)*per+1}-${(page-1)*per+s.length} จาก ${v.length} รายการ`:'ไม่มีรายการ';try{t2cnt.textContent=v.length+' รายการ'}catch(e){}   // จำนวนบนหัวตาราง เห็นทันทีไม่ต้องเลื่อนลงไปท้ายตาราง
+ const nd=kd==='jobs'?noDup(v).length:v.length,dn=v.length-nd;info.textContent=!v.length?'ไม่มีรายการ':`แสดง ${(page-1)*per+1}-${(page-1)*per+s.length} จาก ${v.length} `+(dn?`แถว · นับจริง ${nd} รายการ (ลงซ้ำ ${dn} ไม่นับ)`:'รายการ');try{t2cnt.textContent=nd+' รายการ'+(dn?' (+ซ้ำ '+dn+')':'')}catch(e){}   // จำนวนบนหัวตาราง เห็นทันทีไม่ต้องเลื่อนลงไปท้ายตาราง
  let h=`<button onclick="goto(${Math.max(1,page-1)})">‹</button>`;for(let i=Math.max(1,page-2);i<=Math.min(pc,page+2);i++)h+=`<button class="${i===page?'on':''}" onclick="goto(${i})">${i}</button>`;
  pgs.innerHTML=h+`<button onclick="goto(${Math.min(pc,page+1)})">›</button>`}
 let view='home',p3=1,p4=1,p6=1,p7=1,p8=1,TT='wait';
@@ -635,7 +648,7 @@ let DRAWQ=[],DRAWT=0;
 const drawParts_=()=>({home:[kpis,t1,rec,ring,sum,cols,drawHomeDefer],search:[t2],phones:[drawPhones],defer:[drawDefer],mru:[drawMru],track:[drawTrack],nf:[drawNf]});
 function drawRest(){clearTimeout(DRAWT);const q=DRAWQ;DRAWQ=[];q.forEach(f=>{try{f()}catch(e){console.error(e)}})}
 function drawStep_(){DRAWT=0;const f=DRAWQ.shift();if(!f)return;try{f()}catch(e){console.error(e)}if(DRAWQ.length)DRAWT=setTimeout(drawStep_,16)}
-function draw(){RCC=null;clearTimeout(DRAWT);DRAWQ=[];dimF();drawMF();const P=drawParts_(),now=P[view];
+function draw(){RCC=null;DUPC=null;clearTimeout(DRAWT);DRAWQ=[];dimF();drawMF();const P=drawParts_(),now=P[view];
  if(!now){Object.keys(P).forEach(k=>P[k].forEach(f=>f()))}
  else{now.forEach(f=>f());Object.keys(P).forEach(k=>{if(k!==view)DRAWQ.push(...P[k])});DRAWT=setTimeout(drawStep_,120)}
  if(window.afterDraw)afterDraw()}
@@ -773,10 +786,10 @@ function reportSheets(o){o=o||{names:RSHEETS.map(x=>x[0]),month:'',useF:true};
  return withFilters(o.useF,()=>{const dp=dpm();
   return RSHEETS.filter(x=>o.names.includes(x[0])).map(([name,kd])=>{
    const pd=kd==='track'?(r=>g(r,'วันที่ปลด/ถอด')):PDATE[kd];let recs=recordsFor(kd);if(o.month)recs=recs.filter(r=>ymOf(pd(r))===o.month);
-   const hasSt=kd!=='mru'&&kd!=='nf',head=TH[kd].slice();if(hasSt)head.push('สถานะผ่อนผัน');head.push('เดือน');
+   const hasSt=kd!=='mru'&&kd!=='nf',head=TH[kd].slice();if(hasSt)head.push('สถานะผ่อนผัน');head.push('เดือน');if(kd==='jobs')head.push('ลงซ้ำ');
    const rows=recs.map(r=>{const row=TH[kd].map(h=>cell(r,h,dp,kd));
     if(hasSt)row.push(kd==='defer'?stOf(g(r,'วันที่นัดชำระ')):stOf(dp[g(r,'เครื่องวัดเลขที่')]));
-    row.push(ymOf(pd(r)));return row});
+    row.push(ymOf(pd(r)));if(kd==='jobs'){const I=dupInfo();row.push(!I.grp.has(r)?'':I.last.get(r)===r?'ล่าสุด (ใช้รายการนี้)':'ซ้ำ ไม่นับ (ยึดเวลา '+dupHM(I.last.get(r))+')')}return row});
    return{name,kd,head,rows}})})}
 const crcT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=crcT[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
@@ -1093,7 +1106,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
   if(/เก่า\s*(ไป|มา)\s*ใหม่|เรียง\s*(ลำดับ)?\s*(จาก)?\s*เก่า|เก่าก่อน/.test(t)){o.sort='old';t=t.replace(/(เรียง\s*(ลำดับ)?\s*(จาก)?\s*)?(เก่า\s*(ไป|มา)\s*ใหม่|เก่า(ก่อน|สุด)?)/g,' ')}
   else if(/ใหม่\s*(ไป|มา)\s*เก่า|เรียง\s*(ลำดับ)?\s*(จาก)?\s*(ใหม่|ล่าสุด)|ใหม่ก่อน/.test(t)){o.sort='new';t=t.replace(/(เรียง\s*(ลำดับ)?\s*(จาก)?\s*)?(ใหม่\s*(ไป|มา)\s*เก่า|ใหม่(ก่อน|สุด)?|ล่าสุด)/g,' ')}
   const SB={'คน':'worker','รายคน':'worker','ช่าง':'worker','ผู้ปฏิบัติงาน':'worker','ประเภทงาน':'type','ประเภท':'type','รายวัน':'date','วัน':'date','วันที่':'date','ทริปงาน':'trip','ทริป':'trip','รายทริป':'trip','บริษัท':'comp'};
-  let sm=t.match(/(?:สรุป\S*\s*)?แยก\s*(?:ตาม)?\s*(รายคน|คน|ช่าง|ผู้ปฏิบัติงาน|ประเภทงาน|ประเภท|รายวัน|วันที่|วัน|ทริปงาน|ทริป|บริษัท)|ราย(คน|วัน|ทริป)/);
+  let sm=t.match(/(?:สรุป(?:งาน|ยอด|ผล)?\s*)?แยก\s*(?:ตาม)?\s*(รายคน|คน|ช่าง|ผู้ปฏิบัติงาน|ประเภทงาน|ประเภท|รายวัน|วันที่|วัน|ทริปงาน|ทริป|บริษัท)|ราย(คน|วัน|ทริป)/);
   if(sm){o.summary={by:SB[sm[1]||('ราย'+sm[2])]||'worker'};t=t.replace(sm[0],' ')}
   else if(sm=t.match(/ใคร\S*?(เยอะ|มาก|น้อย)\s*(ที่)?\s*สุด/)){o.summary={by:'worker',top:sm[1]==='น้อย'?'min':'max'};t=t.replace(/ใคร/,' ').replace(/(ทำ)?(งาน)?(เยอะ|มาก|น้อย)\s*(ที่)?\s*สุด/,' ')}
   else if(sm=t.match(/^\s*สรุป(งาน|ยอด|ผล)?/)){o.summary={by:'type'};t=t.replace(sm[0],' ')}
@@ -1195,7 +1208,8 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={},keepF=o.kee
 const THM=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const vDSay=d=>{const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return '';const y=+m[1]+543;return (+m[3])+' '+THM[+m[2]-1]+(+m[1]===new Date().getFullYear()?'':' '+y)};
 function vWhen(){if(!F.date)return '';if(F.date.startsWith('r:')){const l=dlab(F.date).replace(/^📅 /,'');return /สัปดาห์|เดือน|วัน/.test(l)?l:'ช่วง '+F.date.slice(2).split(':').map(vDSay).join(' ถึง ')}return 'วันที่ '+vDSay(F.date)}
-function vRowsNow(pg){return pg==='phones'?phonesV():pg==='defer'?deferV():pg==='mru'?mruV():pg==='nf'?nfV():pg==='track'?trackRows().map(x=>x._o):(tab==='defer'?deferV():tab==='all'?jobsV():jobsV().filter(r=>g(r,'ประเภทงาน')===tab))}
+function vRowsNow(pg){const a=vRowsAll(pg);return pg==='track'||(pg==='search'&&tab!=='defer')?noDup(a):a}
+function vRowsAll(pg){return pg==='phones'?phonesV():pg==='defer'?deferV():pg==='mru'?mruV():pg==='nf'?nfV():pg==='track'?trackRows().map(x=>x._o):(tab==='defer'?deferV():tab==='all'?jobsV():jobsV().filter(r=>g(r,'ประเภทงาน')===tab))}
 const VBYF={type:r=>[g(r,'ประเภทงาน')||'-'],worker:r=>{const w=splitL(g(r,'ผู้ปฏิบัติงาน'));return w.length?w:['ไม่ระบุชื่อ']},trip:r=>[g(r,'ทริปงาน')||'-'],comp:r=>[g(r,'บริษัท')||'-'],date:r=>[dkey(g(r,'วันที่นัดชำระ')||PDATE.jobs(r))||'-']};
 function vBreak(o,pg){const k=['type','worker','trip','comp'].find(x=>o.multi&&(o.multi[x]||[]).length>=2);if(!k)return null;const rows=vRowsNow(pg),c={};o.multi[k].forEach(v=>c[v]=0);
  rows.forEach(r=>VBYF[k](r).forEach(v=>{if(v in c)c[v]++}));const parts=o.multi[k].map(v=>v+' '+c[v]),w=vWhen();
@@ -1284,7 +1298,7 @@ function vNoConfirm(fn){const c=window.confirm;window.confirm=()=>true;try{fn()}
 function vQuiet(fn){const a=window.alert;let said='';window.alert=m=>{said=String(m)};try{fn()}finally{window.alert=a}return said}   // เก็บข้อความเตือนมาพูดแทนป๊อปอัป
 function vPage(d){const fns={search:['goto','page'],phones:['goP3','p3'],defer:['goP4','p4'],mru:['goP6','p6'],track:['goP7','p7'],nf:['goP8','p8']}[view];if(!fns)return false;
  const cur={page,p3,p4,p6,p7,p8}[fns[1]];window[fns[0]](Math.max(1,cur+d));return true}
-const vNum=t=>{const m=String(t||'').match(/จาก\s*([\d,]+)/);return m?+m[1].replace(/,/g,''):/ไม่มีรายการ/.test(t)?0:null};
+const vNum=t=>{const m=String(t||'').match(/นับจริง\s*([\d,]+)/)||String(t||'').match(/จาก\s*([\d,]+)/);return m?+m[1].replace(/,/g,''):/ไม่มีรายการ/.test(t)?0:null};
 
 // ---- 4.4) ทำตามคำสั่ง (มาจาก AI หรือจากตัวแยกคำสั่งพื้นฐาน) ----
 // ขานชื่อผู้ใช้ทุกครั้งที่ตอบ (ปิดได้ในตั้งค่า): "ครับ คุณบาส มี 2 รายการ"
