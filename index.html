@@ -1784,7 +1784,7 @@ const lvAud=b64=>({realtimeInput:{audio:{data:b64,mimeType:'audio/pcm;rate=16000
 function lvIdle(){clearTimeout(LV.idleT);const ms=LV.wake?LVWAKEIDLE:LVIDLE;LV.idleT=setTimeout(()=>{if(LV.on&&!LV.play.length){if(LV.wake)lvStop('💤 ไม่มีใครเรียกนาน พักการรอฟังแล้ว — แตะ 🎤 เพื่อเริ่มใหม่');else lvStop('💤 เงียบไปนาน จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')}else if(LV.on)lvIdle()},ms)}
 
 // ---- ตัดเสียงเงียบ/เสียงสะท้อน: ส่งเฉพาะช่วงที่มีคนพูด (ประหยัดเน็ต · ผู้ช่วยไม่ได้ยินเสียงตัวเองแล้วหยุดพูดกลางคัน) ----
-const lvSpeaking=()=>LV.play.length>0||!!(VTTS&&VTTS.speaking);   // ผู้ช่วยพูดอยู่ (เสียง Google หรือเสียงมือถือ)
+const lvSpeaking=()=>LV.play.length>0||!!LV.turnOn||lvNow()<(LV.tail||0)||!!(VTTS&&VTTS.speaking);   // v34: นับว่ายังพูดอยู่ตลอดรอบ + 0.7 วิหลังเสียงจบ (เดิมเสียงขาดช่วงนิดเดียว ไมค์เปิด → ได้ยินเสียงตัวเอง → ตัดกลางประโยค)   // ผู้ช่วยพูดอยู่ (เสียง Google หรือเสียงมือถือ)
 function lvGate(f,b64){const g=LV.g,n=lvNow();if(LVLOUD&&lvSpeaking()){g.open=false;g.pre=[];if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}return}   // ลำโพงดัง: ไม่ส่งเสียงตอนผู้ช่วยพูด (กันได้ยินเสียงตัวเอง)
  let s=0;for(let i=0;i<f.length;i++)s+=f[i]*f[i];const rms=Math.sqrt(s/f.length);
  const speaking=lvSpeaking(),thr=speaking?Math.max(0.025+0.006*LVVOL,g.floor*7):Math.max(0.008,g.floor*3);   // เปิดเสียงดัง → เกณฑ์ตอนผู้ช่วยพูดสูงขึ้นตาม
@@ -1857,7 +1857,8 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
   const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
- if(sc){if(sc.interrupted){lvFlush();LV.hold=[];LV.dropTurn=false;LV.quick=false}
+ if(sc){if(sc.interrupted||sc.turnComplete)LV.turnOn=false;
+  if(sc.interrupted){lvFlush();LV.hold=[];LV.dropTurn=false;LV.quick=false}
   if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);if(LV.dropTurn&&!LV.quick)LV.dropTurn=false;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
   const mute=(LV.wake&&!LV.awake)||LV.dropTurn;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ยังไม่เล่นเสียงตอบ (เก็บไว้ก่อน ถ้ายืนยันว่าเรียกชื่อในรอบนี้ค่อยเล่นทันที)
   ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(mute){(LV.hold=LV.hold||[]).push(p.inlineData.data);if(LV.hold.length>200)LV.hold.shift();return}if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
@@ -1941,9 +1942,9 @@ function lvLoudSet(on){LVLOUD=!!on;vLSset('rb_lvloud',LVLOUD?'1':'0')}   // ล�
 function lvVolSet(v){LVVOL=Math.max(0.5,Math.min(4,+v||2.5));vLSset('rb_lvvol',LVVOL);try{if(LV.outN)LV.outN.gain.value=LVVOL}catch(e){}}
 function lvPlay(b64){const c=LV.ctxOut;if(!c)return;let pcm;try{pcm=new Int16Array(lvUnB64(b64))}catch(e){return}if(!pcm.length)return;
  const buf=c.createBuffer(1,pcm.length,24000),ch=buf.getChannelData(0);for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/0x8000;
- const s=c.createBufferSource();s.buffer=buf;s.connect(lvOut(c));const at=Math.max(c.currentTime+0.03,LV.next);s.start(at);LV.next=at+buf.duration;LV.play.push(s);vfab.classList.add('speak');
- s.onended=()=>{LV.play=LV.play.filter(x=>x!==s);if(!LV.play.length){vfab.classList.remove('speak');if(LV.endAfter)lvEndSoon()}}}
-function lvFlush(){LV.play.forEach(s=>{try{s.onended=null;s.stop()}catch(e){}});LV.play=[];LV.next=0;vfab.classList.remove('speak')}
+ LV.turnOn=true;const s=c.createBufferSource();s.buffer=buf;s.connect(lvOut(c));const at=LV.next>c.currentTime+0.02?LV.next:c.currentTime+0.12;s.start(at);LV.next=at+buf.duration;LV.play.push(s);vfab.classList.add('speak');   // เริ่มใหม่/เสียงมาไม่ทัน → เผื่อ 0.12 วิ ให้เล่นต่อเนื่องไม่กระตุก
+ s.onended=()=>{LV.play=LV.play.filter(x=>x!==s);if(!LV.play.length){LV.tail=lvNow()+700;LV.turnOn=false;vfab.classList.remove('speak');if(LV.endAfter)lvEndSoon()}}}
+function lvFlush(){LV.play.forEach(s=>{try{s.onended=null;s.stop()}catch(e){}});LV.play=[];LV.next=0;LV.turnOn=false;LV.tail=0;vfab.classList.remove('speak')}
 function lvEndSoon(ms){clearTimeout(LV.endT);LV.endT=setTimeout(()=>{if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')},ms==null?(LV.play.length?600:300):ms)}
 // ---- สายหลุด / ต่อใหม่ / สลับรุ่น / ถอยกลับระบบเดิม ----
 function lvClosed(ws,e){if(ws!==LV.ws||LV.stopping)return;clearTimeout(LV.setupT);const why=String((e&&e.reason)||ws.__why||'')+(e&&e.code?' ('+e.code+')':'');
