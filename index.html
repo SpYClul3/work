@@ -977,8 +977,8 @@ function vNorm(s){s=String(s||'');
  s=s.replace(ENRE,m=>engNum(m));
  s=s.replace(TNRE,m=>thaiNum(m));
  s=s.replace(/\s*(?:ทับ|สแลช|slash)\s*/gi,'/').replace(/\s*\/\s*/g,'/');
- s=s.replace(/(?:ทิพย์|ทิพ|ทิป|ทริบ|ทิบ|ตริป|ทรีป)\s*(?=\d)/g,'ทริป ');
- s=s.replace(/ตัด(?:สาย|ไฟ|มิเตอร์|มิเตอ)?(?!สิน|ใจ|ทอน|กัน|ออก)/g,'ปลด');   // ภาษาพูด: ตัดสาย/ตัดไฟ = ปลด
+ {const ni=s.search(/หมายเหตุ|โน้ต|โน๊ต/),hd=ni<0?s:s.slice(0,ni),tl=ni<0?'':s.slice(ni);   // แก้คำเพี้ยนเฉพาะส่วนคำสั่ง ไม่แตะข้อความหมายเหตุ
+  s=hd.replace(/(?:ทิพย์|ทิพ|ทิป|ทริบ|ทิบ|ตริป|ทรีป)\s*(?=\d)/g,'ทริป ').replace(/ตัด(?:สาย|ไฟ|มิเตอร์|มิเตอ)?(?!สิน|ใจ|ทอน|กัน|ออก)/g,'ปลด')+tl}   // ภาษาพูด: ตัดสาย/ตัดไฟ = ปลด
  s=s.replace(/\s+/g,' ').trim();
  return s.replace(/\s*(?:ครับ|ค่ะ|คะ|นะ)?\s*ว่า$/,'').trim()}
 
@@ -1122,8 +1122,9 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  // ค้นหา หรือ บันทึก
  // ค่าเริ่มต้น = ค้นหา · จะบันทึกต้องขึ้นต้นด้วย "บันทึกงาน / บันทึกข้อมูล / บันทึก…" (หรือพูดตอนฟอร์มบันทึกเปิดอยู่)
  const SAVERE=/^(บันทึกงาน|บันทึกข้อมูล|บันทึก|เพิ่มงาน|เพิ่มข้อมูล|ลงงาน|ลงข้อมูล|กรอกข้อมูล|กรอก|ใส่ข้อมูล)\s*/,SRCHRE=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)\s*/;
- let phQ='';const phm=t.match(/(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|ที่มี|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/);if(phm&&!/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)$/.test(t.trim())){phQ=/ไม่/.test(phm[1])?'ไม่มีรูป':'มีรูป';t=t.replace(/(ที่)?\s*(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/,' ').trim()}
- let dupQ=false;if(/ซ้ำ/.test(t)&&!/(แก้|ลบ)/.test(t)){dupQ=true;t=t.replace(/(บันทึก|ลง)?\s*(งาน)?\s*(ที่)?\s*(ลง|บันทึก)?\s*(งาน)?\s*ซ้ำ(\s*(กัน|ไว้))?(\s*\d+\s*งาน)?/,' ').trim()}
+ const tHead=t.split(/หมายเหตุ|โน้ต|โน๊ต/)[0],saveWithMeter=SAVERE.test(t)&&/\d{6,}/.test(tHead);   // ① ② คำว่า ซ้ำ/รูป ในหมายเหตุ หรือตอนสั่งบันทึกที่มีเลขเครื่อง = ไม่ใช่คำสั่งค้นหา
+ let phQ='';const phm=saveWithMeter?null:tHead.match(/(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|ที่มี|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/);if(phm&&!/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)$/.test(t.trim())){phQ=/ไม่/.test(phm[1])?'ไม่มีรูป':'มีรูป';t=t.replace(/(ที่)?\s*(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/,' ').trim()}
+ let dupQ=false;if(!saveWithMeter&&/ซ้ำ/.test(tHead)&&!/(แก้|ลบ)/.test(tHead)){dupQ=true;t=t.replace(/(บันทึก|ลง)?\s*(งาน)?\s*(ที่)?\s*(ลง|บันทึก)?\s*(งาน)?\s*ซ้ำ(\s*(กัน|ไว้))?(\s*\d+\s*งาน)?/,' ').trim()}
  const saidSave=!dupQ&&SAVERE.test(t),saidSearch=SRCHRE.test(t),isSearch=dupQ||!!phQ||saidSearch||!(saidSave||ctx.formOpen);
  o.intent=isSearch?'search':'save';if(dupQ){o.filters.dup='ซ้ำ';o.kind=o.kind||'jobs'}if(phQ){o.filters.photo=phQ;o.photoQ=1}o.formOpen=!!ctx.formOpen;o.saidSave=saidSave;
  t=t.replace(saidSave?SAVERE:SRCHRE,'');
@@ -1316,7 +1317,7 @@ const vChatOnly=s=>/^(?:สวัสดี|หวัดดี|ดีจ้า|�
 function vSay(t,after,opt){opt=opt||{};t=vPron(String(t||'').replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu,'').replace(/[“”"]/g,'').replace(/\s*[·—]\s*/g,' ')).trim();
  if(!t||VMUTE||!VTTS||(typeof LV!=='undefined'&&LV.on&&!opt.force)){if(after)after();return}
  vSaidAdd(t);   // ตอนคุยเสียงสด ผู้ช่วยพูดเอง
- try{const my=++VSAYN;if(!(VFILLON&&Date.now()<VFILLON))VTTS.cancel();VFILLON=opt.filler?Date.now()+2500:0;   // คำพูดระหว่างรอ (สั้น) ให้พูดจบก่อน แล้วต่อคำตอบจริงทันที ไม่ตัดกลางคำ
+ try{const my=++VSAYN;if(!opt.queue&&!(VFILLON&&Date.now()<VFILLON))VTTS.cancel();VFILLON=opt.filler?Date.now()+2500:0;   // คำพูดระหว่างรอ (สั้น) ให้พูดจบก่อน แล้วต่อคำตอบจริงทันที ไม่ตัดกลางคำ
   const parts=vChunks(t);let done=false;const fin=()=>{if(done)return;done=true;if(my===VSAYN)VFILLON=0;if(after&&my===VSAYN)after()};
   parts.forEach((x,i)=>{const u=new SpeechSynthesisUtterance(x);u.lang='th-TH';if(VVOICE)u.voice=VVOICE;u.rate=VRATE;if(i===parts.length-1){u.onend=fin;u.onerror=fin}VTTS.speak(u)});
   setTimeout(fin,Math.min(90000,3000+t.length*150/VRATE))}catch(e){if(after)after()}}
@@ -1426,7 +1427,7 @@ let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Da
 // ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
 const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ไหนบ้าง|ก่อนหน้า|เทียบ|เฉลี่ย|ไม่ใช่)/i;
 const VFILL=/(เฉพาะ|คนเดียว|อย่างเดียว|แทน|แบ่งเป็น|แยกเป็น|วันที่นัด|นัด|อ่าน|บอก|นับ|รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี|ซ้ำ|กัน|คน|ลง|หน้า|แท็บ|เรียก|ไฟล์|วิ่ง|เป็นคน)/g;
-function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม|(แยก\s*)?(ตาม|ราย)\s*(คน|ช่าง)|(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มีแนบ|มี|แนบ)?\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
+function vLeft(o,names){let t=vCanon(String(o.heard||'').split(/หมายเหตุ|โน้ต|โน๊ต/)[0]).toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม|(แยก\s*)?(ตาม|ราย)\s*(คน|ช่าง)|(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มีแนบ|มี|แนบ)?\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
  const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
  names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
  VK.forEach(([f,ws])=>ws.forEach(kill));['เอ็มอาร์ยู','ไม่พบข้อมูล','ผ่อนผัน','ค่าไฟ','ใกล้เคียง'].forEach(kill);
@@ -1923,9 +1924,9 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
   const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
- if(sc){if(sc.interrupted||sc.turnComplete){LV.turnOn=false;LV.spokeTurn=false}
+ if(sc){if(sc.interrupted||sc.turnComplete){LV.turnOn=false;LV.spokeTurn=false;LV.phoneTurn=false}
   if(sc.interrupted){lvFlush();LV.hold=[];LV.dropTurn=false;LV.quick=false}
-  if(sc.inputTranscription&&sc.inputTranscription.text){if(!LV.turnOn)LV.spokeTurn=false;LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);if(LV.dropTurn&&!LV.quick)LV.dropTurn=false;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
+  if(sc.inputTranscription&&sc.inputTranscription.text){if(!LV.turnOn){LV.spokeTurn=false;LV.phoneTurn=false}LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);if(LV.dropTurn&&!LV.quick)LV.dropTurn=false;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
   const mute=(LV.wake&&!LV.awake)||LV.dropTurn;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ยังไม่เล่นเสียงตอบ (เก็บไว้ก่อน ถ้ายืนยันว่าเรียกชื่อในรอบนี้ค่อยเล่นทันที)
   ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(mute){(LV.hold=LV.hold||[]).push(p.inlineData.data);if(LV.hold.length>200)LV.hold.shift();return}if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
   if(sc.outputTranscription&&sc.outputTranscription.text&&!mute){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
@@ -1962,7 +1963,7 @@ function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{m
  const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
  try{vShow(heard,rs.map(r=>r.msg).join(' · '),bad,sg)}catch(e){}
  if(say&&LVPHONE&&LV.on){   // v35: คำตอบคำสั่งงาน → มือถือพูดเองทันที (ไม่ต้องรอเสียงผู้ช่วยเรียบเรียง ~1.5-2 วิ) · ผู้ช่วยเข้าใจคำสั่งครบแล้วจึงถึงตรงนี้ · เสียงผู้ช่วยรอบนี้ปิด
-  LV.dropTurn=true;lvFlush();if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvStat('phone',lvNow()-LV.tEnd);LV.tail=lvNow()+60000;vSay(LV.spokeTurn?sp1:say,()=>{LV.tail=lvNow()+700},{force:true});   // ผู้ช่วยขานรับไปแล้วในรอบนี้ → ไม่ขึ้นต้น "ครับ คุณ…" ซ้ำ
+  LV.dropTurn=true;lvFlush();if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvStat('phone',lvNow()-LV.tEnd);LV.tail=lvNow()+60000;vSay(LV.spokeTurn||LV.phoneTurn?sp1:say,()=>{LV.tail=lvNow()+700},{force:true,queue:!!(LV.phoneTurn&&VTTS&&VTTS.speaking)});LV.phoneTurn=true;   // ④ หลายคำสั่งในรอบเดียว → พูดต่อคิวจนจบ ไม่ตัดกัน (ขานชื่อแค่ครั้งแรก)   // ผู้ช่วยขานรับไปแล้วในรอบนี้ → ไม่ขึ้นต้น "ครับ คุณ…" ซ้ำ
   cb({result:txt||'ทำแล้ว',spoken:'แอปพูดผลนี้ให้ผู้ใช้ฟังแล้ว ห้ามพูดซ้ำ ไม่ต้องพูดอะไร เงียบรอฟังต่อ',ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()});return}
  if(say)vSaidAdd(say);
  cb({result:txt||'ทำแล้ว',say:say||undefined,ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
