@@ -1,5 +1,5 @@
 // เปิดแอปได้แม้เน็ตไม่ดี: ใช้ไฟล์ล่าสุดจากเน็ตก่อน ถ้าไม่มีเน็ตใช้ไฟล์ที่เก็บไว้ (ไม่ยุ่งกับการส่งข้อมูลไป Google)
-const C='rb-'+"1795596854395";
+const C='rb-'+"1795605396643";
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./manifest.json','./icon-192.png'])).catch(()=>{}));self.skipWaiting()});
 const F='rb-fonts-1';   // ฟอนต์ Kanit เก็บไว้ในเครื่อง → ตัวอักษรเหมือนเดิมทุกครั้ง แม้เน็ตไม่ดี
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C&&k!==F).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

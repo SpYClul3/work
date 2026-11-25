@@ -978,6 +978,7 @@ function vNorm(s){s=String(s||'');
  s=s.replace(TNRE,m=>thaiNum(m));
  s=s.replace(/\s*(?:ทับ|สแลช|slash)\s*/gi,'/').replace(/\s*\/\s*/g,'/');
  s=s.replace(/(?:ทิพย์|ทิพ|ทิป|ทริบ|ทิบ|ตริป|ทรีป)\s*(?=\d)/g,'ทริป ');
+ s=s.replace(/ตัด(?:สาย|ไฟ|มิเตอร์|มิเตอ)?(?!สิน|ใจ|ทอน|กัน|ออก)/g,'ปลด');   // ภาษาพูด: ตัดสาย/ตัดไฟ = ปลด
  s=s.replace(/\s+/g,' ').trim();
  return s.replace(/\s*(?:ครับ|ค่ะ|คะ|นะ)?\s*ว่า$/,'').trim()}
 
@@ -1133,7 +1134,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
   let sm=t.match(/(?:สรุป(?:งาน|ยอด|ผล)?\s*)?แยก\s*(?:ตาม)?\s*(รายคน|คน|ช่าง|ผู้ปฏิบัติงาน|ประเภทงาน|ประเภท|รายวัน|วันที่|วัน|ทริปงาน|ทริป|บริษัท)|ราย(คน|วัน|ทริป)/);
   if(sm){o.summary={by:SB[sm[1]||('ราย'+sm[2])]||'worker'};t=t.replace(sm[0],' ')}
   else if(sm=t.match(/ใคร\S*?(เยอะ|มาก|น้อย)\s*(ที่)?\s*สุด/)){o.summary={by:'worker',top:sm[1]==='น้อย'?'min':'max'};t=t.replace(/ใคร/,' ').replace(/(ทำ)?(งาน)?(เยอะ|มาก|น้อย)\s*(ที่)?\s*สุด/,' ')}
-  else if(sm=t.match(/ใคร\s*(เป็นคน)?\s*(วิ่ง|ทำ|ลง|ไป|รับ|ออก)(งาน)?/)){o.summary={by:'worker'};t=t.replace(sm[0],' ')}   // "MRU 126 ใครวิ่ง" = แยกตามคน
+  else if(sm=t.match(/ใคร\s*(เป็นคน)?\s*(วิ่ง|ทำ|ลง|ไป|รับ|ออก|ปลด|ถอด|ใส่สาย|ต่อกลับ|เลิกใช้)(งาน)?/)){o.summary={by:'worker'};t=VTYPES.includes(sm[2])?t.replace(/ใคร\s*(เป็นคน)?/,' '):t.replace(sm[0],' ')}   // "MRU 126 ใครวิ่ง" = แยกตามคน
   else if(sm=t.match(/^\s*สรุป(งาน|ยอด|ผล)?/)){o.summary={by:'type'};t=t.replace(sm[0],' ')}
   const am=t.match(/ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ทุกตาราง|ทุกประเภทข้อมูล/);if(am){o.all=true;t=t.replace(am[0],' ')}
  }
@@ -1187,6 +1188,8 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  else if(/^นับ/.test(heard)&&o.intent!=='save'){o.intent='search';o.count=true;if(/ทั้งหมด/.test(heard)&&!Object.keys(o.fields).length)o.kind=o.kind||(/งาน/.test(heard)||!vk?'jobs':vk);else if(!o.kind&&vk){o.kind=vk;o.keep=true}}
 if(o.photoQ&&!o.kind){o.kind=vk&&vk!=='mru'?vk:'jobs';o.keep=!!vk&&vk!=='mru'}
  if(o.intent==='search'&&!o.kind&&vk&&(/(เฉพาะ|คนเดียว|แทน|แบ่งเป็น|แยกเป็น|อย่างเดียว)/.test(heard)||/^ของ/.test(heard))){o.kind=vk;o.keep=true}
+ if(/(ตรงกับ|ตรงกัน|จับคู่|คู่กับ|แมตช์|ไม่ใช่งาน\s*(ปลด|ถอด)|ไม่(มี|พบ)งาน\s*(ปลด|ถอด))/.test(heard)&&/(ใส่สาย|ต่อกลับ|ปลด|ถอด)/.test(heard)){o.intent='search';o.check=true;o.kind='jobs';delete o.fields.type;if(o.multi)o.multi.type=[];if(o.not)o.not.type=[]}   // ตรวจจับคู่ ปลด/ถอด ↔ ใส่สาย/ต่อกลับ
+ {const fm=heard.match(/^(ดู|ค้นหา|ค้น|หา)\s*งาน\s*(ของ|ที่|แถว|ใน|หมู่บ้าน|ซอย|ชุมชน)?\s*(\S{2,20}?)\s*ทั้งหมด$/);if(fm&&o.intent==='search'&&!o.check&&!Object.keys(o.fields).length&&!names.includes(fm[3])&&!VTYPES.includes(fm[3])){o.textQ=fm[3];o.kind=o.kind||'jobs'}}   // "ดูงานปู่เจ้าทั้งหมด" = ค้นข้อความ
  const anyNot=o.not&&Object.values(o.not).some(x=>x.length);
  if(!o.kind&&!Object.keys(o.fields).length&&!Object.keys(o.filters).length&&!o.unknownName&&!anyNot&&!o.summary&&!o.sort&&!(isSearch&&(saidSearch||/\d/.test(o.free||''))))o.intent='none';
  return o}
@@ -1222,13 +1225,13 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={},keepF=o.kee
  const MV=(k,one)=>{const inc=o.multi&&o.multi[k]&&o.multi[k].length?o.multi[k]:(one?[one]:[]),exc=(o.not&&o.not[k])||[];return inc.concat(exc.map(x=>'!'+x)).join('|')};
  ['trip','comp','worker','type'].forEach(k=>{const v=MV(k,f[k]);if(v)set[k]=v});if(o.sort)SORTD=o.sort==='old'?'old':'new';
  if(f.date&&f.dateTo)set.date='r:'+f.date+':'+f.dateTo;else if(f.date||f.due)set.date=f.date||f.due;if(f.mru)set.mru=f.mru.join('|');if(fl.dp)set.dp=fl.dp;if(fl.dup)set.dup=fl.dup;if(fl.photo)set.photo=fl.photo;
- const q=f.meter||f.phone||f.house||(f.nb&&f.nb[0])||(o.free&&o.free.length>1&&/[\dA-Za-z]/.test(o.free)?o.free:'');if(q)set.q=q;
+ const q=o.textQ||f.meter||f.phone||f.house||(f.nb&&f.nb[0])||(o.free&&o.free.length>1&&/[\dA-Za-z]/.test(o.free)?o.free:'');if(q)set.q=q;
  let pg=o.kind==='phones'||f.phone?'phones':o.kind==='defer'?'defer':o.kind==='mru'||(f.mru&&!o.kind)?'mru':o.kind==='nf'?'nf':'search';
  if(fl.rc&&fl.rc!==RC_NONE){pg='track';TT=fl.rc===RC_WAIT?'wait':fl.rc===RC_DONE?'done':'end'}else if(fl.rc)set.rc=fl.rc;
  if(keepF)Object.keys(keepF).forEach(k=>{if(keepF[k]&&!(k in set))set[k]=keepF[k]});
  const td=isoD(new Date()),yd=isoD(new Date(Date.now()-864e5)),PGN={phones:'เบอร์โทร',defer:'ผ่อนผัน',mru:'MRU',nf:'งานไม่พบข้อมูล',track:'ติดตามใส่สาย'},and=v=>fLab(v).replace(/, /g,' และ ');
  const dsay=v=>v===td?'วันนี้':v===yd?'เมื่อวาน':v.startsWith('r:')?dlab(v).replace(/^\S+\s/,''):'วันที่ '+fmtD(v);
- const base=(set.type?'งาน'+and(set.type):PGN[pg]||'งาน')+(set.worker?'ของ'+and(set.worker):''),rest=[set.trip?'ทริป '+and(set.trip):'',set.comp?'บริษัท '+and(set.comp):'',set.mru?'MRU '+set.mru:'',set.date?dsay(set.date):'',set.q?'เลข '+set.q:'',set.dup?'ที่ลงซ้ำ':'',set.photo?(set.photo==='มีรูป'?'ที่มีรูป':'ที่ไม่มีรูป'):''].filter(Boolean);
+ const base=(set.type?'งาน'+and(set.type):PGN[pg]||'งาน')+(set.worker?'ของ'+and(set.worker):''),rest=[set.trip?'ทริป '+and(set.trip):'',set.comp?'บริษัท '+and(set.comp):'',set.mru?'MRU '+set.mru:'',set.date?dsay(set.date):'',set.q?(/\d/.test(set.q)?'เลข ':'คำว่า ')+set.q:'',set.dup?'ที่ลงซ้ำ':'',set.photo?(set.photo==='มีรูป'?'ที่มีรูป':'ที่ไม่มีรูป'):''].filter(Boolean);
  const say=(rest.length||set.type||set.worker||PGN[pg]?base:'งานทั้งหมด')+(rest.length?' '+rest.join(' '):'');   // คำบอกว่าค้นอะไร ให้คำตอบเสียงฟังรู้เรื่อง เช่น "งานปลดของบาส เมื่อวาน มี 3 รายการ"
  Object.assign(F,set);if(pg==='search'){tab='all';syncTabFromType()}page=p3=p4=p6=p7=p8=1;
  go(pg);filt();draw();vScrollRes(pg);
@@ -1239,6 +1242,14 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={},keepF=o.kee
 const THM=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const vDSay=d=>{const m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return '';const y=+m[1]+543;return (+m[3])+' '+THM[+m[2]-1]+(+m[1]===new Date().getFullYear()?'':' '+y)};
 function vWhen(){if(!F.date)return '';if(F.date.startsWith('r:')){const l=dlab(F.date).replace(/^📅 /,'');return /สัปดาห์|เดือน|วัน/.test(l)?l:'ช่วง '+F.date.slice(2).split(':').map(vDSay).join(' ถึง ')}return 'วันที่ '+vDSay(F.date)}
+// ตรวจจับคู่: งานใส่สาย/ต่อกลับ ตรงกับงานปลด/ถอดไหม (ตามวันที่/คน/ทริปที่พูด) + งานลงซ้ำ → แสดงรายการที่ไม่ตรง
+function vCheck(o){const r=vSearch(Object.assign({},o,{kind:'jobs',check:false,summary:null}));const rows=jobsV(),nd=noDup(rows),M=rcMap();
+ const rec=nd.filter(x=>RECON.includes(g(x,'ประเภทงาน'))),dis=nd.filter(x=>DISC.includes(g(x,'ประเภทงาน')));
+ const none=rec.filter(x=>rcOf(x)===RC_NONE),near=none.filter(x=>(M.get(x)||{}).near).length,ok=rec.length-none.length,wait=dis.filter(x=>rcOf(x)===RC_WAIT).length,dup=rows.length-nd.length;
+ F.type='ใส่สาย|ต่อกลับ';if(none.length)F.rc=RC_NONE;page=1;syncTabFromType();filt();draw();
+ const when=(r.say||'').replace(/^งาน(ทั้งหมด)?\s*/,'').trim();
+ const sp=(when?when+' ':'')+'ใส่สายและต่อกลับ '+rec.length+' งาน ตรงกับงานปลดหรือถอด '+ok+' งาน'+(none.length?' ไม่พบงานปลดหรือถอด '+none.length+' งาน'+(near?' ในนี้บ้านเลขที่ไม่ตรง '+near+' งาน':''):(rec.length?' ครบทุกงาน':''))+(dup?' มีงานลงซ้ำ '+dup+' รายการ':' ไม่มีงานลงซ้ำ')+' · งานปลดถอด '+dis.length+' งาน ยังไม่ใส่สาย '+wait+' งาน';
+ return {msg:'🔗 '+sp+(none.length?' — แสดงรายการที่ไม่ตรง':''),sp:sp.replace(/ · /g,' ')}}
 function vRowsNow(pg){const a=vRowsAll(pg);return pg==='track'||(pg==='search'&&tab!=='defer')?noDup(a):a}
 function vRowsAll(pg){return pg==='phones'?phonesV():pg==='defer'?deferV():pg==='mru'?mruV():pg==='nf'?nfV():pg==='track'?trackRows().map(x=>x._o):(tab==='defer'?deferV():tab==='all'?jobsV():jobsV().filter(r=>g(r,'ประเภทงาน')===tab))}
 const VBYF={type:r=>[g(r,'ประเภทงาน')||'-'],worker:r=>{const w=splitL(g(r,'ผู้ปฏิบัติงาน'));return w.length?w:['ไม่ระบุชื่อ']},trip:r=>[g(r,'ทริปงาน')||'-'],comp:r=>[g(r,'บริษัท')||'-'],date:r=>[dkey(g(r,'วันที่นัดชำระ')||PDATE.jobs(r))||'-']};
@@ -1374,6 +1385,7 @@ function vExec(o,note,quiet){let msg='',sp='',bad=false,listen=false,sg=null;con
   else if(c==='me'){vCloseAll();pickMe();msg=sp='เลือกชื่อผู้ใช้เครื่องนี้'}
   else{msg=sp='ไม่เข้าใจคำสั่ง';bad=true}}
  else if(it==='nav'){vCloseAll();if(o.page==='report')openR();else if(o.page==='workers')openW();else if(o.page==='log')openLog();else if(o.page==='settings')openSet();else go(o.page);const nm=({report:'รายงาน',workers:'จัดการรายชื่อ',log:'ประวัติการแก้ไข',settings:'ตั้งค่า'}[o.page]||((document.querySelector(`.side .nav[data-k="${o.page}"]`)||{}).textContent||o.page).trim());msg='📄 เปิด '+nm;sp='เปิด'+nm.replace(/^[^฀-๿a-zA-Z]+/,'')}
+ else if(it==='search'&&o.check){const r=vCheck(o);msg=r.msg;sp=r.sp}
  else if(it==='search'&&o.all){const r=searchAll(o.free||o.fields.meter||o.fields.house||o.fields.phone||o.fields.worker||'');msg=r.msg;sp=r.sp}
  else if(it==='search'){const r=vSearch(o),n=vNum(r.count);msg='🔍 '+(r.txt||'ค้นหา')+(r.count?' → '+r.count:'');sp=n===null?(o.say||'ค้นหาแล้ว'):(r.say?r.say+' ':'')+(n?(o.count?'มี ':'พบ ')+n+' รายการ':'ไม่พบข้อมูล');
   if(o.summary){const sm=vSummary(o,r.pg);msg=sm.msg;sp=sm.sp}
@@ -1421,6 +1433,7 @@ function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุ�
  if(o.fields&&o.fields.comp)kill(o.fields.comp);
  return t.replace(VFILL,' ').replace(/[\d\/\-.,:a-z]+/g,' ').replace(/[่้๊๋์็ํ]/g,'').replace(/\s+/g,'').trim()}
 function vSure(o,names){if(o.intent==='cmd'||o.intent==='nav'||o.intent==='me')return true;
+ if(o.intent==='search'&&(o.check||o.textQ)&&!VASK.test((o.heard||'').replace(/ไม่ใช่งาน/g,'')))return true;
  if(o.unknownName||VASK.test(o.heard||''))return false;if(vLeft(o,names).length>1)return false;
  if(o.intent==='save')return !!(o.fields.meter||(o.fields.mru&&o.fields.mru.length)||o.fields.phone||((o.formOpen||o.saidSave)&&Object.keys(o.fields).length)||(o.saidSave&&o.kind));   // "บันทึกงาน MRU / บันทึกเบอร์โทร" = เปิดฟอร์มหมวดนั้น   // ฟอร์มเปิดอยู่/สั่งกรอกชัด ๆ + มีข้อมูล = ทำได้เลย
  if(o.intent==='search')return !!(Object.keys(o.fields).length||Object.keys(o.filters).length||o.kind||o.summary||o.all||o.sort||(o.not&&Object.values(o.not).some(x=>x.length))||/\d/.test(o.free||''));
