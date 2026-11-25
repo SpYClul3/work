@@ -1845,13 +1845,14 @@ const lvAud=b64=>({realtimeInput:{audio:{data:b64,mimeType:'audio/pcm;rate=16000
 function lvIdle(){clearTimeout(LV.idleT);const ms=LV.wake?LVWAKEIDLE:LVIDLE;LV.idleT=setTimeout(()=>{if(LV.on&&!LV.play.length){if(LV.wake)lvStop('💤 ไม่มีใครเรียกนาน พักการรอฟังแล้ว — แตะ 🎤 เพื่อเริ่มใหม่');else lvStop('💤 เงียบไปนาน จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')}else if(LV.on)lvIdle()},ms)}
 
 // ---- ตัดเสียงเงียบ/เสียงสะท้อน: ส่งเฉพาะช่วงที่มีคนพูด (ประหยัดเน็ต · ผู้ช่วยไม่ได้ยินเสียงตัวเองแล้วหยุดพูดกลางคัน) ----
+const lvHang=()=>Math.max(900,Math.min(2300,(+VSIL||1000)+300));   // เงียบนานเท่านี้ = พูดจบ (ตามตั้งค่า พูดจบแล้วรอกี่วินาที + 0.3)
 const lvSpeaking=()=>LV.play.length>0||!!LV.turnOn||lvNow()<(LV.tail||0)||!!(VTTS&&VTTS.speaking);   // v34: นับว่ายังพูดอยู่ตลอดรอบ + 0.7 วิหลังเสียงจบ (เดิมเสียงขาดช่วงนิดเดียว ไมค์เปิด → ได้ยินเสียงตัวเอง → ตัดกลางประโยค)   // ผู้ช่วยพูดอยู่ (เสียง Google หรือเสียงมือถือ)
 function lvGate(f,b64){const g=LV.g,n=lvNow();if(LVLOUD&&lvSpeaking()){g.open=false;g.pre=[];if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}return}   // ลำโพงดัง: ไม่ส่งเสียงตอนผู้ช่วยพูด (กันได้ยินเสียงตัวเอง)
  let s=0;for(let i=0;i<f.length;i++)s+=f[i]*f[i];const rms=Math.sqrt(s/f.length);
  const speaking=lvSpeaking(),thr=speaking?Math.max(0.025+0.006*LVVOL,g.floor*7):Math.max(0.008,g.floor*3);   // เปิดเสียงดัง → เกณฑ์ตอนผู้ช่วยพูดสูงขึ้นตาม
  if(!g.open&&rms<g.floor*3+0.002)g.floor=g.floor*0.96+rms*0.04;   // จำระดับเสียงรอบข้าง
- if(rms>thr){LV.lastVoice=n;if(!g.open){g.open=true;g.pre.forEach(x=>lvSend(lvAud(x)));g.pre=[]}g.until=n+900}
- if(g.open){lvSend(lvAud(b64));g.sent=true;if(n>g.until){g.open=false;if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}}}
+ if(rms>(g.open&&!speaking?thr*0.6:thr)){LV.lastVoice=n;if(!g.open){g.open=true;g.pre.forEach(x=>lvSend(lvAud(x)));g.pre=[]}g.until=n+lvHang()}   // v42: หยุดคิดกลางประโยคได้ตาม "พูดจบแล้วรอกี่วินาที" · เสียงท้ายคำเบา ๆ ยังนับว่าพูดอยู่
+ if(g.open){lvSend(lvAud(b64));g.sent=true;if(n>g.until||(speaking&&n>(LV.lastVoice||0)+900)){g.open=false;if(g.sent){lvSend({realtimeInput:{audioStreamEnd:true}});g.sent=false}}}
  else{g.pre.push(b64);if(g.pre.length>3)g.pre.shift()}}
 
 // ---- เริ่ม / จบ ----
@@ -1900,7 +1901,7 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
   systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?(LVPHONE?'เวลาคุณพูดเอง (คุยเล่น/ถามกลับ) ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" ครั้งเดียว ห้ามเรียกชื่อซ้ำหรือลงท้ายประโยคด้วยชื่อ · คำสั่งงานไม่ต้องพูด แอปขานชื่อให้แล้ว':'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" ครั้งเดียว (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา · ห้ามลงท้ายประโยคด้วยชื่อ'):'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+(LVPHONE?'\nคำสั่งงาน: เรียก do_command ทันทีโดยไม่ต้องพูดอะไรเลย (ไม่ต้องขานรับ ไม่ต้องบอกว่ากำลังทำ) แอปจะขานชื่อและพูดผลให้เอง · ผลที่มี spoken = แอปพูดแล้ว ให้เงียบ':'')+'\nผลของ do_command มี say = ประโยคที่แอปเตรียมไว้แล้ว: พูด say ทันทีคำต่อคำ ไม่ต้องคิด ไม่เรียบเรียงใหม่ ไม่เติมคำ ไม่ขึ้นต้นชื่อซ้ำ (ถ้าไม่มี say ค่อยสรุปจาก result เอง)'+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
   inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
- if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:600,endOfSpeechSensitivity:'END_SENSITIVITY_LOW',prefixPaddingMs:20}};   // ตรวจพูดจบไว
+ if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:Math.max(600,Math.min(2000,+VSIL||1000)),endOfSpeechSensitivity:'END_SENSITIVITY_LOW',prefixPaddingMs:20}};   // ตรวจพูดจบไว
  if(o.wake&&native&&!safe)st.proactivity={proactiveAudio:true};   // ให้ผู้ช่วยเลือกเงียบได้เมื่อเสียงนั้นไม่ได้พูดกับเขา
  return st}
 // โหมดปลอดภัย: รุ่นไหนไม่รับค่าตั้งเสริม (ปิดการคิด/ตรวจพูดจบไว/ค้น Google/เลือกเงียบ) → ใช้เฉพาะค่าที่จำเป็น · จำไว้ 7 วัน · เก็บเหตุผลไว้ดูในตั้งค่า
