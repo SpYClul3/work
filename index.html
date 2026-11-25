@@ -148,7 +148,7 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .filt label.na{opacity:.38}.filt label.na select,.filt label.na input{cursor:not-allowed}
 .nodata{color:var(--m);font-style:italic;font-size:12px}.warn{color:#ffb980}
 .box label.rchk{display:flex;gap:8px;align-items:center;margin:6px 0;cursor:pointer}.rchk input{width:auto}
-.dx{display:inline-block;border-radius:6px;padding:1px 9px;font-weight:500;color:#d6dbe6;background:#2c3242;border:1px solid #6b7280}.dw{color:#ffb980;font-size:12px}
+.dx{display:inline-block;border-radius:6px;padding:1px 9px;font-weight:500;color:#d6dbe6;background:#2c3242;border:1px solid #6b7280}.dw{color:#ffb980;font-size:12px}.rch{color:#ffd27a;font-size:11.5px;line-height:1.35;margin-top:3px;white-space:normal;max-width:240px;cursor:help}
 .mhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}.mhead h3{margin:0;flex:1}
 .vmini{border:1px solid var(--cy);background:#0b1a5a;color:#bfe6ff;border-radius:16px;padding:4px 12px;cursor:pointer;font-size:13px;white-space:nowrap}
 .vfab{position:fixed;right:16px;bottom:16px;z-index:57;width:56px;height:56px;border-radius:50%;border:1px solid #2b8cff;background:linear-gradient(135deg,#1e6bff,#2b8cff);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px #1e6bff88}
@@ -433,6 +433,9 @@ function sameJob(a,b){const ma=nrm(g(a,'เครื่องวัดเลข�
  if(nrm(g(a,'บ้านเลขที่'))!==nrm(g(b,'บ้านเลขที่')))return false;
  for(const k of ['บริษัท','ทริปงาน']){const x=nrm(g(a,k)),y=nrm(g(b,k));if(x&&y&&x!==y)return false}
  return true}
+// เครื่องวัดเดียวกัน (บริษัท/ทริปไม่ขัดกัน) แต่บ้านเลขที่ไม่ตรง → น่าจะพิมพ์บ้านเลขที่ผิด (ใช้บอกในตาราง + เตือนตอนบันทึก)
+function nearJob(a,b){const ma=nrm(g(a,'เครื่องวัดเลขที่'));if(!ma||ma!==nrm(g(b,'เครื่องวัดเลขที่'))||nrm(g(a,'บ้านเลขที่'))===nrm(g(b,'บ้านเลขที่')))return false;
+ for(const k of ['บริษัท','ทริปงาน']){const x=nrm(g(a,k)),y=nrm(g(b,k));if(x&&y&&x!==y)return false}return true}
 // ลำดับเวลา: วันที่ปฏิบัติงาน แล้วตามด้วยเวลาบันทึก
 const jOrd=r=>[dkey(g(r,'วันที่ปฏิบัติงาน')||g(r,'เวลาบันทึก'))||'0000-00-00',pts(g(r,'เวลาบันทึก'))];
 const jCmp=(a,b)=>{const x=jOrd(a),y=jOrd(b);return x[0]<y[0]?-1:x[0]>y[0]?1:x[1]-y[1]};
@@ -448,11 +451,19 @@ function rcMap(){if(RCC)return RCC;const M=new Map(),by=new Map();
      if(CLOSE.includes(tx)){st=RC_END;b=x;break}
      if(DISC.includes(tx))sup=true}
     if(!sup)for(let k=i+1;k<s.length;k++){if(DISC.includes(g(s[k],'ประเภทงาน'))&&sameJob(r,s[k])){sup=true;break}}
-    M.set(r,{st:st,by:b,sup:sup})}
+    let near=null;if(st===RC_WAIT&&!sup)for(let k=i+1;k<s.length;k++){if(RECON.includes(g(s[k],'ประเภทงาน'))&&nearJob(r,s[k])){near=s[k];break}}
+    M.set(r,{st:st,by:b,sup:sup,near})}
    else if(RECON.includes(t)){let found=false;for(let k=i-1;k>=0;k--){if(DISC.includes(g(s[k],'ประเภทงาน'))&&sameJob(r,s[k])){found=true;break}}
-    M.set(r,{st:found?'':RC_NONE})}})});
+    let near=null;if(!found)for(let k=i-1;k>=0;k--){if(DISC.includes(g(s[k],'ประเภทงาน'))&&nearJob(r,s[k])){near=s[k];break}}
+    M.set(r,{st:found?'':RC_NONE,near})}})});
  return RCC=M}
 const rcOf=r=>{const x=rcMap().get(r);return x?x.st:''};
+function rcHint(r){const x=rcMap().get(r);if(!x||!x.near)return '';const n=x.near,t='บ้านเลขที่ไม่ตรงกับงาน'+g(n,'ประเภทงาน')+' บ้าน '+g(n,'บ้านเลขที่')+' ('+(g(n,'ผู้ปฏิบัติงาน')||'-')+' '+fmtD(g(n,'วันที่ปฏิบัติงาน'))+')';
+ return `<div class="rch" title="${esc(t)} — แก้บ้านเลขที่ให้ตรงกัน สถานะจะเปลี่ยนเอง">⚠️ ${esc(t)}</div>`}
+// งานใส่สาย/ต่อกลับที่จะบันทึก: เครื่องนี้มีงานปลด/ถอดค้างอยู่ที่บ้านเลขที่อื่นไหม (และไม่มีงานค้างที่บ้านเลขที่ตรง)
+function houseMismatch(d){if(!RECON.includes(String(d['ประเภทงาน']||'').trim()))return null;const a=DB.jobs.filter(r=>DISC.includes(g(r,'ประเภทงาน'))&&rcOf(r)===RC_WAIT);
+ if(a.some(r=>sameJob(d,r)))return null;const c=a.filter(r=>nearJob(d,r));return c.sort((x,y)=>jCmp(y,x))[0]||null}
+let SAVE_HOUSE_OK=false;
 const DEF=['แจ็ค','บาส','เดียร์','ไมค์','เชษ','ก๊อต','เนส','เปรี้ยว'];
 const wk=()=>{const a=DB.workers.filter(r=>g(r,'สถานะ')==='ใช้งาน').map(r=>g(r,'ชื่อ')).filter(Boolean);return a.length?a:DEF};
 const fw=()=>[...new Set([...wk(),...DB.jobs.map(r=>g(r,'ผู้ปฏิบัติงาน')),...(DB.mru||[]).map(r=>g(r,'ผู้ปฏิบัติงาน')),...(DB.nf||[]).map(r=>g(r,'ผู้ปฏิบัติงาน')),...DB.phones.flatMap(r=>splitL(g(r,'ผู้ปฏิบัติงาน')))])].filter(Boolean);
@@ -543,7 +554,7 @@ function mselSet(v,keep){F[MSK]=v;page=p3=p4=p6=p7=p8=1;syncTabFromType();const 
 function mselClose(){const p=document.getElementById('mpop');if(p)p.style.display='none';MSK=''}
 document.addEventListener('click',e=>{const p=document.getElementById('mpop');if(p&&p.style.display==='block'&&e.target.isConnected&&!p.contains(e.target))mselClose()});
 function tbl(kd,rows,start,del,cf){const H=TH[kd],dp=dpm();return '<tr><th>#'+H.map(h=>cf?`<th class="hd${CF[h]!==undefined?' act':''}" onclick="openCF(event,'${h}')">${h} ${CF[h]!==undefined?'●':'▾'}`:'<th>'+h).join('')+(del?'<th>จัดการ':'')+'</tr>'+(rows.length?rows.map((r,i)=>'<tr'+(r._f?' class="rf" title="ส่งขึ้น Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ กดป้ายมุมขวาบนเพื่อส่งอีกครั้ง"':r._p?' class="rp"':kd==='jobs'&&isDupOld(r)?' class="rdup"':'')+'><td class="no">'+(start+i+1)+(kd==='jobs'?dupTag(r):'')+(g(r,'รูป')?`<button class="ic" title="ดูรูป" onclick="phView('${kd}','${esc(g(r,'ID'))}')">📷</button>`:'')+H.map(h=>{const v=cell(r,h,dp,kd),nod=kd==='defer'&&h==='ผู้ปฏิบัติงาน'&&!v;   // data-l = ชื่อช่อง (มุมมองการ์ดบนมือถือ) · data-e = ช่องว่าง (การ์ดซ่อนไว้)
-  return '<td data-l="'+h+'"'+(h==='หมายเหตุ'?' class="tn"':'')+(!nod&&String(v==null?'':v).trim()===''?' data-e="1"':'')+'>'+(nod?(g(r,'MRU')?'<span class="nodata" title="ยังไม่มี MRU นี้ในแท็บ MRU">ยังไม่มีใน MRU</span>':'<span class="nodata">ไม่ได้ใส่ MRU</span>'):dc(h,v))}).join('')+(del?`<td class="act"><button class="ic e" title="แก้ไข" onclick="editRow('${kd}','${esc(g(r,'ID'))}')">✎</button><button class="ic d" title="ลบ" onclick="del('${kd}','${esc(g(r,'ID'))}')">🗑</button>`:'')+'</tr>').join(''):'<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>')}
+  return '<td data-l="'+h+'"'+(h==='หมายเหตุ'?' class="tn"':'')+(!nod&&String(v==null?'':v).trim()===''?' data-e="1"':'')+'>'+(nod?(g(r,'MRU')?'<span class="nodata" title="ยังไม่มี MRU นี้ในแท็บ MRU">ยังไม่มีใน MRU</span>':'<span class="nodata">ไม่ได้ใส่ MRU</span>'):dc(h,v)+(kd==='jobs'&&h==='สถานะใส่สาย'?rcHint(r):''))}).join('')+(del?`<td class="act"><button class="ic e" title="แก้ไข" onclick="editRow('${kd}','${esc(g(r,'ID'))}')">✎</button><button class="ic d" title="ลบ" onclick="del('${kd}','${esc(g(r,'ID'))}')">🗑</button>`:'')+'</tr>').join(''):'<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>')}
 function t1(){t1_.innerHTML=tbl('phones',phonesV().slice(0,8),0,false)}
 const RB={'MRU':'#d4a017','ปลด':'#e8731e','ถอด':'#18a85a','ใส่สาย':'#d63a8a','ต่อกลับ':'#7a4bff','เลิกใช้':'#6b7280','ไม่พบข้อมูล':'#b45309','เบอร์โทร':'#1a9fd8','ผ่อนผัน':'#c9a010'};
 function whenL(ts){const t=pts(ts);if(!t)return['',''];const d=new Date(t),n=new Date(),day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),df=Math.round((day(n)-day(d))/864e5);
@@ -913,6 +924,9 @@ if(EDIT){if(kind==='mru'&&mruTokens(mMru.value).length>1){alert('แก้ไข
 if(kind==='mru'){saveMru(d);return}
  if(kind==='jobs'&&!SAVE_DUP_OK){const ex=dupFind(d);if(ex){const msg='งาน'+d['ประเภทงาน']+' เครื่อง '+m+(h?' บ้าน '+h:'')+' ลงไปแล้ววันเดียวกัน'+(dupHM(ex)?' เมื่อ '+dupHM(ex):'')+(g(ex,'ผู้ปฏิบัติงาน')?' โดย'+g(ex,'ผู้ปฏิบัติงาน'):'');
   if(window.__dupVoice){window.__dupVoice(msg);return}if(!confirm('⚠️ '+msg+'\n\nบันทึกซ้ำอีกครั้งไหม? (ระบบจะนับเฉพาะรายการล่าสุด)'))return}}
+ if(kind==='jobs'&&!SAVE_HOUSE_OK){const p=houseMismatch(d);if(p){const H=g(p,'บ้านเลขที่'),msg='เครื่อง '+m+' มีงาน'+g(p,'ประเภทงาน')+'ค้างอยู่ที่บ้าน '+H+' ('+(g(p,'ผู้ปฏิบัติงาน')||'-')+' '+fmtD(g(p,'วันที่ปฏิบัติงาน'))+') แต่กรอกบ้าน '+(h||'(ว่าง)');
+  if(window.__houseVoice){window.__houseVoice(msg,H,h);return}
+  if(confirm('⚠️ '+msg+'\n\nตกลง = ใช้บ้าน '+H+' (ตรงกับงาน'+g(p,'ประเภทงาน')+' จะขึ้น "ใส่สายแล้ว")\nยกเลิก = ใช้บ้าน '+(h||'(ว่าง)')+' ตามที่กรอก')){d['บ้านเลขที่']=H;mHouse.value=H}}}
  d.ID=uid();const kd=kind,lab={jobs:'บันทึกงาน',phones:'บันทึกเบอร์โทรศัพท์',defer:'บันทึกผ่อนผันค่าไฟ',mru:'บันทึก MRU',nf:'บันทึกงานไม่พบข้อมูล'}[kd];
  let rec=null,mergedLocal=false;
  if(kd==='phones'&&d['เครื่องวัดเลขที่']){rec=[...(DB.phones||[])].reverse().find(r=>['ทริปงาน','เครื่องวัดเลขที่','บ้านเลขที่'].every(k=>g(r,k)===String(d[k]||'').trim()))||null;if(rec){mergePhoneRec(rec,d);rec._p=1;mergedLocal=true}}
@@ -1326,10 +1340,16 @@ function vAddr(t){t=String(t||'');let n='';try{n=meGet()||''}catch(e){}if(n)t=vN
 function vExec(o,note,quiet){let msg='',sp='',bad=false,listen=false,sg=null;const it=o.intent,formOn=()=>modal.classList.contains('show');
  if(it==='cmd'){const c=o.cmd;
   if((c==='yes'||c==='save')&&VPEND){const p=VPEND;VPEND=null;p.fn();msg='✅ '+p.done;sp=p.done}
+  else if(c==='no'&&VPEND&&VPEND.noFn){const p=VPEND;VPEND=null;p.noFn();msg='✅ '+p.noDone;sp=p.noDone}
   else if((c==='no'||c==='close')&&VPEND){const p=VPEND;VPEND=null;msg=sp=p.no||'ยกเลิกแล้ว ไม่ได้ลบ'}
   else if(c==='yes'){const i=VSUG.findIndex(x=>!x.done);if(i>=0){vPick(i);vStat.textContent='คำสั่ง:';vTxt.value=o.heard;vSay('เปลี่ยนให้แล้ว');return o}msg=sp='ไม่มีอะไรให้ยืนยัน'}
-  else if(c==='save'){let dupM='';window.__dupVoice=x=>{dupM=x};const wasOpen=formOn();let w0='';try{w0=wasOpen?vQuiet(()=>save()):''}finally{window.__dupVoice=null}
-   if(dupM){VPEND={fn:()=>{SAVE_DUP_OK=true;try{vQuiet(()=>save())}finally{SAVE_DUP_OK=false}},done:'บันทึกซ้ำแล้ว',ask:'บันทึกงานซ้ำ',no:'ยกเลิกแล้ว ยังไม่ได้บันทึก'};msg='⚠️ '+dupM+' — พูดว่า “ยืนยัน” เพื่อบันทึกซ้ำ หรือ “ยกเลิก”';sp=dupM+' จะบันทึกซ้ำไหม พูดว่า ยืนยัน หรือ ยกเลิก';listen=true;
+  else if(c==='save'){let dupM='',hsM=null;window.__dupVoice=x=>{dupM=x};window.__houseVoice=(x,H,h)=>{hsM={x,H,h}};const wasOpen=formOn();let w0='';try{w0=wasOpen?vQuiet(()=>save()):''}finally{window.__dupVoice=null;window.__houseVoice=null}
+   const svOk=f=>{SAVE_HOUSE_OK=true;try{return vQuiet(f)}finally{SAVE_HOUSE_OK=false}};
+   if(hsM){const {H,h}=hsM;VPEND={fn:()=>{mHouse.value=H;svOk(()=>save())},done:'บันทึกแล้ว ใช้บ้าน '+H,ask:'ใช้บ้านเลขที่ '+H,noFn:()=>svOk(()=>save()),noDone:'บันทึกแล้ว ใช้บ้าน '+(h||'ตามที่กรอก'),no:'ยกเลิกแล้ว ยังไม่ได้บันทึก'};
+    msg='⚠️ '+hsM.x+' — พูดว่า “ใช่” ใช้บ้าน '+H+' หรือ “ไม่” ใช้ตามที่กรอก';sp=hsM.x+' จะใช้บ้าน '+H+' ไหม พูดว่า ใช่ หรือ ไม่';listen=true;
+    sg=[{g:'p',lab:'ใช้บ้าน '+H,fn:()=>vExec({intent:'cmd',cmd:'yes',heard:''})},{g:'p',lab:'ใช้ '+(h||'ตามที่กรอก'),fn:()=>vExec({intent:'cmd',cmd:'no',heard:''})}]}
+   else
+   if(dupM){VPEND={fn:()=>{SAVE_DUP_OK=true;SAVE_HOUSE_OK=true;try{vQuiet(()=>save())}finally{SAVE_DUP_OK=false;SAVE_HOUSE_OK=false}},done:'บันทึกซ้ำแล้ว',ask:'บันทึกงานซ้ำ',no:'ยกเลิกแล้ว ยังไม่ได้บันทึก'};msg='⚠️ '+dupM+' — พูดว่า “ยืนยัน” เพื่อบันทึกซ้ำ หรือ “ยกเลิก”';sp=dupM+' จะบันทึกซ้ำไหม พูดว่า ยืนยัน หรือ ยกเลิก';listen=true;
     sg=[{g:'p',lab:'บันทึกซ้ำ',fn:()=>vExec({intent:'cmd',cmd:'yes',heard:''})},{g:'p',lab:'ยกเลิก',fn:()=>vExec({intent:'cmd',cmd:'no',heard:''})}]}
    else if(wasOpen){const w=w0;if(formOn()){msg='⚠️ ยังบันทึกไม่ได้: '+(w||'ดูข้อความเตือนในฟอร์ม');sp='ยังบันทึกไม่ได้ '+(w.replace(/^กรุณา/,'ต้อง')||'');bad=true;listen=true}else{msg='✅ บันทึกแล้ว';sp='บันทึกแล้ว'}}
    else if(rmodal.classList.contains('show')){dlXlsx();msg=sp='กำลังดาวน์โหลดรายงาน'}
