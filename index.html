@@ -377,7 +377,7 @@ const goQ=()=>{const e=document.getElementById('f_q');if(e)e.focus()};
 const goTo=id=>{const e=document.getElementById(id);if(e&&e.scrollIntoView)e.scrollIntoView({behavior:'smooth',block:'center'})};
 const DEMO_MSG=(/^https?:/.test(location.protocol)&&!(typeof google!=='undefined'&&google.script)?'⚠️ ยังไม่ได้ใส่ลิงก์ API_URL ในไฟล์ index.html (บรรทัดบน ๆ ของไฟล์) — ':'')+'โหมดตัวอย่าง: หน้านี้ยังไม่ได้เชื่อม Google Sheet เพราะไม่ได้เปิดผ่านลิงก์เว็บแอปของ Apps Script (ข้อมูลที่เห็นเป็นข้อมูลสมมติ)';
 let LOADALL=false;const LOAD_M=3;   // ตอนเปิดโหลดย้อนหลัง 3 เดือน (กด “โหลดข้อมูลทั้งหมด” เพื่อดูเก่ากว่านั้น)
-let DB={jobs:[],phones:[],defer:[],mru:[],nf:[],workers:[]},F={type:'',comp:'',trip:'',mru:'',dp:'',date:'',worker:'',q:'',dup:''},page=1,tab='all',kind='jobs';
+let DB={jobs:[],phones:[],defer:[],mru:[],nf:[],workers:[]},F={type:'',comp:'',trip:'',mru:'',dp:'',date:'',worker:'',q:'',dup:'',photo:''},page=1,tab='all',kind='jobs';
 const g=(r,k)=>r[k]==null?'':String(r[k]).trim();
 const splitL=s=>String(s||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean),digs=s=>String(s).replace(/\D/g,'');
 const pts=s=>{const m=String(s||'').match(/(\d+)\/(\d+)\/(\d+)(?:,?\s*(\d+):(\d+)(?::(\d+))?)?/);if(m)return new Date(+m[3],m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();const d=Date.parse(s);return isNaN(d)?0:d};
@@ -414,6 +414,7 @@ function matchF(kd,r,M){
  if(F.trip&&!fOk(F.trip,[g(r,'ทริปงาน')]))return false;
  if(F.dup&&kd==='jobs'&&!dupInfo().grp.has(r))return false;
  if(F.dup&&kd!=='jobs')return false;
+ if(F.photo&&(F.photo==='มีรูป')!==!!g(r,'รูป'))return false;
  if(F.worker){const ws=splitL(kd==='defer'?cell(r,'ผู้ปฏิบัติงาน',M,'defer'):g(r,'ผู้ปฏิบัติงาน'));if(!fOk(F.worker,ws))return false}
  if(F.type&&kd==='jobs'&&!fOk(F.type,[g(r,'ประเภทงาน')]))return false;
  if(F.rc&&kd==='jobs'&&rcOf(r)!==F.rc)return false;
@@ -514,7 +515,7 @@ function kpis(){const all=[...DB.jobs,...DB.phones,...DB.defer],S=a=>a.filter(x=
  const ph=new Set(S([...DB.phones.map(r=>g(r,'เบอร์โทร')),...DB.defer.map(r=>g(r,'เบอร์โทรศัพท์'))])).size;
  const n=[['📋','งานทั้งหมด',noDup(DB.jobs).length,'k1','jobs'],['🚚','เครื่องวัดเลขที่',u('เครื่องวัดเลขที่'),'k2','meter'],['🚌','ทริปงาน',trips,'k3','trip'],['🏠','บ้านเลขที่',u('บ้านเลขที่'),'k4','house'],['📞','เบอร์โทรศัพท์',ph,'k5','phone'],['👥','ผู้ปฏิบัติงาน',wk().length,'k6','worker']];
  kpis_.innerHTML=n.map(k=>`<div class="kpi ${k[3]}" onclick="showK('${k[4]}')" title="คลิกเพื่อดูข้อมูล"><i>${k[0]}</i><div><span>${k[1]}</span><b>${k[2]}</b></div></div>`).join('')}
-const SUP={dup:['jobs'],rc:['jobs'],trip:['jobs','phones','defer','mru','nf'],mru:['defer','mru'],type:['jobs'],comp:['jobs','defer','mru','nf'],dp:['jobs','phones','defer'],date:['jobs','phones','defer','mru','nf'],worker:['jobs','phones','defer','mru','nf'],q:['jobs','phones','defer','mru','nf']};
+const SUP={photo:['jobs','phones','defer','nf'],dup:['jobs'],rc:['jobs'],trip:['jobs','phones','defer','mru','nf'],mru:['defer','mru'],type:['jobs'],comp:['jobs','defer','mru','nf'],dp:['jobs','phones','defer'],date:['jobs','phones','defer','mru','nf'],worker:['jobs','phones','defer','mru','nf'],q:['jobs','phones','defer','mru','nf']};
 const viewData=()=>view==='nf'?['nf']:view==='track'?['jobs']:view==='home'?['jobs','phones','defer']:view==='search'?[tab==='defer'?'defer':'jobs']:view==='phones'?['phones']:view==='defer'?['defer']:['mru'];
 function dimF(){const vd=viewData();document.querySelectorAll('#filt label[data-f]').forEach(l=>{const na=!SUP[l.dataset.f].some(d=>vd.includes(d));l.classList.toggle('na',na);l.title=na?'ตัวกรองนี้ไม่มีผลกับหน้านี้ (ข้อมูลหน้านี้ไม่มีช่องนี้)':(l.dataset.tip||'')})}
 function syncTabFromType(){if(tab!=='defer')tab=F.type&&fvs(F.type).length===1&&F.type[0]!=='!'?F.type:'all'}
@@ -530,7 +531,7 @@ function dlab(x){x=String(x||'');if(!x.startsWith('r:'))return fmtD(x);const hit
 function filt(){const dates=[...new Set([...DB.jobs.map(PDATE.jobs),...DB.phones.map(PDATE.phones),...DB.defer.filter(r=>!g(r,'ซ่อน')).map(PDATE.defer),...(DB.mru||[]).map(PDATE.mru),...(DB.nf||[]).map(PDATE.nf)].map(dkey).filter(Boolean))].sort().reverse();
  const ms=(k,l,v,tip)=>{const lb=fLab(F[k]);return `<label data-f="${k}" data-tip="${esc(tip||'')}" title="${esc(tip||'')}">${l}<button type="button" class="msel${F[k]?' on':''}" onclick="mselOpen(event,'${k}')">${esc(lb||'ทั้งหมด')}</button></label>`};
  const sel=(k,l,v,lab,tip)=>{const vs=F[k]&&!v.includes(F[k])?[...v,F[k]]:v;return `<label data-f="${k}" data-tip="${esc(tip||'')}" title="${esc(tip||'')}">${l}<select onchange="F.${k}=this.value;page=p3=p4=p6=p7=p8=1;syncTabFromType();draw()"><option value="">ทั้งหมด</option>${vs.map(x=>`<option value="${esc(x)}" ${F[k]===x?'selected':''}>${esc(lab?lab(x):x)}</option>`).join('')}</select></label>`};
- filt_.innerHTML=ms('trip','ทริปงาน',tripOpts())+ms('mru','MRU',mruOpts(),'ใช้กับ ผ่อนผันค่าไฟ และ MRU')+ms('type','ประเภทงาน',tp(),'ใช้กับตารางงาน')+ms('comp','บริษัท',compOpts(),'ใช้กับ งาน ผ่อนผันค่าไฟ และ MRU')+sel('rc','สถานะใส่สาย',[RC_WAIT,RC_DONE,RC_END,RC_NONE],x=>(x===RC_WAIT?'🔴 ':x===RC_DONE?'🟢 ':x===RC_END?'⚫ ':'⚠️ ')+x,'ใช้กับตารางงาน และหน้าติดตามใส่สาย')+sel('dup','ลงงานซ้ำ',['ซ้ำ'],()=>'⚠️ ดูเฉพาะที่ลงซ้ำ','ปลด/ถอด/ใส่สาย/ต่อกลับ ที่เครื่องวัด+บ้าน+ประเภท+วันเดียวกัน ลงมากกว่า 1 ครั้ง (นับเฉพาะเวลาบันทึกล่าสุด)')+sel('dp','ผ่อนผันค่าไฟ',['ครบกำหนด','ยังไม่ครบกำหนด'],x=>(x==='ครบกำหนด'?'🔴 ':'🟢 ')+x,'งาน/เบอร์โทร: ดูจากเครื่องวัดที่มีผ่อนผัน')+sel('date','วันที่',DPRE().concat(dates),dlab,'งาน = วันที่ปฏิบัติงาน · เบอร์โทร = วันที่บันทึก · ผ่อนผัน = วันที่นัดชำระ · MRU = วันที่')+ms('worker','ผู้ปฏิบัติงาน',fw(),'ผ่อนผันค่าไฟ = ผู้ปฏิบัติงานที่ดึงมาจาก MRU')+`<label data-f="q" data-tip="ค้นได้ทุกคอลัมน์ที่เห็นในตาราง">ค้นหา<input type="text" id="f_q" value="${esc(F.q)}" placeholder="ชื่อ เลขเครื่อง บ้านเลขที่ เบอร์ MRU วันที่…" oninput="F.q=this.value.trim();page=p3=p4=p6=p7=p8=1;draw()"></label><button class="btn" title="ค้นคำนี้ในทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล)" onclick="searchAll(F.q)">🔎 ทุกหมวด</button><button class="btn" title="สลับการเรียงลำดับ" onclick="setSort(SORTD==='old'?'new':'old')">${SORTD==='old'?'⬆️ เก่า→ใหม่':'⬇️ ใหม่→เก่า'}</button><button class="btn" onclick="clearF()">ล้างค่า</button>`;dimF()}
+ filt_.innerHTML=ms('trip','ทริปงาน',tripOpts())+ms('mru','MRU',mruOpts(),'ใช้กับ ผ่อนผันค่าไฟ และ MRU')+ms('type','ประเภทงาน',tp(),'ใช้กับตารางงาน')+ms('comp','บริษัท',compOpts(),'ใช้กับ งาน ผ่อนผันค่าไฟ และ MRU')+sel('rc','สถานะใส่สาย',[RC_WAIT,RC_DONE,RC_END,RC_NONE],x=>(x===RC_WAIT?'🔴 ':x===RC_DONE?'🟢 ':x===RC_END?'⚫ ':'⚠️ ')+x,'ใช้กับตารางงาน และหน้าติดตามใส่สาย')+sel('photo','รูปถ่าย',['มีรูป','ไม่มีรูป'],x=>(x==='มีรูป'?'📷 ':'')+x,'ดูเฉพาะรายการที่แนบรูป / ยังไม่มีรูป')+sel('dup','ลงงานซ้ำ',['ซ้ำ'],()=>'⚠️ ดูเฉพาะที่ลงซ้ำ','ปลด/ถอด/ใส่สาย/ต่อกลับ ที่เครื่องวัด+บ้าน+ประเภท+วันเดียวกัน ลงมากกว่า 1 ครั้ง (นับเฉพาะเวลาบันทึกล่าสุด)')+sel('dp','ผ่อนผันค่าไฟ',['ครบกำหนด','ยังไม่ครบกำหนด'],x=>(x==='ครบกำหนด'?'🔴 ':'🟢 ')+x,'งาน/เบอร์โทร: ดูจากเครื่องวัดที่มีผ่อนผัน')+sel('date','วันที่',DPRE().concat(dates),dlab,'งาน = วันที่ปฏิบัติงาน · เบอร์โทร = วันที่บันทึก · ผ่อนผัน = วันที่นัดชำระ · MRU = วันที่')+ms('worker','ผู้ปฏิบัติงาน',fw(),'ผ่อนผันค่าไฟ = ผู้ปฏิบัติงานที่ดึงมาจาก MRU')+`<label data-f="q" data-tip="ค้นได้ทุกคอลัมน์ที่เห็นในตาราง">ค้นหา<input type="text" id="f_q" value="${esc(F.q)}" placeholder="ชื่อ เลขเครื่อง บ้านเลขที่ เบอร์ MRU วันที่…" oninput="F.q=this.value.trim();page=p3=p4=p6=p7=p8=1;draw()"></label><button class="btn" title="ค้นคำนี้ในทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล)" onclick="searchAll(F.q)">🔎 ทุกหมวด</button><button class="btn" title="สลับการเรียงลำดับ" onclick="setSort(SORTD==='old'?'new':'old')">${SORTD==='old'?'⬆️ เก่า→ใหม่':'⬇️ ใหม่→เก่า'}</button><button class="btn" onclick="clearF()">ล้างค่า</button>`;dimF()}
 // ---- ช่องตัวกรองแบบเลือกหลายค่า: แตะ 1 ครั้ง = เอา ✅ · 2 ครั้ง = ยกเว้น 🚫 · 3 ครั้ง = ไม่เลือก ----
 const MSOPT={trip:()=>tripOpts(),mru:()=>mruOpts(),type:()=>tp(),comp:()=>compOpts(),worker:()=>fw()};let MSK='';
 function mselOpen(e,k){e.stopPropagation();const pop=document.getElementById('mpop');if(MSK===k&&pop.style.display==='block'){mselClose();return}MSK=k;mselDraw();
@@ -1106,9 +1107,10 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  // ค้นหา หรือ บันทึก
  // ค่าเริ่มต้น = ค้นหา · จะบันทึกต้องขึ้นต้นด้วย "บันทึกงาน / บันทึกข้อมูล / บันทึก…" (หรือพูดตอนฟอร์มบันทึกเปิดอยู่)
  const SAVERE=/^(บันทึกงาน|บันทึกข้อมูล|บันทึก|เพิ่มงาน|เพิ่มข้อมูล|ลงงาน|ลงข้อมูล|กรอกข้อมูล|กรอก|ใส่ข้อมูล)\s*/,SRCHRE=/^(ค้นหา|ค้น|กรอง|แสดง|ดู|หา)(?!ไม่เจอ|ไม่พบ)\s*/;
+ let phQ='';const phm=t.match(/(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|ที่มี|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/);if(phm&&!/^(ถ่ายรูป|แนบรูป|ถ่ายรูปแนบ|เพิ่มรูป)$/.test(t.trim())){phQ=/ไม่/.test(phm[1])?'ไม่มีรูป':'มีรูป';t=t.replace(/(ที่)?\s*(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มี|แนบ|มีแนบ)\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/,' ').trim()}
  let dupQ=false;if(/ซ้ำ/.test(t)&&!/(แก้|ลบ)/.test(t)){dupQ=true;t=t.replace(/(บันทึก|ลง)?\s*(งาน)?\s*(ที่)?\s*(ลง|บันทึก)?\s*(งาน)?\s*ซ้ำ(\s*(กัน|ไว้))?(\s*\d+\s*งาน)?/,' ').trim()}
- const saidSave=!dupQ&&SAVERE.test(t),saidSearch=SRCHRE.test(t),isSearch=dupQ||saidSearch||!(saidSave||ctx.formOpen);
- o.intent=isSearch?'search':'save';if(dupQ){o.filters.dup='ซ้ำ';o.kind=o.kind||'jobs'}o.formOpen=!!ctx.formOpen;o.saidSave=saidSave;
+ const saidSave=!dupQ&&SAVERE.test(t),saidSearch=SRCHRE.test(t),isSearch=dupQ||!!phQ||saidSearch||!(saidSave||ctx.formOpen);
+ o.intent=isSearch?'search':'save';if(dupQ){o.filters.dup='ซ้ำ';o.kind=o.kind||'jobs'}if(phQ){o.filters.photo=phQ;o.photoQ=1}o.formOpen=!!ctx.formOpen;o.saidSave=saidSave;
  t=t.replace(saidSave?SAVERE:SRCHRE,'');
  if(isSearch){   // เรียงลำดับ / สรุปแยก / ค้นทุกหมวด
   if(/เก่า\s*(ไป|มา)\s*ใหม่|เรียง\s*(ลำดับ)?\s*(จาก)?\s*เก่า|เก่าก่อน/.test(t)){o.sort='old';t=t.replace(/(เรียง\s*(ลำดับ)?\s*(จาก)?\s*)?(เก่า\s*(ไป|มา)\s*ใหม่|เก่า(ก่อน|สุด)?)/g,' ')}
@@ -1168,6 +1170,7 @@ function vParse(raw,names,ctx){names=(names||[]).slice().sort((a,b)=>b.length-a.
  if(/^(อ่าน|บอก)\s*(วันที่|วัน)?\s*นัด/.test(heard)){o.intent='search';o.kind='defer';o.summary={by:'date'};o.keep=VW==='defer'}
  else if(/^นับ\s*(จำนวน)?\s*(ผู้ปฏิบัติงาน|คนงาน|ช่าง|คนทำงาน|ทีมงาน)/.test(heard)){o.intent='search';delete o.fields.type;if(o.multi)o.multi.type=[];o.summary={by:'worker',n:1};o.kind=vk||'jobs';o.keep=!!vk}
  else if(/^นับ/.test(heard)&&o.intent!=='save'){o.intent='search';o.count=true;if(/ทั้งหมด/.test(heard)&&!Object.keys(o.fields).length)o.kind=o.kind||(/งาน/.test(heard)||!vk?'jobs':vk);else if(!o.kind&&vk){o.kind=vk;o.keep=true}}
+if(o.photoQ&&!o.kind){o.kind=vk&&vk!=='mru'?vk:'jobs';o.keep=!!vk&&vk!=='mru'}
  if(o.intent==='search'&&!o.kind&&vk&&(/(เฉพาะ|คนเดียว|แทน|แบ่งเป็น|แยกเป็น|อย่างเดียว)/.test(heard)||/^ของ/.test(heard))){o.kind=vk;o.keep=true}
  const anyNot=o.not&&Object.values(o.not).some(x=>x.length);
  if(!o.kind&&!Object.keys(o.fields).length&&!Object.keys(o.filters).length&&!o.unknownName&&!anyNot&&!o.summary&&!o.sort&&!(isSearch&&(saidSearch||/\d/.test(o.free||''))))o.intent='none';
@@ -1203,19 +1206,19 @@ function vSearch(o){vCloseAll();const f=o.fields,fl=o.filters,set={},keepF=o.kee
  for(const k of Object.keys(F))F[k]='';CF={};
  const MV=(k,one)=>{const inc=o.multi&&o.multi[k]&&o.multi[k].length?o.multi[k]:(one?[one]:[]),exc=(o.not&&o.not[k])||[];return inc.concat(exc.map(x=>'!'+x)).join('|')};
  ['trip','comp','worker','type'].forEach(k=>{const v=MV(k,f[k]);if(v)set[k]=v});if(o.sort)SORTD=o.sort==='old'?'old':'new';
- if(f.date&&f.dateTo)set.date='r:'+f.date+':'+f.dateTo;else if(f.date||f.due)set.date=f.date||f.due;if(f.mru)set.mru=f.mru.join('|');if(fl.dp)set.dp=fl.dp;if(fl.dup)set.dup=fl.dup;
+ if(f.date&&f.dateTo)set.date='r:'+f.date+':'+f.dateTo;else if(f.date||f.due)set.date=f.date||f.due;if(f.mru)set.mru=f.mru.join('|');if(fl.dp)set.dp=fl.dp;if(fl.dup)set.dup=fl.dup;if(fl.photo)set.photo=fl.photo;
  const q=f.meter||f.phone||f.house||(f.nb&&f.nb[0])||(o.free&&o.free.length>1&&/[\dA-Za-z]/.test(o.free)?o.free:'');if(q)set.q=q;
  let pg=o.kind==='phones'||f.phone?'phones':o.kind==='defer'?'defer':o.kind==='mru'||(f.mru&&!o.kind)?'mru':o.kind==='nf'?'nf':'search';
  if(fl.rc&&fl.rc!==RC_NONE){pg='track';TT=fl.rc===RC_WAIT?'wait':fl.rc===RC_DONE?'done':'end'}else if(fl.rc)set.rc=fl.rc;
  if(keepF)Object.keys(keepF).forEach(k=>{if(keepF[k]&&!(k in set))set[k]=keepF[k]});
  const td=isoD(new Date()),yd=isoD(new Date(Date.now()-864e5)),PGN={phones:'เบอร์โทร',defer:'ผ่อนผัน',mru:'MRU',nf:'งานไม่พบข้อมูล',track:'ติดตามใส่สาย'},and=v=>fLab(v).replace(/, /g,' และ ');
  const dsay=v=>v===td?'วันนี้':v===yd?'เมื่อวาน':v.startsWith('r:')?dlab(v).replace(/^\S+\s/,''):'วันที่ '+fmtD(v);
- const base=(set.type?'งาน'+and(set.type):PGN[pg]||'งาน')+(set.worker?'ของ'+and(set.worker):''),rest=[set.trip?'ทริป '+and(set.trip):'',set.comp?'บริษัท '+and(set.comp):'',set.mru?'MRU '+set.mru:'',set.date?dsay(set.date):'',set.q?'เลข '+set.q:'',set.dup?'ที่ลงซ้ำ':''].filter(Boolean);
+ const base=(set.type?'งาน'+and(set.type):PGN[pg]||'งาน')+(set.worker?'ของ'+and(set.worker):''),rest=[set.trip?'ทริป '+and(set.trip):'',set.comp?'บริษัท '+and(set.comp):'',set.mru?'MRU '+set.mru:'',set.date?dsay(set.date):'',set.q?'เลข '+set.q:'',set.dup?'ที่ลงซ้ำ':'',set.photo?(set.photo==='มีรูป'?'ที่มีรูป':'ที่ไม่มีรูป'):''].filter(Boolean);
  const say=(rest.length||set.type||set.worker||PGN[pg]?base:'งานทั้งหมด')+(rest.length?' '+rest.join(' '):'');   // คำบอกว่าค้นอะไร ให้คำตอบเสียงฟังรู้เรื่อง เช่น "งานปลดของบาส เมื่อวาน มี 3 รายการ"
  Object.assign(F,set);if(pg==='search'){tab='all';syncTabFromType()}page=p3=p4=p6=p7=p8=1;
  go(pg);filt();draw();vScrollRes(pg);
  const n={search:'info',phones:'info3',defer:'info4',mru:'info6',track:'info7',nf:'info8'}[pg],el=n&&document.getElementById(n);
- const lab={dup:'ลงซ้ำ',trip:'ทริป',comp:'บริษัท',worker:'ผู้ปฏิบัติงาน',type:'ประเภทงาน',date:'วันที่',mru:'MRU',dp:'ผ่อนผัน',rc:'สถานะใส่สาย',q:'ค้นหา'};
+ const lab={photo:'รูป',dup:'ลงซ้ำ',trip:'ทริป',comp:'บริษัท',worker:'ผู้ปฏิบัติงาน',type:'ประเภทงาน',date:'วันที่',mru:'MRU',dp:'ผ่อนผัน',rc:'สถานะใส่สาย',q:'ค้นหา'};
  return{pg,txt:Object.keys(set).map(k=>lab[k]+' '+(k==='date'?dlab(set[k]).replace(/^📅 /,''):['trip','comp','worker','type','mru'].includes(k)?fLab(set[k]):set[k])).join(' · ')+(o.sort?' · เรียง'+(SORTD==='old'?'เก่า→ใหม่':'ใหม่→เก่า'):'')+(fl.rc&&pg==='track'?(Object.keys(set).length?' · ':'')+fl.rc:''),count:el?el.textContent:'',say}}
 // ---- 4.05) ตอบแยกแต่ละค่า / สรุปแยกตามคน-วัน-ประเภท ----
 const THM=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -1385,8 +1388,8 @@ const vAIon=()=>!!(run&&DB&&DB._ai&&!window.__noAI);
 let VWARM=0;function vWarm(){if(!vAIon()||Date.now()-VWARM<60000)return;VWARM=Date.now();try{callApi('ping',[],()=>{},()=>{})}catch(e){}}
 // ตัวแยกคำสั่งในเครื่องเข้าใจครบไหม → ครบ = ทำทันทีไม่ต้องรอ AI (เร็วกว่ามาก) · ไม่ครบ = ส่งให้ AI
 const VASK=/(แก้|เปลี่ยน|ลบ|เพิ่มชื่อ|รายงาน|ส่งออก|excel|เอ็กเซล|ทำไม|ยังไง|อย่างไร|ไหนบ้าง|ก่อนหน้า|เทียบ|เฉลี่ย|ไม่ใช่)/i;
-const VFILL=/(เฉพาะ|คนเดียว|อย่างเดียว|แทน|แบ่งเป็น|แยกเป็น|วันที่นัด|นัด|อ่าน|บอก|นับ|รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี|ซ้ำ|กัน|คน|ลง|หน้า|แท็บ)/g;
-function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม|(แยก\s*)?(ตาม|ราย)\s*(คน|ช่าง)/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
+const VFILL=/(เฉพาะ|คนเดียว|อย่างเดียว|แทน|แบ่งเป็น|แยกเป็น|วันที่นัด|นัด|อ่าน|บอก|นับ|รายละเอียด|รายการ|ทุกคน|ทุกๆคน|เช็ค|เช็ก|เชค|ตรวจสอบ|ตรวจดู|ตรวจ|กรอก|ใส่ข้อมูล|ยกเว้น|ไม่เอา|ไม่รวม|นอกจาก|เว้นแต่|หรือ|เรียง|ลำดับ|ใหม่|เก่า|ไป|มา|สรุป|ยอด|แยก|ตาม|ราย|ใคร|เยอะ|มาก|น้อย|สุด|ทุกหมวด|ทุกที่|ทุกหัวข้อ|ทั้งระบบ|ประเภท|ค้นหา|ค้น|หา|ดู|แสดง|เปิด|งาน|ของ|ที่|ให้|หน่อย|บ้าง|ทั้งหมด|ครับ|ค่ะ|คะ|นะ|จ้า|จ้ะ|มี|ไป|กี่|เท่าไร|เท่าไหร่|จำนวน|รายการ|อัน|ได้|แล้ว|อะไร|ช่วย|ขอ|เอา|วัน|คน|ทำ|ไหม|มั้ย|ทุก|อยู่|กับ|และ|ใน|ช่วง|ตอน|เมื่อ|บันทึก|ข้อมูล|เลขที่|เลข|เครื่องวัด|เครื่อง|ผู้ปฏิบัติงาน|ช่าง|โดย|บ้าน|ทริป|บริษัท|เบอร์|โทร|ถึง|ตั้งแต่|จาก|เดือน|สัปดาห์|อาทิตย์|นี้|ที่แล้ว|ก่อน|ผ่านมา|ล่าสุด|ปี|ซ้ำ|กัน|คน|ลง|หน้า|แท็บ|เรียก|ไฟล์)/g;
+function vLeft(o,names){let t=vCanon(o.heard||'').toLowerCase().replace(/ทุก\s*ๆ?\s*คน|ทั้งทีม|(แยก\s*)?(ตาม|ราย)\s*(คน|ช่าง)|(ไม่มี|ไม่ได้แนบ|ยังไม่มี|มีแนบ|มี|แนบ)?\s*(ไฟล์)?\s*(รูปถ่าย|รูปภาพ|รูป|ภาพ)/g,' ');   // ตัดก่อน (ไม่งั้นชื่อเดือนย่อ "กค" ตัดกลางคำ)
  const kill=w=>{if(w)t=t.split(String(w).toLowerCase()).join(' ')};
  names.slice().sort((a,b)=>b.length-a.length).forEach(kill);TYPES.forEach(kill);VTYPES.forEach(kill);VREL.forEach(x=>kill(x[0]));VKIND.forEach(x=>kill(x[0]));VST.forEach(x=>kill(x[0]));VPAGES.forEach(x=>kill(x[0]));VMON.flat().forEach(kill);
  VK.forEach(([f,ws])=>ws.forEach(kill));['เอ็มอาร์ยู','ไม่พบข้อมูล','ผ่อนผัน','ค่าไฟ','ใกล้เคียง'].forEach(kill);
@@ -1776,7 +1779,7 @@ const lvAvg=k=>{const a=LVST[k]||[];return a.length?(a.reduce((x,y)=>x+y,0)/a.le
 // กุญแจล่วงหน้า: ขอไว้ตั้งแต่เปิดแอป (ใช้ได้ 25 นาที) → แตะ 🎤 แล้วต่อ Google ทันที ไม่ต้องรอเซิร์ฟเวอร์
 let LVPRE=null,LVPREQ=false,LVPRECB=[];
 function lvPrefetch(cb){if(cb)LVPRECB.push(cb);const done=()=>{const q=LVPRECB;LVPRECB=[];q.forEach(f=>{try{f()}catch(e){}})};
- if(LVPREQ)return;if(!lvWant()){done();return}if(LVPRE&&lvNow()<LVPRE.t+18*60000){done();return}LVPREQ=true;
+ if(LVPREQ&&lvNow()-LVPREQ<15000)return;if(!lvWant()){done();return}if(LVPRE&&lvNow()<LVPRE.t+18*60000){done();return}LVPREQ=lvNow();   // ขอค้างเกิน 15 วิ (เน็ตหลุด) → ขอใหม่ได้
  callApi('liveToken',[],t=>{LVPREQ=false;if(t&&t.token)LVPRE={tok:t,t:lvNow()};done()},()=>{LVPREQ=false;LVPRECB=[]})}
 function lvTakeTok(){const p=LVPRE;LVPRE=null;return p&&lvNow()<p.t+20*60000?p.tok:null}
 let LVIDLE=20000,LVSETUP=8000,LVWAKEIDLE=15*60000;   // คุยปกติ: เงียบ 20 วิ จบเอง · โหมดเรียกชื่อ: ไม่มีใครเรียก 15 นาที พักเอง · ต่อไม่ติดใน 8 วิ = ลองรุ่นถัดไป
@@ -1852,7 +1855,7 @@ function lvSetup(o){o=o||{model:LV.model,tok:LV.tok,wake:LV.wake,handle:LV.handl
  const native=/native-audio/.test(o.model),safe=lvSafe(o.model),gc={responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:LVVOICE}}}};
  if(native&&!safe)gc.thinkingConfig={thinkingBudget:0};   // ไม่ต้องคิดก่อนตอบ = เริ่มพูดไวขึ้น
  const st={model:'models/'+o.model,generationConfig:gc,
-  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" เสมอ (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา':'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+'\nผลของ do_command มี say = ประโยคที่แอปเตรียมไว้แล้ว: พูด say ทันทีคำต่อคำ ไม่ต้องคิด ไม่เรียบเรียงใหม่ ไม่เติมคำ ไม่ขึ้นต้นชื่อซ้ำ (ถ้าไม่มี say ค่อยสรุปจาก result เอง)'+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
+  systemInstruction:{parts:[{text:String(o.tok.prompt||'')+(c.me?'\nผู้ใช้ที่คุยกับคุณตอนนี้ชื่อ "'+c.me+'" · '+(VADDR?(LVPHONE?'เวลาคุณพูดเอง (คุยเล่น/ถามกลับ) ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" · คำสั่งงานไม่ต้องพูด แอปขานชื่อให้แล้ว':'ทุกครั้งที่ตอบ ให้ขึ้นต้นด้วย "ครับ คุณ'+c.me+'" เสมอ (รวมตอนขานรับ ตอบผลคำสั่ง และคุยเล่น) แล้วค่อยพูดเนื้อหา'):'ขานรับ/ทักทายให้เรียกชื่อ เช่น "ครับ คุณ'+c.me+'"'):'')+(LVPHONE?'\nคำสั่งงาน: เรียก do_command ทันทีโดยไม่ต้องพูดอะไรเลย (ไม่ต้องขานรับ ไม่ต้องบอกว่ากำลังทำ) แอปจะขานชื่อและพูดผลให้เอง · ผลที่มี spoken = แอปพูดแล้ว ให้เงียบ':'')+'\nผลของ do_command มี say = ประโยคที่แอปเตรียมไว้แล้ว: พูด say ทันทีคำต่อคำ ไม่ต้องคิด ไม่เรียบเรียงใหม่ ไม่เติมคำ ไม่ขึ้นต้นชื่อซ้ำ (ถ้าไม่มี say ค่อยสรุปจาก result เอง)'+(o.wake?'\n'+LVWAKERULE():'')+'\n\nบริบท: '+JSON.stringify(c)}]},tools:safe?[{functionDeclarations:fn}]:[{functionDeclarations:fn},{googleSearch:{}}],
   inputAudioTranscription:{},outputAudioTranscription:{},
   contextWindowCompression:{slidingWindow:{}},sessionResumption:o.handle?{handle:o.handle}:{}};
  if(!safe)st.realtimeInputConfig={automaticActivityDetection:{silenceDurationMs:600,endOfSpeechSensitivity:'END_SENSITIVITY_LOW',prefixPaddingMs:20}};   // ตรวจพูดจบไว
@@ -1877,9 +1880,9 @@ function lvMsg(t){let m;try{m=JSON.parse(t)}catch(e){return}
   const q=LV.qa;LV.qa=[];q.forEach(b=>lvSend(lvAud(b)));if(q.length){LV.g.open=true;LV.g.sent=true;LV.g.until=lvNow()+900}   // เสียงที่พูดระหว่างรอต่อ ส่งตามไปเลย
   vStat.textContent=LV.wake?'👂 รอฟังอยู่ — เรียก “'+lvNm()+'” ได้เลย':'🎙️ คุยได้เลย — พูดแทรกได้ทุกเมื่อ · พูดว่า “พอแล้ว” หรือแตะ 🎤 เพื่อจบ';if(first)vTone('ok');return}
  const sc=m.serverContent;
- if(sc){if(sc.interrupted||sc.turnComplete)LV.turnOn=false;
+ if(sc){if(sc.interrupted||sc.turnComplete){LV.turnOn=false;LV.spokeTurn=false}
   if(sc.interrupted){lvFlush();LV.hold=[];LV.dropTurn=false;LV.quick=false}
-  if(sc.inputTranscription&&sc.inputTranscription.text){LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);if(LV.dropTurn&&!LV.quick)LV.dropTurn=false;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
+  if(sc.inputTranscription&&sc.inputTranscription.text){if(!LV.turnOn)LV.spokeTurn=false;LV.heard+=sc.inputTranscription.text;if(LV.wake&&(LV.awake||lvIsWake(LV.heard)))lvAwake(true);if(LV.dropTurn&&!LV.quick)LV.dropTurn=false;vTxt.value=LV.heard.trim();LV.tEnd=lvNow();LV.waitAns=true;LV.callWait=true;lvIdle();clearTimeout(LV.specT);LV.specT=setTimeout(lvSpecRun,250)}
   const mute=(LV.wake&&!LV.awake)||LV.dropTurn;   // โหมดรอฟังและยังไม่มีใครเรียกชื่อ → ยังไม่เล่นเสียงตอบ (เก็บไว้ก่อน ถ้ายืนยันว่าเรียกชื่อในรอบนี้ค่อยเล่นทันที)
   ((sc.modelTurn&&sc.modelTurn.parts)||[]).forEach(p=>{if(p.inlineData&&p.inlineData.data&&/audio/.test(p.inlineData.mimeType||'audio')){if(mute){(LV.hold=LV.hold||[]).push(p.inlineData.data);if(LV.hold.length>200)LV.hold.shift();return}if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}if(LV.waitGen){LV.waitGen=false;lvStat('gen',lvNow()-LV.tResp)}lvPlay(p.inlineData.data)}});
   if(sc.outputTranscription&&sc.outputTranscription.text&&!mute){LV.said+=sc.outputTranscription.text;vRes.className='vres';vRes.textContent='💬 '+LV.said.trim()}
@@ -1916,7 +1919,7 @@ function lvReply(rs,heard,cb){rs=(rs||[]).map(r=>r&&typeof r.msg==='string'?r:{m
  const txt=rs.map(r=>lvClean(r.msg)+(r.sp&&lvClean(r.sp)!==lvClean(r.msg)?' (พูดได้ว่า: '+lvClean(r.sp)+')':'')).join(' | ');
  try{vShow(heard,rs.map(r=>r.msg).join(' · '),bad,sg)}catch(e){}
  if(say&&LVPHONE&&LV.on){   // v35: คำตอบคำสั่งงาน → มือถือพูดเองทันที (ไม่ต้องรอเสียงผู้ช่วยเรียบเรียง ~1.5-2 วิ) · ผู้ช่วยเข้าใจคำสั่งครบแล้วจึงถึงตรงนี้ · เสียงผู้ช่วยรอบนี้ปิด
-  LV.dropTurn=true;lvFlush();if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvStat('phone',lvNow()-LV.tEnd);LV.tail=lvNow()+60000;vSay(say,()=>{LV.tail=lvNow()+700},{force:true});
+  LV.dropTurn=true;lvFlush();if(LV.waitAns){LV.waitAns=false;lvStat('answer',lvNow()-LV.tEnd)}lvStat('phone',lvNow()-LV.tEnd);LV.tail=lvNow()+60000;vSay(LV.spokeTurn?sp1:say,()=>{LV.tail=lvNow()+700},{force:true});   // ผู้ช่วยขานรับไปแล้วในรอบนี้ → ไม่ขึ้นต้น "ครับ คุณ…" ซ้ำ
   cb({result:txt||'ทำแล้ว',spoken:'แอปพูดผลนี้ให้ผู้ใช้ฟังแล้ว ห้ามพูดซ้ำ ไม่ต้องพูดอะไร เงียบรอฟังต่อ',ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()});return}
  if(say)vSaidAdd(say);
  cb({result:txt||'ทำแล้ว',say:say||undefined,ok:!bad,choices:sg?sg.map(z=>lvClean(z.lab)):undefined,state:lvState()})}
@@ -1965,7 +1968,7 @@ function lvLoudSet(on){LVLOUD=!!on;vLSset('rb_lvloud',LVLOUD?'1':'0')}   // ล�
 function lvVolSet(v){LVVOL=Math.max(0.5,Math.min(4,+v||2.5));vLSset('rb_lvvol',LVVOL);try{if(LV.outN)LV.outN.gain.value=LVVOL}catch(e){}}
 function lvPlay(b64){const c=LV.ctxOut;if(!c)return;let pcm;try{pcm=new Int16Array(lvUnB64(b64))}catch(e){return}if(!pcm.length)return;
  const buf=c.createBuffer(1,pcm.length,24000),ch=buf.getChannelData(0);for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/0x8000;
- LV.turnOn=true;const s=c.createBufferSource();s.buffer=buf;s.connect(lvOut(c));const at=LV.next>c.currentTime+0.02?LV.next:c.currentTime+0.12;s.start(at);LV.next=at+buf.duration;LV.play.push(s);vfab.classList.add('speak');   // เริ่มใหม่/เสียงมาไม่ทัน → เผื่อ 0.12 วิ ให้เล่นต่อเนื่องไม่กระตุก
+ LV.turnOn=true;LV.spokeTurn=true;const s=c.createBufferSource();s.buffer=buf;s.connect(lvOut(c));const at=LV.next>c.currentTime+0.02?LV.next:c.currentTime+0.12;s.start(at);LV.next=at+buf.duration;LV.play.push(s);vfab.classList.add('speak');   // เริ่มใหม่/เสียงมาไม่ทัน → เผื่อ 0.12 วิ ให้เล่นต่อเนื่องไม่กระตุก
  s.onended=()=>{LV.play=LV.play.filter(x=>x!==s);if(!LV.play.length){LV.tail=lvNow()+700;LV.turnOn=false;vfab.classList.remove('speak');if(LV.endAfter)lvEndSoon()}}}
 function lvFlush(){LV.play.forEach(s=>{try{s.onended=null;s.stop()}catch(e){}});LV.play=[];LV.next=0;LV.turnOn=false;LV.tail=0;vfab.classList.remove('speak')}
 function lvEndSoon(ms){clearTimeout(LV.endT);LV.endT=setTimeout(()=>{if(LV.on||LV.st)lvStop('👋 จบการคุยแล้ว — แตะ 🎤 เพื่อคุยใหม่')},ms==null?(LV.play.length?600:300):ms)}
@@ -1999,7 +2002,7 @@ function lvArm(){if(LVARMED)return;LVARMED=true;const h=e=>{if(e&&e.target&&e.ta
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lvWarmClose();if(LV.wake&&(LV.on||LV.st)){lvStop('');LV.wakeBack=true}}
  else{setTimeout(()=>{try{lvPrefetch()}catch(e){}},800);setTimeout(()=>{try{lvWarm()}catch(e){}},1500);if(LVWAKE&&(LV.wakeBack||LVARMED)){LV.wakeBack=false;try{if(LV.ctxIn&&LV.ctxIn.state!=='suspended')lvWakeGo();else lvArm()}catch(e){lvArm()}}}});
 // เปิดแอป → เตรียมกุญแจเสียงสดไว้ก่อน · โหมดเรียกชื่อรอการแตะครั้งแรก
-setTimeout(()=>{try{lvPrefetch()}catch(e){}},4000);setTimeout(()=>{try{lvWarm()}catch(e){}},6000);if(LVWAKE)lvArm();
+setTimeout(()=>{try{lvPrefetch()}catch(e){}},1200);setTimeout(()=>{try{lvWarm()}catch(e){}},1600);   // v38: เดิม 4/6 วิ → กดไมค์ครั้งแรกหลังเปิดแอปช้าif(LVWAKE)lvArm();
 // ตรวจทุก 15 วินาที: ถ้ายังไม่มีสายรอไว้ (เช่น ตอนเปิดแอปข้อมูลยังโหลดไม่เสร็จ หรือสายหลุด) → ต่อรอไว้ใหม่
 function lvWarmTick(){try{if(!WM&&lvCanWarm())lvWarm()}catch(e){}}
 setInterval(lvWarmTick,15000);
