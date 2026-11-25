@@ -148,7 +148,7 @@ textarea{background:#0b1a5a;border:1px solid #2a4aaa;border-radius:7px;padding:6
 .filt label.na{opacity:.38}.filt label.na select,.filt label.na input{cursor:not-allowed}
 .nodata{color:var(--m);font-style:italic;font-size:12px}.warn{color:#ffb980}
 .box label.rchk{display:flex;gap:8px;align-items:center;margin:6px 0;cursor:pointer}.rchk input{width:auto}
-.dx{display:inline-block;border-radius:6px;padding:1px 9px;font-weight:500;color:#d6dbe6;background:#2c3242;border:1px solid #6b7280}.dw{color:#ffb980;font-size:12px}.rch{color:#ffd27a;font-size:11.5px;line-height:1.35;margin-top:3px;white-space:normal;max-width:240px;cursor:help}
+.dx{display:inline-block;border-radius:6px;padding:1px 9px;font-weight:500;color:#d6dbe6;background:#2c3242;border:1px solid #6b7280}.dw{color:#ffb980;font-size:12px}.mtr{display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap}.mtr input{width:84px;text-transform:uppercase}.mtr .mtt{width:70px}.rch{color:#ffd27a;font-size:11.5px;line-height:1.35;margin-top:3px;white-space:normal;max-width:240px;cursor:help}
 .mhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}.mhead h3{margin:0;flex:1}
 .vmini{border:1px solid var(--cy);background:#0b1a5a;color:#bfe6ff;border-radius:16px;padding:4px 12px;cursor:pointer;font-size:13px;white-space:nowrap}
 .vfab{position:fixed;right:16px;bottom:16px;z-index:57;width:56px;height:56px;border-radius:50%;border:1px solid #2b8cff;background:linear-gradient(135deg,#1e6bff,#2b8cff);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px #1e6bff88}
@@ -270,7 +270,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
  <div id="fC"><label>บริษัท</label><select id="mComp" onchange="mruHintDraw()"></select></div>
  <label>ทริปงาน</label><select id="mTrip" onchange="mruHintDraw()"></select>
  <div id="fM"><label id="lblM">MRU</label><input type="text" id="mMru" list="mruList" placeholder="MRU" oninput="mruHintDraw()"><datalist id="mruList"></datalist><div id="mruHint" class="dpl" style="margin:4px 0 0"></div></div>
- <div id="fMH"><label>เครื่องวัดเลขที่ <button type="button" class="btn sc" onclick="scanMeter()" title="ถ่ายรูปหน้าเครื่องวัด ให้ AI อ่านเลขให้">📷 สแกนเลข</button></label><input type="text" id="mMeter" inputmode="numeric"><div id="scHint" class="dpl" style="margin:4px 0 0"></div>
+ <div id="fMH"><label>เครื่องวัดเลขที่ <button type="button" class="btn sc" onclick="scanMeter()" title="ถ่ายรูปหน้าเครื่องวัด หรือใบสั่งงานทั้งใบ ให้ AI อ่านและกรอกให้">📷 สแกนเลข/ใบงาน</button></label><input type="text" id="mMeter" inputmode="numeric"><div id="scHint" class="dpl" style="margin:4px 0 0"></div>
  <label>บ้านเลขที่</label><input type="text" id="mHouse"><div id="rcHint" class="dpl" style="margin:4px 0 0"></div></div>
  <div id="fNB" style="display:none"><label>เครื่องวัดเลขที่ใกล้เคียง 1</label><input type="text" id="mNb1" inputmode="numeric" placeholder="ไม่บังคับ">
  <label>เครื่องวัดเลขที่ใกล้เคียง 2</label><input type="text" id="mNb2" inputmode="numeric" placeholder="ไม่บังคับ"></div>
@@ -315,7 +315,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
 <input type="file" id="phCap" accept="image/*" capture="environment" style="display:none" onchange="phPicked(this)">
 <input type="file" id="scGal" accept="image/*" style="display:none" onchange="scPicked(this)">
 <div class="modal" id="cmodal"><div class="box cambox"><h3 id="camT" style="margin-bottom:8px">📷 ถ่ายรูป</h3>
- <div class="camw"><video id="camV" playsinline muted autoplay></video><div id="camGuide" class="camg"><span>จัดเลขเครื่องวัดให้อยู่ในกรอบ</span></div></div>
+ <div class="camw"><video id="camV" playsinline muted autoplay></video><div id="camGuide" class="camg"><span>จัดเลขเครื่องวัดให้อยู่ในกรอบ หรือถ่ายใบสั่งงานทั้งใบ</span></div></div>
  <div id="camMsg" class="dpl" style="margin-top:8px"></div>
  <div class="camb"><button type="button" class="btn" onclick="camGallery()" title="เลือกจากคลังรูป">🖼️</button><button type="button" class="btn" id="camTorch" onclick="camTorchT()" title="ไฟฉาย">🔦</button><button type="button" class="cams" id="camShot" onclick="camSnap()" title="ถ่าย" aria-label="ถ่าย"></button><button type="button" class="btn" onclick="camFlip()" title="สลับกล้องหน้า/หลัง">🔄</button><button type="button" class="btn" onclick="camClose()">ปิด</button></div>
  <div class="dpl" style="text-align:center;margin-top:6px">กล้องในแอปใช้ไม่ได้? <a href="#" style="color:#7fe3ff" onclick="event.preventDefault();camNative()">เปิดแอปกล้องของเครื่อง</a></div></div></div>
@@ -339,7 +339,7 @@ window.IMG={side:'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgw
 <script>
 (window.__loaded=window.__loaded||[]).push("JS1");
 (function(){var b=document.getElementById('boot');if(b)b.style.display='none'})();
-const CLIENT_VER=23;
+const CLIENT_VER=24;
 const COL=['#1e90ff','#22d36b','#ffb02e','#9b5bff','#22b8ff','#e84aa8','#ff5a6e','#ff8a1e','#18c0a0','#c0d63a'];
 const P=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1663,6 +1663,7 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
      +(lvAvg('phone')?'<div style="font-size:12px;opacity:.8">มือถือพูดคำตอบคำสั่งงาน: พูดจบ → เริ่มตอบ '+lvAvg('phone')+' วิ</div>':'')+'<div style="font-size:12px;opacity:.8">แยกขั้น: ต่อสายใหม่ '+a('conn')+' วิ · พูดจบ→ผู้ช่วยสั่งแอป '+a('call')+' วิ · แอปทำคำสั่ง '+a('tool')+' วิ · ผู้ช่วยเรียบเรียงคำตอบ '+a('gen')+' วิ</div>'
      +(()=>{const x=LVST.ai||[];return x.length?'<div style="font-size:12px;opacity:.8">คำสั่งที่แอปแปลเองได้ '+x.filter(v=>v===1).length+'/'+x.length+' ครั้ง'+(()=>{let q=[];try{q=JSON.parse(localStorage.getItem('rb_lvaireq')||'[]').filter(x=>!vKnown(x))}catch(e){}return q.length?'<br>ประโยคที่ต้องถาม AI (ช้ากว่า): '+q.map(x=>'“'+esc(String(x).slice(0,50))+'”').join(' · '):''})()+'</div>':''})()})(),' <button class="btn" onclick="lvStatReset();openSet()">ล้างค่า</button>')
   +row('ผลลัพธ์บนมือถือ',`<select id="sCard" onchange="vCardSet(this.value==='1')"><option value="0"${VCARD?'':' selected'}>ตาราง (แบบเดิม)</option><option value="1"${VCARD?' selected':''}>การ์ด 1 รายการต่อ 1 กล่อง</option></select>`)
+  +row('🚌 รหัส MRU → ทริปงาน','ใช้ตอนสแกนใบสั่งงาน · ดู 4 ตัวหน้าของ MRU ตามตารางนี้ · ไม่อยู่ในตาราง = ดู 3 ตัวหลังปัดลงหลักร้อย (ต่ำกว่า 100 = ทริป 100) · ทั้งทีมใช้ร่วมกัน',' <button class="btn" onclick="mtShow()">ดู / แก้</button>')+'<div id="mtBox"></div>'
   +row('ประโยคที่ทั้งทีมพูดแล้วแอปแปลเองไม่ได้','เก็บไว้ใน Sheet แท็บ “คำสั่งที่ AI ช่วยแปล” · คัดลอกส่งให้ Claude สอนแอปเพิ่ม → คำสั่งเร็วขึ้น',' <button class="btn" onclick="aiqShow()">ดูรายการ</button>')+'<div id="aiqBox"></div>'
   +row('แผงคำสั่งเสียง',`<select id="sMini" onchange="vPanelMode(this.value)">${[['none','ไม่แสดง ตอบด้วยเสียงอย่างเดียว (แนะนำ)'],['mini','แถบเล็กด้านล่าง'],['full','แผงเต็มด้านบน']].map(([v,l])=>`<option value="${v}"${VPMODE===v?' selected':''}>${l}</option>`).join('')}</select>`)
   +row('🗣️ เรียกชื่อ “ศิวภัทร” เพื่อสั่งงาน','ไมค์รอฟังตลอดตอนเปิดแอป (แตะหน้าจอครั้งแรกเพื่อเริ่ม) · ทำงานเฉพาะเมื่อได้ยินชื่อ “ศิวภัทร” (ปุ่ม 🎤 ม่วง = รอ · แดง = คุยอยู่) · เงียบ 12 วิ กลับไปรอชื่อ · จอไม่ดับเอง · ใช้แบต/เน็ตมากขึ้น',` <label><input type="checkbox" id="sWake"${LVWAKE?' checked':''}${lvSupported()?'':' disabled'} onchange="lvWakeSet(this.checked)"> เปิด</label>`)
@@ -1685,6 +1686,31 @@ function setDraw(st){const ok=(b,y,n)=>`<span class="${b?'ok':'no'}">${b?'✅ '+
  h+='<div class="sh">🔒 ความปลอดภัย</div>'+row('ออกจากระบบเครื่องนี้','ลบรหัสทีมและชื่อผู้ใช้ออกจากเครื่องนี้',' <button class="btn" onclick="logoutDevice()">ออกจากระบบ</button>');
  sBody.innerHTML=h}
 // รายการประโยคที่ต้องถาม AI (รวมทั้งทีม) + ปุ่มคัดลอก
+// ---- รหัส MRU → ทริปงาน (สแกนใบสั่งงาน) ----
+const MRUDEF=[['77KD','37'],['7737','37'],['77PM','100'],['77A2','42'],['7742','42']];
+function mruRules(){return Array.isArray(DB._mrut)&&DB._mrut.length?DB._mrut:MRUDEF}
+// MRU 8 ตัว: 4 ตัวหน้าอยู่ในตาราง → ทริปตามตาราง · ไม่อยู่ → 3 ตัวหลังปัดลงหลักร้อย (ต่ำกว่า 100 = 100) · อ่านไม่ได้ = ''
+function mruTrip(mru){const s=String(mru||'').replace(/[\s-]/g,'').toUpperCase();if(s.length<7)return '';const hit=mruRules().find(x=>String(x[0]).toUpperCase()===s.slice(0,4));if(hit)return String(hit[1]);
+ const l3=s.slice(-3);if(!/^\d{3}$/.test(l3))return '';const n=+l3;return String(n<100?100:Math.floor(n/100)*100)}
+// ชื่อบริษัทในใบงาน → รหัสบริษัทในแอป (ไม่รู้จัก = '')
+function docComp(t){t=String(t||'');return /เอส\s*ที|(^|[^A-Z])S\.?\s*T\.?([^A-Z]|$)/i.test(t)?'ST':/ศิวภัทร|เอส\s*พี|(^|[^A-Z])S\.?\s*P\.?([^A-Z]|$)/i.test(t)?'SP':''}
+const docHouse=a=>{const m=String(a||'').match(/^\s*(?:บ้านเลขที่\s*)?(\d+(?:\s*\/\s*\d+)?)/);return m?m[1].replace(/\s/g,''):''};
+const docType=t=>{t=String(t||'');return /ต่อกลับ|ต่อสาย|คืนไฟ/.test(t)?'ต่อกลับ':/ใส่สาย/.test(t)?'ใส่สาย':/ถอด/.test(t)?'ถอด':/ปลด/.test(t)?'ปลด':/เลิกใช้/.test(t)?'เลิกใช้':''};
+// อ่านใบสั่งงาน → เติมเฉพาะช่องที่ว่าง (ประเภทงานตามหัวใบ) · คืนข้อความสรุป
+function scDoc(doc){if(!doc||!(doc.mru||doc.company||doc.address||doc.type))return '';const out=[],warn=[],keep=[];
+ const put=(el,v,lab)=>{if(!el||!v)return;if(String(el.value||'').trim()&&String(el.value).trim()!==v){keep.push(lab);return}vSet(el,v)};
+ const ty=docType(doc.type);if(ty&&kind==='jobs'&&!EDIT){vSet(mType,ty);out.push(ty)}
+ const c=docComp(doc.company);if(c){put(mComp,c,'บริษัท');out.push(c)}else if(doc.company)warn.push('ไม่รู้จักบริษัท “'+doc.company+'” เลือกเอง');
+ const tr=mruTrip(doc.mru);if(tr){put(mTrip,tr,'ทริปงาน');out.push('ทริป '+tr+' (MRU '+doc.mru+')')}else if(doc.mru)warn.push('อ่านทริปจาก MRU '+doc.mru+' ไม่ได้ เลือกเอง');
+ const h=docHouse(doc.address);if(h){put(mHouse,h,'บ้านเลขที่');out.push('บ้าน '+h)}
+ return '<br>📄 ใบงาน: '+esc(out.join(' · ')||'-')+(keep.length?' <small>(ช่อง'+esc(keep.join(', '))+'มีค่าอยู่แล้ว ไม่ได้เปลี่ยน)</small>':'')+(warn.length?'<br>⚠️ '+esc(warn.join(' · ')):'')}
+function mtShow(){const b=document.getElementById('mtBox');if(!b)return;const R=mruRules();
+ b.innerHTML='<div class="mtb">'+R.map((x,i)=>`<div class="mtr"><input class="mtc" maxlength="4" value="${esc(x[0])}" placeholder="7742"> → ทริป <input class="mtt" inputmode="numeric" maxlength="4" value="${esc(x[1])}" placeholder="42"> <button type="button" class="btn sc" onclick="this.parentElement.remove()">ลบ</button></div>`).join('')+
+  '</div><button type="button" class="btn sc" onclick="mtAdd()">+ เพิ่มรหัส</button> <button type="button" class="btn" onclick="mtSave()">💾 บันทึก</button> <span id="mtMsg" class="dpl"></span>'+
+  '<div class="dpl">ตัวอย่าง: 7742<b>0016</b> → ทริป 42 (ตามตาราง) · 7755<b>0350</b> → ทริป 300 · 7755<b>0030</b> → ทริป 100</div>'}
+function mtAdd(){const b=document.querySelector('#mtBox .mtb');if(!b)return;const d=document.createElement('div');d.className='mtr';d.innerHTML='<input class="mtc" maxlength="4" placeholder="7742"> → ทริป <input class="mtt" inputmode="numeric" maxlength="4" placeholder="42"> <button type="button" class="btn sc" onclick="this.parentElement.remove()">ลบ</button>';b.appendChild(d)}
+function mtSave(){const rows=[...document.querySelectorAll('#mtBox .mtr')].map(r=>[r.querySelector('.mtc').value.trim().toUpperCase(),r.querySelector('.mtt').value.trim()]).filter(x=>x[0]||x[1]);const m=document.getElementById('mtMsg');
+ if(m)m.textContent='กำลังบันทึก…';callApi('setMruTrip',[rows],r=>{DB._mrut=r;if(m)m.textContent='✅ บันทึกแล้ว ('+r.length+' รหัส)';mtShow();const m2=document.getElementById('mtMsg');if(m2)m2.textContent='✅ บันทึกแล้ว ('+r.length+' รหัส)'},e=>{if(m)m.textContent='⚠️ '+((e&&e.message)||e)})}
 function aiqShow(){const b=document.getElementById('aiqBox');if(!b)return;b.innerHTML='<div class="dpl">กำลังโหลด…</div>';
  callApi('aiReqs',[60],r=>{const all=(r&&r.rows)||[],isChat=x=>/"act"\s*:\s*"chat"/.test(x.ai||''),known=all.filter(x=>vKnown(x.t)).length,chat=all.filter(x=>!vKnown(x.t)&&isChat(x)).length,rows=all.filter(x=>!vKnown(x.t)&&!isChat(x));
   const note=known||chat?'<div class="dpl">ซ่อน '+(known?known+' ประโยคที่แอปเข้าใจแล้ว':'')+(known&&chat?' · ':'')+(chat?chat+' ประโยคคุยเล่น (ให้ AI ตอบ)':'')+'</div>':'';
@@ -1771,7 +1797,8 @@ function scShow(r){const m=r&&r.meter||'',alt=(r&&r.others)||[];
  const B=(lab,js)=>`<button type="button" class="btn sc" onclick="${js}">${lab}</button>`;
  const chips=[...cand.filter(x=>x!==pick).map(x=>B(esc(x),`vSet(mMeter,'${x}');rcHintDraw()`)),...near.map(x=>B(`${x.m}${x.house?' บ้าน '+esc(x.house):''} (มีในระบบ)`,`vApply({meter:'${x.m}',house:'${esc(x.house)}'})`))];
  if(ex&&(ex.house&&!mHouse.value.trim()))chips.unshift(B('📋 ใช้ข้อมูลเดิม: บ้าน '+esc(ex.house)+(ex.trip?' · ทริป '+esc(ex.trip):''),`vApply({house:'${esc(ex.house)}',trip:'${esc(ex.trip)}',comp:'${esc(ex.comp)}'})`));
- scHint.innerHTML=`📷 อ่านได้: <b>${esc(pick)}</b>${known?' ✅ มีในระบบ':''} — ตรวจให้ตรงกับหน้าเครื่องก่อนบันทึก`+(chips.length?'<br>'+chips.join(' '):'');
+ let dh='';try{dh=scDoc(r&&r.doc)}catch(e){}
+ scHint.innerHTML=`📷 อ่านได้: <b>${esc(pick)}</b>${known?' ✅ มีในระบบ':''} — ตรวจให้ตรงกับใบงาน/หน้าเครื่องก่อนบันทึก`+dh+(chips.length?'<br>'+chips.join(' '):'');try{rcHintDraw()}catch(e){}
  vSay('อ่านได้ '+pick.split('').join(' '))}
 
 // ---- 6.5) ค้นทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล) ----
