@@ -80,7 +80,7 @@ tr:hover td{background:#10246e55}td.hl,th.hl{background:#143a9a66}
 .box label{display:block;margin:8px 0 3px}.box .ws{display:flex;flex-wrap:wrap;gap:6px}
 .ws label{margin:0;border:1px solid #2a4aaa;border-radius:16px;padding:3px 10px;cursor:pointer}.ws label:has(input:checked){background:#1e6bff}.ws input{display:none}
 .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
-.empty{text-align:center;color:var(--m);padding:16px}
+.empty{text-align:center;color:var(--m);padding:16px}.emp{position:sticky;left:12px;width:min(100%,calc(100vw - 72px))}.qh{margin-top:10px;color:var(--t,#cfe0ff);line-height:1.9}.qh .btn{margin:4px 3px 0;padding:6px 12px}
 @media(max-width:1100px){.app{grid-template-columns:1fr}.side{display:none}.kpis{grid-template-columns:repeat(3,1fr)}.row1,.grid2,.mid{grid-template-columns:1fr}.slogan{display:none}}
 .art{position:absolute;inset:0 0 0 auto;width:48%;height:100%;pointer-events:none;border-radius:inherit}
 header{position:relative;overflow:hidden}header>*:not(.art){position:relative}
@@ -422,7 +422,7 @@ function matchF(kd,r,M){
  if(F.date){const dk=dkey(PDATE[kd](r));if(F.date.startsWith('r:')){const [a,b]=F.date.slice(2).split(':');if(!dk||dk<a||dk>b)return false}else if(dk!==F.date)return false}
  if(F.mru&&(kd==='defer'||kd==='mru')&&!fOk(F.mru.toUpperCase(),[g(r,'MRU').toUpperCase()]))return false;
  if(F.dp&&kd!=='mru'&&kd!=='nf'&&(kd==='defer'?stOf(g(r,'วันที่นัดชำระ')):stOf(M[g(r,'เครื่องวัดเลขที่')]))!==F.dp)return false;
- if(F.q){const q=F.q.toLowerCase(),qd=/^\d{6,}$/.test(q)?q:'';if(!cellHit(r,kd,M,q,qd))return false}
+ if(F.q&&!qHit(r,kd,M,qParse(F.q)))return false
  return true}
 // ===== ติดตามใส่สาย: จับคู่งานปลด/ถอด กับงานใส่สาย/ต่อกลับ =====
 const DISC=['ปลด','ถอด'],RECON=['ใส่สาย','ต่อกลับ'],CLOSE=['เลิกใช้'];
@@ -491,13 +491,44 @@ function rowTxt_(r,kd){const raw=kd+'\u0001'+Object.values(r).join('\u0001');let
  const ps=TH[kd].filter(h=>!cellDyn_(kd,h)).map(h=>String(cell(r,h,{},kd)).toLowerCase());x={raw,s:ps.join('\u0002'),d:ps.map(c=>c.replace(/\D/g,'')).join('\u0002')};SXC.set(r,x);return x}
 function cellHit(r,kd,M,q,qd){const x=rowTxt_(r,kd);if(x.s.includes(q)||(qd&&x.d.includes(qd)))return true;
  return TH[kd].some(h=>{if(!cellDyn_(kd,h))return false;const c=String(cell(r,h,M,kd)).toLowerCase();return c.includes(q)||(qd&&c.replace(/\D/g,'').includes(qd))})}
+// ===== ค้นข้อความ (v46) =====
+// ไม่สนเว้นวรรครอบ / - และในเลขล้วน ("24 / 35" "5512 1852" "081 458 2444") · หลายคำ = ต้องเจอครบทุกคำ (คนละช่องได้)
+// วันที่ พ.ศ. "25/11/2569" "25/11/69" = 25/11/2026 · ปี 2 หลัก ≥50 = พ.ศ. น้อยกว่า = ค.ศ.
+const qYr_=y=>{const n=+y;return y.length<=2?(n>=50?2500+n-543:2000+n):(n>2400?n-543:n)};
+function qDate_(w){const m=w.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);return m?P(m[1])+'/'+P(m[2])+'/'+qYr_(m[3]):''}
+let QPC=[null,null];
+function qParse(q){q=String(q||'').trim().toLowerCase();if(QPC[0]===q)return QPC[1];
+ const s=q.replace(/\s*([\/\-.:,])\s*/g,'$1');
+ const ws=/^[\d\s]+$/.test(s)&&s.replace(/\D/g,'').length>=4?[s.replace(/\s/g,'')]:s.split(/\s+/).filter(Boolean);
+ const t=ws.map(w=>{const a=[w],dt=qDate_(w);if(dt&&dt!==w)a.push(dt);const dg=w.replace(/\D/g,'');return {a,d:/^[\d\-]+$/.test(w)&&dg.length>=6?dg:''}});
+ QPC=[q,t];return t}
+const qHit=(r,kd,M,T)=>T.every(t=>t.a.some(w=>cellHit(r,kd,M,w,t.d)));
+// คำที่ส่งไปค้นข้อมูลเก่าที่เซิร์ฟเวอร์ (ค้นได้คำเดียว) = คำที่ยาวสุด
+const qOld=q=>{const T=qParse(q);if(!T.length)return q;const t=T.reduce((a,b)=>b.a[0].length>a.a[0].length?b:a);return t.d||t.a[0]};
+// ผลที่ตรงทั้งช่อง (บ้าน 24/35 ไม่ใช่ 124/35) ขึ้นก่อน · ลำดับเดิมในแต่ละกลุ่มไม่เปลี่ยน
+function qFirst(kd,a){if(!F.q)return a;const T=qParse(F.q);if(T.length!==1)return a;const t=T[0];
+ const ex=r=>TH[kd].some(h=>{const c=String(cell(r,h,{},kd)).trim().toLowerCase();return t.a.includes(c)||(t.d&&c.replace(/\D/g,'')===t.d)});
+ const x=[],y=[];a.forEach(r=>(ex(r)?x:y).push(r));return x.length&&y.length?x.concat(y):a}
+// ตารางว่างตอนค้น: บอกว่าเจอในหมวดอื่น / ถูกตัวกรองซ่อน พร้อมปุ่มไปดู
+const QPG={jobs:'search',phones:'phones',defer:'defer',mru:'mru',nf:'nf'},QLB={jobs:'🔍 งาน',phones:'📞 เบอร์โทร',defer:'💡 ผ่อนผันค่าไฟ',mru:'📍 MRU',nf:'❓ งานไม่พบข้อมูล'};
+const FLB={trip:'ทริปงาน',mru:'MRU',type:'ประเภทงาน',comp:'บริษัท',rc:'สถานะใส่สาย',photo:'รูปถ่าย',dup:'ลงงานซ้ำ',dp:'ผ่อนผันค่าไฟ',date:'วันที่',worker:'ผู้ปฏิบัติงาน'};
+function qCnt(kd,T,M){const gone=typeof GONE!=='undefined'?GONE:new Set();return (DB[kd]||[]).filter(r=>!(kd==='defer'&&g(r,'ซ่อน'))&&!gone.has(g(r,'ID'))&&qHit(r,kd,M,T)).length}
+function qHint(kd){if(!F.q||!QPG[kd])return '';const T=qParse(F.q),M=dpm(),own=qCnt(kd,T,M);let h='';
+ if(own){const fl=Object.keys(FLB).filter(k=>F[k]).map(k=>FLB[k]+': '+(k==='date'?dlab(F[k]):fLab(F[k]))).concat(Object.keys(typeof CF!=='undefined'?CF:{}).map(k=>k+': '+CF[k]));
+  h+=`<div class="qh">🔎 พบ “${esc(F.q)}” ${own} รายการ แต่ถูกตัวกรองซ่อนไว้${fl.length?' ('+esc(fl.join(' · '))+')':''}<br><button class="btn" onclick="qShowAll()">ล้างตัวกรองแล้วดู</button></div>`}
+ const oth=Object.keys(QPG).filter(k=>k!==kd).map(k=>[k,qCnt(k,T,M)]).filter(x=>x[1]);
+ if(oth.length)h+=`<div class="qh">${own?'':'ไม่พบในหน้านี้ · '}พบ “${esc(F.q)}” ใน<br>`+oth.map(([k,n])=>`<button class="btn" onclick="qGo('${k}')">${QLB[k]} ${n} รายการ</button>`).join(' ')+'</div>';
+ return h}
+function qClr(){Object.keys(FLB).forEach(k=>F[k]='');try{CF={}}catch(e){}if(tab!=='defer')tab='all';page=p3=p4=p6=p7=p8=1}
+function qShowAll(){qClr();filt();draw()}
+function qGo(k){qClr();if(k==='jobs')tab='all';filt();go(QPG[k])}
 const cell=(r,h,dp,kd)=>{if(kd==='jobs'&&h==='สถานะใส่สาย')return rcOf(r);
  if(kd==='defer'&&h==='ผู้ปฏิบัติงาน'){const m=mruLatest(g(r,'ทริปงาน'),g(r,'MRU'),g(r,'บริษัท'));return m?g(m,'ผู้ปฏิบัติงาน'):''}
  const v=h==='นัดชำระ'?(dp[g(r,'เครื่องวัดเลขที่')]||''):g(r,h);return DC.includes(h)?fmtD(v):v};
 const mruOpts=()=>[...new Map([...DB.defer,...(DB.mru||[])].map(r=>g(r,'MRU')).filter(Boolean).map(x=>[x.toUpperCase(),x])).values()].sort((a,b)=>a.localeCompare(b,'th',{numeric:true}));
-const jobsV=()=>{const M=dpm();return srt(DB.jobs.filter(r=>matchF('jobs',r,M)).sort(byNew))};
-const phonesV=()=>{const M=dpm();return srt(DB.phones.filter(r=>matchF('phones',r,M)).sort(byNew))};
-const deferV=()=>{const M=dpm();return srt(DB.defer.filter(r=>!g(r,'ซ่อน')&&matchF('defer',r,M)).sort(byNew))};
+const jobsV=()=>{const M=dpm();return qFirst('jobs',srt(DB.jobs.filter(r=>matchF('jobs',r,M)).sort(byNew)))};
+const phonesV=()=>{const M=dpm();return qFirst('phones',srt(DB.phones.filter(r=>matchF('phones',r,M)).sort(byNew)))};
+const deferV=()=>{const M=dpm();return qFirst('defer',srt(DB.defer.filter(r=>!g(r,'ซ่อน')&&matchF('defer',r,M)).sort(byNew)))};
 let MF='';
 const ymOf=x=>{const m=fmtD(x).match(/^(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]:''};
 const jobM=r=>ymOf(g(r,'วันที่ปฏิบัติงาน')||g(r,'เวลาบันทึก')),othM=r=>ymOf(g(r,'เวลาบันทึก'));
@@ -553,8 +584,8 @@ function mselTap(i){const o=mpop._o[i],vs=fvs(F[MSK]);let nv;if(vs.includes(o))n
 function mselSet(v,keep){F[MSK]=v;page=p3=p4=p6=p7=p8=1;syncTabFromType();const k=MSK;filt();draw();if(keep){MSK=k;mselDraw()}else mselClose()}
 function mselClose(){const p=document.getElementById('mpop');if(p)p.style.display='none';MSK=''}
 document.addEventListener('click',e=>{const p=document.getElementById('mpop');if(p&&p.style.display==='block'&&e.target.isConnected&&!p.contains(e.target))mselClose()});
-function tbl(kd,rows,start,del,cf){const H=TH[kd],dp=dpm();return '<tr><th>#'+H.map(h=>cf?`<th class="hd${CF[h]!==undefined?' act':''}" onclick="openCF(event,'${h}')">${h} ${CF[h]!==undefined?'●':'▾'}`:'<th>'+h).join('')+(del?'<th>จัดการ':'')+'</tr>'+(rows.length?rows.map((r,i)=>'<tr'+(r._f?' class="rf" title="ส่งขึ้น Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ กดป้ายมุมขวาบนเพื่อส่งอีกครั้ง"':r._p?' class="rp"':kd==='jobs'&&isDupOld(r)?' class="rdup"':'')+'><td class="no">'+(start+i+1)+(kd==='jobs'?dupTag(r):'')+(g(r,'รูป')?`<button class="ic" title="ดูรูป" onclick="phView('${kd}','${esc(g(r,'ID'))}')">📷</button>`:'')+H.map(h=>{const v=cell(r,h,dp,kd),nod=kd==='defer'&&h==='ผู้ปฏิบัติงาน'&&!v;   // data-l = ชื่อช่อง (มุมมองการ์ดบนมือถือ) · data-e = ช่องว่าง (การ์ดซ่อนไว้)
-  return '<td data-l="'+h+'"'+(h==='หมายเหตุ'?' class="tn"':'')+(!nod&&String(v==null?'':v).trim()===''?' data-e="1"':'')+'>'+(nod?(g(r,'MRU')?'<span class="nodata" title="ยังไม่มี MRU นี้ในแท็บ MRU">ยังไม่มีใน MRU</span>':'<span class="nodata">ไม่ได้ใส่ MRU</span>'):dc(h,v)+(kd==='jobs'&&h==='สถานะใส่สาย'?rcHint(r):''))}).join('')+(del?`<td class="act"><button class="ic e" title="แก้ไข" onclick="editRow('${kd}','${esc(g(r,'ID'))}')">✎</button><button class="ic d" title="ลบ" onclick="del('${kd}','${esc(g(r,'ID'))}')">🗑</button>`:'')+'</tr>').join(''):'<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>')}
+function tbl(kd,rows,start,del,cf,hk){const H=TH[kd],dp=dpm();return '<tr><th>#'+H.map(h=>cf?`<th class="hd${CF[h]!==undefined?' act':''}" onclick="openCF(event,'${h}')">${h} ${CF[h]!==undefined?'●':'▾'}`:'<th>'+h).join('')+(del?'<th>จัดการ':'')+'</tr>'+(rows.length?rows.map((r,i)=>'<tr'+(r._f?' class="rf" title="ส่งขึ้น Sheet ไม่สำเร็จ — ข้อมูลยังอยู่ กดป้ายมุมขวาบนเพื่อส่งอีกครั้ง"':r._p?' class="rp"':kd==='jobs'&&isDupOld(r)?' class="rdup"':'')+'><td class="no">'+(start+i+1)+(kd==='jobs'?dupTag(r):'')+(g(r,'รูป')?`<button class="ic" title="ดูรูป" onclick="phView('${kd}','${esc(g(r,'ID'))}')">📷</button>`:'')+H.map(h=>{const v=cell(r,h,dp,kd),nod=kd==='defer'&&h==='ผู้ปฏิบัติงาน'&&!v;   // data-l = ชื่อช่อง (มุมมองการ์ดบนมือถือ) · data-e = ช่องว่าง (การ์ดซ่อนไว้)
+  return '<td data-l="'+h+'"'+(h==='หมายเหตุ'?' class="tn"':'')+(!nod&&String(v==null?'':v).trim()===''?' data-e="1"':'')+'>'+(nod?(g(r,'MRU')?'<span class="nodata" title="ยังไม่มี MRU นี้ในแท็บ MRU">ยังไม่มีใน MRU</span>':'<span class="nodata">ไม่ได้ใส่ MRU</span>'):dc(h,v)+(kd==='jobs'&&h==='สถานะใส่สาย'?rcHint(r):''))}).join('')+(del?`<td class="act"><button class="ic e" title="แก้ไข" onclick="editRow('${kd}','${esc(g(r,'ID'))}')">✎</button><button class="ic d" title="ลบ" onclick="del('${kd}','${esc(g(r,'ID'))}')">🗑</button>`:'')+'</tr>').join(''):'<tr><td colspan="9" class="empty"><div class="emp">ไม่พบข้อมูล'+(hk?qHint(kd):'')+'</div></td></tr>')}
 function t1(){t1_.innerHTML=tbl('phones',phonesV().slice(0,8),0,false)}
 const RB={'MRU':'#d4a017','ปลด':'#e8731e','ถอด':'#18a85a','ใส่สาย':'#d63a8a','ต่อกลับ':'#7a4bff','เลิกใช้':'#6b7280','ไม่พบข้อมูล':'#b45309','เบอร์โทร':'#1a9fd8','ผ่อนผัน':'#c9a010'};
 function whenL(ts){const t=pts(ts);if(!t)return['',''];const d=new Date(t),n=new Date(),day=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),df=Math.round((day(n)-day(d))/864e5);
@@ -595,7 +626,7 @@ function goto(p){page=p;t2()}
 function t2(){const TC=tabCounts_();tabs_.innerHTML=tabsList().map(([k,l])=>`<button class="tab ${tab===k?'on':''}" onclick="setTabK('${k}')">${l}${TC[k]!=null?`<span class="tc">${TC[k]}</span>`:''}</button>`).join('');
  const ks=Object.keys(CF);cfbar.innerHTML=ks.length?ks.map(h=>`<button class="tab on" onclick="clrCF('${h}')">${h}: ${esc(CF[h]===''?'(ว่าง)':CF[h])} ✕</button>`).join('')+`<button class="tab" onclick="CF={};page=1;t2()">ล้างทั้งหมด</button>`:'';
  const [kd,v]=rowsT2(),per=10,pc=Math.max(1,Math.ceil(v.length/per));if(page>pc)page=pc;const s=v.slice((page-1)*per,page*per);
- dpl.innerHTML=TH[kd].some(h=>dueCols.includes(h))?LEG:'';t2_.innerHTML=tbl(kd,s,(page-1)*per,kd==='jobs'||kd==='defer',true);
+ dpl.innerHTML=TH[kd].some(h=>dueCols.includes(h))?LEG:'';t2_.innerHTML=tbl(kd,s,(page-1)*per,kd==='jobs'||kd==='defer',true,1);
  const nd=kd==='jobs'?noDup(v).length:v.length,dn=v.length-nd;info.textContent=!v.length?'ไม่มีรายการ':`แสดง ${(page-1)*per+1}-${(page-1)*per+s.length} จาก ${v.length} `+(dn?`แถว · นับจริง ${nd} รายการ (ลงซ้ำ ${dn} ไม่นับ)`:'รายการ');try{t2cnt.textContent=nd+' รายการ'+(dn?' (+ซ้ำ '+dn+')':'')}catch(e){}   // จำนวนบนหัวตาราง เห็นทันทีไม่ต้องเลื่อนลงไปท้ายตาราง
  let h=`<button onclick="goto(${Math.max(1,page-1)})">‹</button>`;for(let i=Math.max(1,page-2);i<=Math.min(pc,page+2);i++)h+=`<button class="${i===page?'on':''}" onclick="goto(${i})">${i}</button>`;
  pgs.innerHTML=h+`<button onclick="goto(${Math.min(pc,page+1)})">›</button>`}
@@ -606,24 +637,24 @@ function go(v){if(DRAWQ.length)drawRest();view=v;kind=v==='defer'?'defer':v==='p
  refreshActive();dimF();
  try{window.scrollTo({top:0,behavior:'smooth'})}catch(x){}}
 const dueTs=r=>pts(fmtD(g(r,'วันที่นัดชำระ')));
-const deferSorted=()=>deferV().sort((a,b)=>dueTs(b)-dueTs(a));
+const deferSorted=()=>qFirst('defer',deferV().sort((a,b)=>dueTs(b)-dueTs(a)));
 function pgr(n,cur,per,infoEl,pgsEl,fn){const pc=Math.max(1,Math.ceil(n/per)),c=Math.min(cur,pc),a=(c-1)*per;
  infoEl.textContent=n?`แสดง ${a+1}-${Math.min(n,a+per)} จาก ${n} รายการ`:'ไม่มีรายการ';
  let h=`<button onclick="${fn}(${Math.max(1,c-1)})">‹</button>`;for(let i=Math.max(1,c-2);i<=Math.min(pc,c+2);i++)h+=`<button class="${i===c?'on':''}" onclick="${fn}(${i})">${i}</button>`;
  pgsEl.innerHTML=h+`<button onclick="${fn}(${Math.min(pc,c+1)})">›</button>`;return[c,a]}
-function drawPhones(){const v=phonesV(),[c,a]=pgr(v.length,p3,10,info3,pgs3,'goP3');p3=c;t3.innerHTML=tbl('phones',v.slice(a,a+10),a,true)}
+function drawPhones(){const v=phonesV(),[c,a]=pgr(v.length,p3,10,info3,pgs3,'goP3');p3=c;t3.innerHTML=tbl('phones',v.slice(a,a+10),a,true,0,1)}
 function goP3(n){p3=n;drawPhones()}
 function dfSummary(v){const M=dpm();let ok=0,noRec=0,noMru=0;const miss=new Map();
  v.forEach(r=>{if(!g(r,'MRU'))noMru++;else if(cell(r,'ผู้ปฏิบัติงาน',M,'defer'))ok++;else{noRec++;const k=g(r,'MRU')+(g(r,'บริษัท')?' ('+g(r,'บริษัท')+')':'');miss.set(k,1)}});
  dfSum.innerHTML=`ดึงผู้ปฏิบัติงานจาก MRU ได้ <b>${ok}</b> จาก ${v.length} รายการ`+(noRec?` · <span class="warn">⚠️ ยังไม่มีข้อมูล MRU นี้ในแท็บ MRU ${noRec} รายการ</span> <span title="${esc([...miss.keys()].join(', '))}">(${esc([...miss.keys()].slice(0,12).join(', '))}${miss.size>12?' …':''})</span>`:'')+(noMru?` · ไม่ได้ใส่ MRU ${noMru} รายการ`:'')}
-function drawDefer(){dpl4.innerHTML=LEG;dfSummary(deferV());const v=deferSorted(),[c,a]=pgr(v.length,p4,10,info4,pgs4,'goP4');p4=c;t4.innerHTML=tbl('defer',v.slice(a,a+10),a,true)}
+function drawDefer(){dpl4.innerHTML=LEG;dfSummary(deferV());const v=deferSorted(),[c,a]=pgr(v.length,p4,10,info4,pgs4,'goP4');p4=c;t4.innerHTML=tbl('defer',v.slice(a,a+10),a,true,0,1)}
 function goP4(n){p4=n;drawDefer()}
-const mruV=()=>{const M=dpm();return srt((DB.mru||[]).filter(r=>matchF('mru',r,M)).sort((a,b)=>pts(fmtD(g(b,'วันที่')))-pts(fmtD(g(a,'วันที่')))||key(b)-key(a)))};
-function drawMru(){const v=mruV(),[c,a]=pgr(v.length,p6,10,info6,pgs6,'goP6');p6=c;t6.innerHTML=tbl('mru',v.slice(a,a+10),a,true)}
+const mruV=()=>{const M=dpm();return qFirst('mru',srt((DB.mru||[]).filter(r=>matchF('mru',r,M)).sort((a,b)=>pts(fmtD(g(b,'วันที่')))-pts(fmtD(g(a,'วันที่')))||key(b)-key(a))))};
+function drawMru(){const v=mruV(),[c,a]=pgr(v.length,p6,10,info6,pgs6,'goP6');p6=c;t6.innerHTML=tbl('mru',v.slice(a,a+10),a,true,0,1)}
 function goP6(n){p6=n;drawMru()}
 // ===== หน้า "งานไม่พบข้อมูล" =====
-const nfV=()=>{const M=dpm();return srt((DB.nf||[]).filter(r=>matchF('nf',r,M)).sort((a,b)=>jCmp(b,a)))};
-function drawNf(){if(typeof t8==='undefined')return;const v=nfV(),[c,a]=pgr(v.length,p8,10,info8,pgs8,'goP8');p8=c;t8.innerHTML=tbl('nf',v.slice(a,a+10),a,true)}
+const nfV=()=>{const M=dpm();return qFirst('nf',srt((DB.nf||[]).filter(r=>matchF('nf',r,M)).sort((a,b)=>jCmp(b,a))))};
+function drawNf(){if(typeof t8==='undefined')return;const v=nfV(),[c,a]=pgr(v.length,p8,10,info8,pgs8,'goP8');p8=c;t8.innerHTML=tbl('nf',v.slice(a,a+10),a,true,0,1)}
 function goP8(n){p8=n;drawNf()}
 // ผู้ปฏิบัติงาน: งานไม่พบข้อมูล ไม่บังคับ -> มีตัวเลือก "ไม่ระบุ"; หัวข้ออื่นบังคับ -> ไม่มีตัวเลือกว่าง
 function workerBlank(k){const has=mWorker.options.length&&mWorker.options[0].value==='';
@@ -1625,7 +1656,7 @@ function onOpenR(){oldDraw()}
 const OLDQ=new Set();let OLDT=null;
 function afterDraw(){if(!DB._partial||LOADALL||!run)return;const q=String(F.q||'').trim();if(q.length<4||OLDQ.has(q))return;clearTimeout(OLDT);OLDT=setTimeout(()=>findOld(q),800)}
 function findOld(q){if(OLDQ.has(q)||String(F.q||'').trim()!==q)return;OLDQ.add(q);
- callApi('findOld',[q],res=>{let n=0;['jobs','defer','nf'].forEach(k=>{const a=DB[k]||(DB[k]=[]),ids=new Set(a.map(r=>g(r,'ID')));(res&&res[k]||[]).forEach(r=>{const id=g(r,'ID');if(!ids.has(id)&&!GONE.has(id)){a.push(r);ids.add(id);n++}})});
+ callApi('findOld',[qOld(q)],res=>{let n=0;['jobs','defer','nf'].forEach(k=>{const a=DB[k]||(DB[k]=[]),ids=new Set(a.map(r=>g(r,'ID')));(res&&res[k]||[]).forEach(r=>{const id=g(r,'ID');if(!ids.has(id)&&!GONE.has(id)){a.push(r);ids.add(id);n++}})});
   if(n){toast('พบข้อมูลเก่ากว่า '+LOAD_M+' เดือนเพิ่ม '+n+' รายการ');const a=document.activeElement;if(!(a&&a.id==='f_q'))filt();draw()}},()=>OLDQ.delete(q))}
 
 // ---- 3) ประวัติการแก้ไข (ใคร ทำอะไร เมื่อไร) ----
@@ -1806,9 +1837,9 @@ function scShow(r){let m=r&&r.meter||'',alt=(r&&r.others)||[];
 
 // ---- 6.5) ค้นทุกหมวดพร้อมกัน (งาน เบอร์โทร ผ่อนผัน MRU งานไม่พบข้อมูล) ----
 const SAK=[['jobs','งาน'],['phones','เบอร์โทร'],['defer','ผ่อนผัน'],['mru','MRU'],['nf','งานไม่พบข้อมูล']];
-function saFind(q){q=String(q||'').trim();const ql=q.toLowerCase(),qd=q.replace(/\D/g,''),useD=qd.length>=4&&qd.length>=q.replace(/\s/g,'').length-1,M=dpm(),out=[],cnt={};if(!q)return {out,cnt};
+function saFind(q){q=String(q||'').trim();const T=qParse(q),M=dpm(),out=[],cnt={};if(!q)return {out,cnt};
  SAK.forEach(([kd,lb])=>(DB[kd]||[]).forEach(r=>{if(kd==='defer'&&g(r,'ซ่อน'))return;if(GONE.has(g(r,'ID')))return;
-  if(!cellHit(r,kd,M,ql,useD?qd:''))return;
+  if(!qHit(r,kd,M,T))return;
   cnt[lb]=(cnt[lb]||0)+1;
   const det=kd==='jobs'?g(r,'ประเภทงาน'):kd==='phones'?('เบอร์ '+(g(r,'เบอร์โทร')||'-')):kd==='defer'?('นัดชำระ '+fmtD(g(r,'วันที่นัดชำระ'))):kd==='mru'?('MRU '+g(r,'MRU')):('ใกล้เคียง '+([g(r,'เครื่องวัดใกล้เคียง 1'),g(r,'เครื่องวัดใกล้เคียง 2')].filter(Boolean).join(', ')||'-'));
   let d='';try{d=fmtD(PDATE[kd](r))}catch(e){}
