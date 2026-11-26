@@ -270,7 +270,7 @@ window.addEventListener('error',function(e){var m=(e&&e.message)||'ไม่ท�
  <div id="fC"><label>บริษัท</label><select id="mComp" onchange="mruHintDraw()"></select></div>
  <label>ทริปงาน</label><select id="mTrip" onchange="mruHintDraw()"></select>
  <div id="fM"><label id="lblM">MRU</label><input type="text" id="mMru" list="mruList" placeholder="MRU" oninput="mruHintDraw()"><datalist id="mruList"></datalist><div id="mruHint" class="dpl" style="margin:4px 0 0"></div></div>
- <div id="fMH"><label>เครื่องวัดเลขที่ <button type="button" class="btn sc" onclick="scanMeter()" title="ถ่ายรูปหน้าเครื่องวัด หรือใบสั่งงานทั้งใบ ให้ AI อ่านและกรอกให้">📷 สแกนเลข/ใบงาน</button></label><input type="text" id="mMeter" inputmode="numeric"><div id="scHint" class="dpl" style="margin:4px 0 0"></div>
+ <div id="fMH"><label>เครื่องวัดเลขที่ <button type="button" class="btn sc" onclick="scanMeter()" title="ถ่ายรูปใบสั่งงานทั้งใบ (หรือหน้าเครื่องวัด) ให้ AI อ่านและกรอกให้">📷 ถ่ายรูปใบงาน</button></label><input type="text" id="mMeter" inputmode="numeric"><div id="scHint" class="dpl" style="margin:4px 0 0"></div>
  <label>บ้านเลขที่</label><input type="text" id="mHouse"><div id="rcHint" class="dpl" style="margin:4px 0 0"></div></div>
  <div id="fNB" style="display:none"><label>เครื่องวัดเลขที่ใกล้เคียง 1</label><input type="text" id="mNb1" inputmode="numeric" placeholder="ไม่บังคับ">
  <label>เครื่องวัดเลขที่ใกล้เคียง 2</label><input type="text" id="mNb2" inputmode="numeric" placeholder="ไม่บังคับ"></div>
@@ -1693,14 +1693,14 @@ function mruRules(){return Array.isArray(DB._mrut)&&DB._mrut.length?DB._mrut:MRU
 function mruTrip(mru){const s=String(mru||'').replace(/[\s-]/g,'').toUpperCase();if(s.length<7)return '';const hit=mruRules().find(x=>String(x[0]).toUpperCase()===s.slice(0,4));if(hit)return String(hit[1]);
  const l3=s.slice(-3);if(!/^\d{3}$/.test(l3))return '';const n=+l3;return String(n<100?100:Math.floor(n/100)*100)}
 // ชื่อบริษัทในใบงาน → รหัสบริษัทในแอป (ไม่รู้จัก = '')
-function docComp(t){t=String(t||'');return /เอส\s*ที|(^|[^A-Z])S\.?\s*T\.?([^A-Z]|$)/i.test(t)?'ST':/ศิวภัทร|เอส\s*พี|(^|[^A-Z])S\.?\s*P\.?([^A-Z]|$)/i.test(t)?'SP':''}
+function docComp(t){t=String(t||'');return /เอส[\s.]*ที|(^|[^A-Z])S\.?\s*T\.?([^A-Z]|$)/i.test(t)?'ST':/ศิวะ?ภัท|เอส[\s.]*พี|(^|[^A-Z])S\.?\s*P\.?([^A-Z]|$)/i.test(t)?'SP':''}
 const docHouse=a=>{const m=String(a||'').match(/^\s*(?:บ้านเลขที่\s*)?(\d+(?:\s*\/\s*\d+)?)/);return m?m[1].replace(/\s/g,''):''};
 const docType=t=>{t=String(t||'');return /ต่อกลับ|ต่อสาย|คืนไฟ/.test(t)?'ต่อกลับ':/ใส่สาย/.test(t)?'ใส่สาย':/ถอด/.test(t)?'ถอด':/ปลด/.test(t)?'ปลด':/เลิกใช้/.test(t)?'เลิกใช้':''};
 // อ่านใบสั่งงาน → เติมเฉพาะช่องที่ว่าง (ประเภทงานตามหัวใบ) · คืนข้อความสรุป
 function scDoc(doc){if(!doc||!(doc.mru||doc.company||doc.address||doc.type))return '';const out=[],warn=[],keep=[];
  const put=(el,v,lab)=>{if(!el||!v)return;if(String(el.value||'').trim()&&String(el.value).trim()!==v){keep.push(lab);return}vSet(el,v)};
  const ty=docType(doc.type);if(ty&&kind==='jobs'&&!EDIT){vSet(mType,ty);out.push(ty)}
- const c=docComp(doc.company);if(c){put(mComp,c,'บริษัท');out.push(c)}else if(doc.company)warn.push('ไม่รู้จักบริษัท “'+doc.company+'” เลือกเอง');
+ const c=docComp(doc.company)||(/^(ST|SP)$/.test(doc.code||'')?doc.code:'');if(c){put(mComp,c,'บริษัท');out.push(c)}else if(doc.company)warn.push('ไม่รู้จักบริษัท “'+doc.company+'” เลือกเอง');
  const tr=mruTrip(doc.mru);if(tr){put(mTrip,tr,'ทริปงาน');out.push('ทริป '+tr+' (MRU '+doc.mru+')')}else if(doc.mru)warn.push('อ่านทริปจาก MRU '+doc.mru+' ไม่ได้ เลือกเอง');
  const h=docHouse(doc.address);if(h){put(mHouse,h,'บ้านเลขที่');out.push('บ้าน '+h)}
  return '<br>📄 ใบงาน: '+esc(out.join(' · ')||'-')+(keep.length?' <small>(ช่อง'+esc(keep.join(', '))+'มีค่าอยู่แล้ว ไม่ได้เปลี่ยน)</small>':'')+(warn.length?'<br>⚠️ '+esc(warn.join(' · ')):'')}
@@ -1761,8 +1761,8 @@ const saveV12=save;save=function(){const ph=PHN.slice(),ed=EDIT?{kd:EDIT.kd,id:E
  const op=QUE.slice(n0).find(o=>o.t==='add'&&o.d);if(op)phQueue(op.kd,g(op.d,'ID'),ph)};
 
 // ---- 6) สแกนเลขเครื่องวัด: ถ่ายรูปหน้าเครื่อง ให้ AI อ่านเลข (ใช้ GEMINI_KEY ใน Code.gs) ----
-function scanMeter(){if(!run){alert('โหมดตัวอย่าง: ยังไม่ได้เชื่อม Google Sheet');return}if(!DB._ai){alert('ต้องใส่ GEMINI_KEY ใน Code.gs ก่อน จึงจะสแกนเลขเครื่องวัดได้');return}camOpen('scan')}
-function scPicked(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;imgSmall(f,1600,.85,scSend)}
+function scanMeter(){if(!run){alert('โหมดตัวอย่าง: ยังไม่ได้เชื่อม Google Sheet');return}if(!DB._ai){alert('ต้องใส่ GEMINI_KEY ใน Code.gs ก่อน จึงจะอ่านใบงาน/เลขเครื่องวัดได้');return}scHint.innerHTML='📷 ถ่ายรูปใบงานให้เห็นทั้งใบ ชัด ๆ (หรือหน้าเครื่องวัด)';try{scIn.click()}catch(e){camOpen('scan')}}   // เปิดแอปกล้องของมือถือ (โฟกัสเอกสารชัดกว่ากล้องในแอป)
+function scPicked(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;scHint.innerHTML='⏳ กำลังย่อรูป…';imgSmall(f,2200,.9,src=>{if(src&&src.length>1900000)imgSmall(f,1600,.82,scSend);else scSend(src)})}   // ใบงานตัวหนังสือเล็ก → รูปละเอียดขึ้น (เกินขนาดค่อยย่อลง)
 function scSend(src){if(!src){scHint.textContent='⚠️ อ่านรูปไม่ได้';return}scHint.innerHTML='⏳ กำลังอ่านเลขจากรูป…';
  callApi('readMeter',[src.split(',')[1]],r=>scShow(r),e=>{scHint.innerHTML='⚠️ อ่านเลขไม่ได้: '+esc(e&&e.message||e);vSay('อ่านเลขไม่ได้')})}
 
@@ -1789,7 +1789,10 @@ function camSnap(){const v=camV;if(!v.videoWidth){toast('กล้องยั�
 function camNative(){const m=CAM;camClose();(m==='scan'?scIn:phCap).click()}
 function camGallery(){const m=CAM;camClose();(m==='scan'?scGal:phIn).click()}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&CAMS)camClose()});
-function scShow(r){const m=r&&r.meter||'',alt=(r&&r.others)||[];
+// เลขเครื่องวัดที่น่าเชื่อ: 7-10 หลัก และไม่ใช่เลขใบสั่งงาน (4400… 12 หลักขึ้นไป) · บนใบงานปกติ 8 หลัก
+const scOkM=x=>/^\d{7,10}$/.test(x)&&!/^4400\d{6,}/.test(x);
+function scShow(r){let m=r&&r.meter||'',alt=(r&&r.others)||[];
+ if(r&&r.doc&&(r.doc.mru||r.doc.address||r.doc.type)){const all=[m,...alt].filter(Boolean),ok=all.filter(scOkM);if(ok.length){m=ok.find(x=>x.length===8)||ok[0];alt=all.filter(x=>x!==m&&scOkM(x))}}
  if(!m&&!alt.length){scHint.innerHTML='⚠️ อ่านเลขไม่ได้'+(r&&r.note?': '+esc(r.note):'')+' — ลองถ่ายใหม่ให้ชัด ไม่มีแสงสะท้อน';vSay('อ่านเลขไม่ได้ ลองถ่ายใหม่');return}
  const MI=vMeters(),cand=[m,...alt].filter(Boolean),known=cand.find(x=>MI.has(x)),pick=known||m||alt[0],ex=MI.get(pick);
  vSet(mMeter,pick);try{rcHintDraw()}catch(e){}
